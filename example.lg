@@ -1,0 +1,56 @@
+
+print "hello
+print (2 + 3)
+print [hello world]
+show [hello world]
+
+to circle :radius
+arc 360 :radius
+end
+
+to rectangle :w :h
+repeat 2 [forward :w right 90 forward :h right 90]
+end
+
+to square :side
+rectangle :side :side
+end
+
+to equalateral :side [:colors []]
+localmake "start.pencolor pencolor
+if [ emptyp :colors ] [
+    localmake "color pencolor
+    localmake "colors (list :color :color :color)
+]
+repeat 3 [
+    setpencolor item # :colors
+    forward :side right 120
+]
+setpencolor :start.pencolor
+end
+
+to ellipse :center :r [:squash.x 1] [:squash.y 0.5] [:step 15]
+make "h first :center       ; x coordinate of circle center
+make "k last :center        ; y coordinate of circle center
+pu
+make "theta heading * -1 + 90
+make "theta.start :theta
+make "alpha :theta
+make "x :h + :squash.x * :r * cos :theta
+make "y :k - :squash.y * :r * sin :theta
+setpos rotate.coords :x :y :alpha
+pd
+do.until [
+    make "theta :theta + :step
+    make "x :h + :squash.x * :r * cos :theta
+    make "y :k - :squash.y * :r * sin :theta
+    setpos rotate.coords :x :y :alpha
+] [:theta - :theta.start >= 360]
+end
+
+to rotate.coords :x :y :theta
+    make "x0 (:x * cos :theta) + (:y * sin :theta)
+    make "y0 (:y * cos :theta) - (:x * sin :theta)
+    output (list :x0 :y0)
+end
+
