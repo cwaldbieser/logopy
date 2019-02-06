@@ -31,6 +31,7 @@ def main(args):
     print(grammar('12345').number())
     print(grammar('print hello world').itemlist())
     print(grammar('print [hello world]').itemlist())
+    print(grammar('print [hello [nested] world]').itemlist())
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Logo programming language interpreter")
