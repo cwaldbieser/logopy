@@ -24,7 +24,7 @@ def main(args):
     """
     grammar = parsley.makeGrammar("""
     digit = anything:x ?(x in '0123456789')
-    number = <digit+>:ds -> int(ds)
+    number = <'-'{0, 1} digit+>:ds -> int(ds)
     itemlist = 
           ws item:first (ws item)*:rest -> [first] + rest
         | ws item:only -> [only]
@@ -39,7 +39,7 @@ def main(args):
     ascii_upper = :x ?(x in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ') -> x
     ascii = ascii_lower | ascii_upper
     identifier_char = ascii | digit | '.'
-    punctuation = :x ?(x in "!'#$%&\,.:<=>?@^_`" '"')
+    punctuation = :x ?(x in "+-*/!'#$%&\,.:<=>?@^_`" '"')
     word_char = ascii | digit | punctuation
     comment = ';' rest_of_line 
     rest_of_line = <('\\\\n' | (~'\\n' anything))*>
@@ -68,6 +68,7 @@ def main(args):
     print(grammar('print (2 + 3) * 5').itemlist())
     print(grammar('to equalateral :side [:colors []]').itemlist())
     print(grammar('localmake "colors (list :color :color :color)').itemlist())
+    print(grammar('make "theta heading * -1 + 90').itemlist())
     #script = args.file.read()
     #print(grammar(script).itemlist())
 
