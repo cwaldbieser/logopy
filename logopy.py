@@ -19,9 +19,9 @@ def calculate(start, pairs):
             result /= value
     return result
 
-def main(args):
+def make_token_grammar():
     """
-    Parse Logo
+    Make the token grammar.
     """
     grammar = parsley.makeGrammar("""
     digit = anything:x ?(x in '0123456789')
@@ -57,23 +57,40 @@ def main(args):
     expr = expr2:left addsub*:right -> calculate(left, right)
     expr2 = value:left muldiv*:right -> calculate(left, right)
     """, {"calculate": calculate})
+    return grammar
+
+def parse_tokens(grammar, script):
+    """
+    Parse a Logo script.
+    Return a list of tokens.
+    """
+    return grammar(script).itemlist()
+
+def main(args):
+    """
+    Parse Logo
+    """
+    grammar = make_token_grammar()
     if args.tests:
         print("Tests ...")
-        print(grammar('12345').number())
-        print(grammar('print hello world').itemlist())
-        print(grammar('print [hello world]').itemlist())
-        print(grammar('print [hello [nested] world]').itemlist())
-        print(grammar('line1\nline2').itemlist())
-        print(grammar('to circle :radius\narc 360 :radius\nend').itemlist())
-        print(grammar('print "hello').itemlist())
-        print(grammar('print "hello;this is a comment\nshow [a list]').itemlist())
-        print(grammar('print (2 + 3) * 5').itemlist())
-        print(grammar('to equalateral :side [:colors []]').itemlist())
-        print(grammar('localmake "colors (list :color :color :color)').itemlist())
-        print(grammar('make "theta heading * -1 + 90').itemlist())
+        tests = [
+            'print hello world',
+            'print [hello world]',
+            'print [hello [nested] world]',
+            'line1\nline2',
+            'to circle :radius\narc 360 :radius\nend',
+            'print "hello',
+            'print "hello;this is a comment\nshow [a list]',
+            'print (2 + 3) * 5',
+            'to equalateral :side [:colors []]',
+            'localmake "colors (list :color :color :color)',
+            'make "theta heading * -1 + 90'
+        ]
+        for prog in tests:
+            print(parse_tokens(grammar, prog))
         print("Tests completed.")
     script = args.file.read()
-    pprint.pprint(grammar(script).itemlist())
+    print(parse_tokens(grammar, script))
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Logo programming language interpreter")
