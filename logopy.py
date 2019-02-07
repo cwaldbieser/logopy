@@ -33,6 +33,7 @@ def main(args):
         | '[' ws itemlist:lst ws ']' -> lst
         | '[' ws ']' -> []
         | word:w (ws comment)* -> w
+        | '(' itemlist:lst ')' -> lst 
     word = expr | <(word_char+)>:val -> val
     ascii_lower = :x ?(x in 'abcdefghijklmnopqrstuvwxyz') -> x
     ascii_upper = :x ?(x in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ') -> x
@@ -66,6 +67,7 @@ def main(args):
     print(grammar('print "hello;this is a comment\nshow [a list]').itemlist())
     print(grammar('print (2 + 3) * 5').itemlist())
     print(grammar('to equalateral :side [:colors []]').itemlist())
+    print(grammar('localmake "colors (list :color :color :color)').itemlist())
     #script = args.file.read()
     #print(grammar(script).itemlist())
 
