@@ -31,6 +31,7 @@ def main(args):
     item =
           itemlist
         | '[' ws itemlist:lst ws ']' -> lst
+        | '[' ws ']' -> []
         | word:w (ws comment)* -> w
     word = expr | <(word_char+)>:val -> val
     ascii_lower = :x ?(x in 'abcdefghijklmnopqrstuvwxyz') -> x
@@ -64,6 +65,7 @@ def main(args):
     print(grammar('print "hello').itemlist())
     print(grammar('print "hello;this is a comment\nshow [a list]').itemlist())
     print(grammar('print (2 + 3) * 5').itemlist())
+    print(grammar('to equalateral :side [:colors []]').itemlist())
     #script = args.file.read()
     #print(grammar(script).itemlist())
 
