@@ -1,0 +1,6 @@
+
+
+class LogoError(Exception):
+    pass
+
+
