@@ -64,6 +64,10 @@ def create_primitives_map():
     """
     m = {}
     make_primitive = LogoProcedure.make_primitive
+    m['butfirst'] = make_primitive("butfirst", ['wordlist'], [], None, 1, process_butfirst)
+    m['bf'] = m['butfirst']
+    m['butfirsts'] = make_primitive("butfirsts", ['list'], [], None, 1, process_butfirsts)
+    m['bfs'] = m['butfirsts']
     m['combine'] = make_primitive("combine", ['thing1', 'thing2'], [], None, 2, process_combine)
     m['first'] = make_primitive("first", ['thing'], [], None, 1, process_first)
     m['firsts'] = make_primitive("firsts", ['list'], [], None, 1, process_firsts)
@@ -93,6 +97,25 @@ def _is_dots_name(token):
     if not len(token) > 1:
         return False
     return True
+
+def process_butfirst(logo, wordlist):
+    """
+    The BUTFIRST command.
+    """
+    if len(wordlist) == 0:
+        raise errors.LogoError("FIRST doesn't like `{}` as input.".format(thing)) 
+    return wordlist[1:]
+
+def process_butfirsts(logo, lst):
+    """
+    The BUTFIRSTS command.
+    """
+    l = []
+    for item in lst:
+        if len(item) == 0:
+            raise errors.LogoError("BUTFIRST doesn't like `{}` as input.".format(item))
+        l.append(item[1:])
+    return l
 
 def process_combine(logo, thing1, thing2):
     """
