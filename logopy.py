@@ -74,7 +74,7 @@ class LogoInterpreter:
         for scope in reversed(scopes):
             if varname in scope:
                 return scope[varname]
-        raise LogoError("No scope has a variable named `{}`.".format(varname))
+        raise errors.LogoError("No scope has a variable named `{}`.".format(varname))
 
     def evaluate_value(self, tokens, quoted=False):
         """

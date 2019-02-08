@@ -82,9 +82,11 @@ def create_primitives_map():
     m['lput'] = make_primitive("lput", ['thing', 'list'], [], None, 2, process_lput)
     m['make'] = make_primitive("make", ['varname', 'value'], [], None, 2, process_make)
     m['pick'] = make_primitive("pick", ['list'], [], None, 1, process_pick)
+    m['pop'] = make_primitive("pop", ['stackname'], [], None, 1, process_pop)
     m['print'] = make_primitive("print", ['thing'], [], 'others', 1, process_print)
     m['pr'] = m['print']
-    m['quoted'] = make_primitive("quoted", ['thing'], [], 'others', 1, process_quoted)
+    m['push'] = make_primitive("push", ['stackname', 'thing'], [], None, 2, process_push)
+    m['quoted'] = make_primitive("quoted", ['thing'], [], None, 1, process_quoted)
     m['remove'] = make_primitive("remove", ['thing', 'list'], [], None, 2, process_remove)
     m['remdup'] = make_primitive("remdup", ['list'], [], None, 1, process_remdup)
     m['reverse'] = make_primitive("reverse", ['list'], [], None, 1, process_reverse)
@@ -227,6 +229,18 @@ def process_pick(logo, lst):
         raise errors.LogoError("PICK does not like `{}` as input.".format(lst))
     return random.choice(lst)
 
+def process_pop(logo, stackname):
+    """
+    The POP command.
+    """
+    stack = logo.get_variable_value(stackname)
+    try:
+        return stack.pop(0)      
+    except AttributeError:
+        raise errors.LogoError("The object referred to by `{}` is not a list.".format(stackname))
+    except IndexError:
+        raise errors.LogoError("Tried to POP from empty stack, `{}`.".format(stackname))
+
 def process_print(logo, *args):
     """
     The PRINT command.
@@ -238,6 +252,16 @@ def process_print(logo, *args):
         else:
             reps.append(str(arg))
     print(' '.join(reps))
+
+def process_push(logo, stackname, thing):
+    """
+    The PUSH command.
+    """
+    stack = logo.get_variable_value(stackname)
+    try:
+        stack.insert(0, thing)      
+    except AttributeError:
+        raise errors.LogoError("The object referred to by `{}` is not a list.".format(stackname))
 
 def process_quoted(logo, thing):
     """
