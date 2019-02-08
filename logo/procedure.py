@@ -96,6 +96,8 @@ def create_primitives_map():
     m['se'] = m["sentence"]
     m['show'] = make_primitive("show", ['thing'], [], 'others', 1, process_show)
     m['word'] = make_primitive("word", ['word1', 'word2'], [], 'words', 2, process_word)
+    m['wordp'] = make_primitive("wordp", ['thing'], [], None, 1, process_wordp)
+    m['word?'] = m['wordp']
     return m
     
 def _is_dots_name(token):
@@ -348,6 +350,14 @@ def process_word(logo, *args):
         if isinstance(arg, list):
             raise errors.LogoError("Expected a word, but got a list instead.")
     return ''.join(args)
+
+def process_wordp(logo, thing):
+    """
+    The WORDP command.
+    """
+    if isinstance(thing, list):
+        return 'false'
+    return 'true'
 
 def _list_contents_repr(o, include_braces=True):
     if isinstance(o, list):
