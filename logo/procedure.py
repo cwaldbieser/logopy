@@ -84,6 +84,7 @@ def create_primitives_map():
     m['pick'] = make_primitive("pick", ['list'], [], None, 1, process_pick)
     m['print'] = make_primitive("print", ['thing'], [], 'others', 1, process_print)
     m['pr'] = m['print']
+    m['remove'] = make_primitive("remove", ['thing', 'list'], [], None, 2, process_remove)
     m['reverse'] = make_primitive("reverse", ['list'], [], None, 1, process_reverse)
     m['sentence'] = make_primitive("sentence", ['thing1', 'thing2'], [], 'others', 2, process_sentence)
     m['se'] = m["sentence"]
@@ -235,6 +236,15 @@ def process_print(logo, *args):
         else:
             reps.append(str(arg))
     print(' '.join(reps))
+
+def process_remove(logo, thing, lst):
+    """
+    The REMOVE command.
+    """
+    if isinstance(lst, list):
+        return [x for x in lst if x != thing]
+    else:
+        return lst.replace(thing, "")
 
 def process_reverse(logo, lst):
     """
