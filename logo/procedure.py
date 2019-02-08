@@ -68,6 +68,7 @@ def create_primitives_map():
     m['first'] = make_primitive("first", ['thing'], [], None, 1, process_first)
     m['firsts'] = make_primitive("firsts", ['list'], [], None, 1, process_firsts)
     m['fput'] = make_primitive("fput", ['thing', 'list'], [], None, 2, process_fput)
+    m['last'] = make_primitive("last", ['thing'], [], None, 1, process_last)
     m['list'] = make_primitive("list", ['thing1', 'thing2'], [], 'others', 2, process_list)
     m['localmake'] = make_primitive("localmake", ['varname', 'value'], [], None, 2, process_localmake)
     m['lput'] = make_primitive("lput", ['thing', 'list'], [], None, 2, process_lput)
@@ -107,7 +108,7 @@ def process_first(logo, thing):
     The FIRST command.
     """
     if len(thing) == 0:
-        return ""
+        raise errors.LogoError("FIRST doesn't like `{}` as input.".format(thing)) 
     else:
         return thing[0] 
 
@@ -129,6 +130,15 @@ def process_fput(logo, thing, lst):
     l = [thing]
     l.extend(lst)
     return l
+
+def process_last(logo, thing):
+    """
+    The LAST command.
+    """
+    if len(thing) == 0:
+        raise errors.LogoError("FIRST doesn't like `{}` as input.".format(thing)) 
+    else:
+        return thing[-1] 
 
 def process_list(logo, *args):
     """
