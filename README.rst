@@ -6,7 +6,7 @@ A work in progress.
 
 To run using `pipenv`:
 
-.. code::bash
+.. code:: bash
 
     $ pipenv run ./logopy.py /path/to/logo/script.lg
     
