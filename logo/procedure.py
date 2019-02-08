@@ -79,6 +79,8 @@ def create_primitives_map():
     m['item'] = make_primitive("item", ['index', 'thing'], [], None, 2, process_item)
     m['last'] = make_primitive("last", ['thing'], [], None, 1, process_last)
     m['list'] = make_primitive("list", ['thing1', 'thing2'], [], 'others', 2, process_list)
+    m['listp'] = make_primitive("listp", ['thing'], [], None, 1, process_listp)
+    m['list?'] = m['listp']
     m['localmake'] = make_primitive("localmake", ['varname', 'value'], [], None, 2, process_localmake)
     m['lput'] = make_primitive("lput", ['thing', 'list'], [], None, 2, process_lput)
     m['make'] = make_primitive("make", ['varname', 'value'], [], None, 2, process_make)
@@ -143,7 +145,7 @@ def process_combine(logo, thing1, thing2):
     """
     The COMBINE command.
     """
-    if isinstance(thing2, list):
+    if _datatypename(thing2) in ('list'):
         return process_fput(logo, thing1, thing2)
     else:
         return process_word(logo, thing1, thing2)
@@ -214,6 +216,14 @@ def process_list(logo, *args):
     The LIST command.
     """
     return list(args)
+
+def process_listp(logo, thing):
+    """
+    The LISTP command.
+    """
+    if _datatypename(thing) == 'list':
+        return 'true'
+    return 'false'
 
 def process_localmake(logo, varname, value):
     """
@@ -347,17 +357,27 @@ def process_word(logo, *args):
     The WORD command.
     """
     for arg in args:
-        if isinstance(arg, list):
-            raise errors.LogoError("Expected a word, but got a list instead.")
+        if not isinstance(arg, str):
+            raise errors.LogoError("Expected a word, but got a {} instead.".format(_datatypename(arg)))
     return ''.join(args)
 
 def process_wordp(logo, thing):
     """
     The WORDP command.
     """
-    if isinstance(thing, list):
-        return 'false'
-    return 'true'
+    if isinstance(thing, str):
+        return 'true'
+    return 'false'
+
+def _datatypename(o):
+    """
+    Returns a sting corresponding to the Logo data type name.
+    """
+    if isinstance(o, str):
+        return 'word'
+    if isinstance(o, list):
+        return 'list'
+    return 'unknown'
 
 def _list_contents_repr(o, include_braces=True):
     if isinstance(o, list):
