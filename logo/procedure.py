@@ -65,6 +65,7 @@ def create_primitives_map():
     m = {}
     make_primitive = LogoProcedure.make_primitive
     m['combine'] = make_primitive("combine", ['thing1', 'thing2'], [], None, 2, process_combine)
+    m['first'] = make_primitive("first", ['thing'], [], None, 1, process_first)
     m['fput'] = make_primitive("fput", ['thing', 'list'], [], None, 2, process_fput)
     m['list'] = make_primitive("list", ['thing1', 'thing2'], [], 'others', 2, process_list)
     m['localmake'] = make_primitive("localmake", ['varname', 'value'], [], None, 2, process_localmake)
@@ -91,14 +92,6 @@ def _is_dots_name(token):
         return False
     return True
 
-def process_fput(logo, thing, lst):
-    """
-    The FPUT command.
-    """
-    l = [thing]
-    l.extend(lst)
-    return l
-
 def process_combine(logo, thing1, thing2):
     """
     The COMBINE command.
@@ -108,6 +101,36 @@ def process_combine(logo, thing1, thing2):
     else:
         return process_word(logo, thing1, thing2)
 
+def process_first(logo, thing):
+    """
+    The FIRST command.
+    """
+    if len(thing) == 0:
+        return ""
+    else:
+        return thing[0] 
+
+def process_fput(logo, thing, lst):
+    """
+    The FPUT command.
+    """
+    l = [thing]
+    l.extend(lst)
+    return l
+
+def process_list(logo, *args):
+    """
+    The LIST command.
+    """
+    return list(args)
+
+def process_localmake(logo, varname, value):
+    """
+    The LOCALMAKE command.
+    """
+    scope = logo.scope_stack[-1]
+    global_scope[varname] = value
+
 def process_lput(logo, thing, lst):
     """
     The LPUT command.
@@ -116,6 +139,25 @@ def process_lput(logo, thing, lst):
     l.append(thing)
     return l
 
+def process_make(logo, varname, value):
+    """
+    The MAKE command.
+    """
+    global_scope = logo.scope_stack[0]
+    global_scope[varname] = value 
+
+def process_print(logo, *args):
+    """
+    The PRINT command.
+    """
+    reps = []
+    for arg in args:
+        if isinstance(arg, list):
+            reps.append(_list_contents_repr(arg, include_braces=False))
+        else:
+            reps.append(str(arg))
+    print(' '.join(reps))
+
 def process_reverse(logo, lst):
     """
     The REVERSE command.
@@ -123,21 +165,6 @@ def process_reverse(logo, lst):
     r = list(lst)
     r.reverse()
     return r
-
-def process_word(logo, *args):
-    """
-    The WORD command.
-    """
-    for arg in args:
-        if isinstance(arg, list):
-            raise errors.LogoError("Expected a word, but got a list instead.")
-    return ''.join(args)
-
-def process_list(logo, *args):
-    """
-    The LIST command.
-    """
-    return list(args)
 
 def process_sentence(logo, *args):
     """
@@ -152,31 +179,14 @@ def process_sentence(logo, *args):
             sentence.append(item)
     return sentence
 
-def process_make(logo, varname, value):
+def process_word(logo, *args):
     """
-    The MAKE command.
+    The WORD command.
     """
-    global_scope = logo.scope_stack[0]
-    global_scope[varname] = value 
-
-def process_localmake(logo, varname, value):
-    """
-    The LOCALMAKE command.
-    """
-    scope = logo.scope_stack[-1]
-    global_scope[varname] = value
-
-def process_print(logo, *args):
-    """
-    The PRINT command.
-    """
-    reps = []
     for arg in args:
         if isinstance(arg, list):
-            reps.append(_list_contents_repr(arg, include_braces=False))
-        else:
-            reps.append(str(arg))
-    print(' '.join(reps))
+            raise errors.LogoError("Expected a word, but got a list instead.")
+    return ''.join(args)
 
 def _list_contents_repr(o, include_braces=True):
     if isinstance(o, list):
