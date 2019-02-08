@@ -64,6 +64,7 @@ def create_primitives_map():
     """
     m = {}
     make_primitive = LogoProcedure.make_primitive
+    m['combine'] = make_primitive("combine", ['thing1', 'thing2'], [], None, 2, process_combine)
     m['fput'] = make_primitive("fput", ['thing', 'list'], [], None, 2, process_fput)
     m['list'] = make_primitive("list", ['thing1', 'thing2'], [], 'others', 2, process_list)
     m['localmake'] = make_primitive("localmake", ['varname', 'value'], [], None, 2, process_localmake)
@@ -97,6 +98,15 @@ def process_fput(logo, thing, lst):
     l.extend(lst)
     return l
 
+def process_combine(logo, thing1, thing2):
+    """
+    The COMBINE command.
+    """
+    if isinstance(thing2, list):
+        return process_fput(logo, thing1, thing2)
+    else:
+        return process_word(logo, thing1, thing2)
+
 def process_lput(logo, thing, lst):
     """
     The LPUT command.
@@ -109,6 +119,9 @@ def process_word(logo, *args):
     """
     The WORD command.
     """
+    for arg in args:
+        if isinstance(arg, list):
+            raise errors.LogoError("Expected a word, but got a list instead.")
     return ''.join(args)
 
 def process_list(logo, *args):
