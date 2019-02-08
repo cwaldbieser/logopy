@@ -84,6 +84,7 @@ def create_primitives_map():
     m['pick'] = make_primitive("pick", ['list'], [], None, 1, process_pick)
     m['print'] = make_primitive("print", ['thing'], [], 'others', 1, process_print)
     m['pr'] = m['print']
+    m['quoted'] = make_primitive("quoted", ['thing'], [], 'others', 1, process_quoted)
     m['remove'] = make_primitive("remove", ['thing', 'list'], [], None, 2, process_remove)
     m['remdup'] = make_primitive("remdup", ['list'], [], None, 1, process_remdup)
     m['reverse'] = make_primitive("reverse", ['list'], [], None, 1, process_reverse)
@@ -237,6 +238,14 @@ def process_print(logo, *args):
         else:
             reps.append(str(arg))
     print(' '.join(reps))
+
+def process_quoted(logo, thing):
+    """
+    The QUOTED command.
+    """
+    if isinstance(thing, list):
+        return thing
+    return '"{}'.format(thing)
 
 def process_remove(logo, thing, lst):
     """
