@@ -89,8 +89,17 @@ def _list_contents_repr(o, include_braces=True):
         return rep
     return str(o)
 
-def process_show(logo, tokens):
-    pass
+def process_show(logo, *args):
+    """
+    The SHOW command.
+    """
+    reps = []
+    for arg in args:
+        if isinstance(arg, list):
+            reps.append(_list_contents_repr(arg))
+        else:
+            reps.append(str(arg))
+    print(' '.join(reps))
 
 def process_to(logo, tokens):
     """
