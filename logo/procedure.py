@@ -67,6 +67,7 @@ def create_primitives_map():
     m['fput'] = make_primitive("fput", ['thing', 'list'], [], None, 2, process_fput)
     m['list'] = make_primitive("list", ['thing1', 'thing2'], [], 'others', 2, process_list)
     m['localmake'] = make_primitive("localmake", ['varname', 'value'], [], None, 2, process_localmake)
+    m['lput'] = make_primitive("lput", ['thing', 'list'], [], None, 2, process_lput)
     m['make'] = make_primitive("make", ['varname', 'value'], [], None, 2, process_make)
     m['print'] = make_primitive("print", ['thing'], [], 'others', 1, process_print)
     m['pr'] = m['print']
@@ -94,6 +95,14 @@ def process_fput(logo, thing, lst):
     """
     l = [thing]
     l.extend(lst)
+    return l
+
+def process_lput(logo, thing, lst):
+    """
+    The LPUT command.
+    """
+    l = list(lst)
+    l.append(thing)
     return l
 
 def process_word(logo, *args):
