@@ -63,11 +63,13 @@ def create_primitives_map():
     Create a mapping of primitives names to procedure information.
     """
     m = {}
-    m['print'] = LogoProcedure.make_primitive("print", ['thing'], [], 'others', 1, process_print)
+    make_primitive = LogoProcedure.make_primitive
+    m['localmake'] = make_primitive("localmake", ['varname', 'value'], [], None, 2, process_localmake)
+    m['make'] = make_primitive("make", ['varname', 'value'], [], None, 2, process_make)
+    m['print'] = make_primitive("print", ['thing'], [], 'others', 1, process_print)
     m['pr'] = m['print']
-    m['show'] = LogoProcedure.make_primitive("show", ['thing'], [], 'others', 1, process_show)
-    m['make'] = LogoProcedure.make_primitive("make", ['varname', 'value'], [], None, 2, process_make)
-    m['localmake'] = LogoProcedure.make_primitive("localmake", ['varname', 'value'], [], None, 2, process_localmake)
+    m['show'] = make_primitive("show", ['thing'], [], 'others', 1, process_show)
+    m['word'] = make_primitive("word", ['word1', 'word2'], [], 'words', 2, process_word)
     return m
     
 def _is_dots_name(token):
@@ -81,6 +83,12 @@ def _is_dots_name(token):
     if not len(token) > 1:
         return False
     return True
+
+def process_word(logo, *args):
+    """
+    The WORD command.
+    """
+    return ''.join(args)
 
 def process_make(logo, varname, value):
     """
