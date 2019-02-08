@@ -72,6 +72,7 @@ def create_primitives_map():
     m['make'] = make_primitive("make", ['varname', 'value'], [], None, 2, process_make)
     m['print'] = make_primitive("print", ['thing'], [], 'others', 1, process_print)
     m['pr'] = m['print']
+    m['reverse'] = make_primitive("reverse", ['list'], [], None, 1, process_reverse)
     m['sentence'] = make_primitive("sentence", ['thing1', 'thing2'], [], 'others', 2, process_sentence)
     m['se'] = m["sentence"]
     m['show'] = make_primitive("show", ['thing'], [], 'others', 1, process_show)
@@ -114,6 +115,14 @@ def process_lput(logo, thing, lst):
     l = list(lst)
     l.append(thing)
     return l
+
+def process_reverse(logo, lst):
+    """
+    The REVERSE command.
+    """
+    r = list(lst)
+    r.reverse()
+    return r
 
 def process_word(logo, *args):
     """
