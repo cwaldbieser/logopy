@@ -74,6 +74,7 @@ def create_primitives_map():
     m['first'] = make_primitive("first", ['thing'], [], None, 1, process_first)
     m['firsts'] = make_primitive("firsts", ['list'], [], None, 1, process_firsts)
     m['fput'] = make_primitive("fput", ['thing', 'list'], [], None, 2, process_fput)
+    m['item'] = make_primitive("item", ['index', 'thing'], [], None, 2, process_item)
     m['last'] = make_primitive("last", ['thing'], [], None, 1, process_last)
     m['list'] = make_primitive("list", ['thing1', 'thing2'], [], 'others', 2, process_list)
     m['localmake'] = make_primitive("localmake", ['varname', 'value'], [], None, 2, process_localmake)
@@ -163,6 +164,18 @@ def process_fput(logo, thing, lst):
     l = [thing]
     l.extend(lst)
     return l
+
+def process_item(logo, index, thing):
+    """
+    The ITEM command.
+    """
+    py_index = index - 1
+    if py_index <= 0:
+        raise errors.LogoError("ITEM index {} out of range.".format(index))
+    try:
+        return thing[py_index]
+    except IndexError:
+        raise errors.LogoError("ITEM index {} out of range.".format(index))
 
 def process_last(logo, thing):
     """
