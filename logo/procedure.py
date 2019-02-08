@@ -68,6 +68,8 @@ def create_primitives_map():
     m['bf'] = m['butfirst']
     m['butfirsts'] = make_primitive("butfirsts", ['list'], [], None, 1, process_butfirsts)
     m['bfs'] = m['butfirsts']
+    m['butlast'] = make_primitive("butlast", ['wordlist'], [], None, 1, process_butlast)
+    m['bl'] = m['butlast']
     m['combine'] = make_primitive("combine", ['thing1', 'thing2'], [], None, 2, process_combine)
     m['first'] = make_primitive("first", ['thing'], [], None, 1, process_first)
     m['firsts'] = make_primitive("firsts", ['list'], [], None, 1, process_firsts)
@@ -103,7 +105,7 @@ def process_butfirst(logo, wordlist):
     The BUTFIRST command.
     """
     if len(wordlist) == 0:
-        raise errors.LogoError("FIRST doesn't like `{}` as input.".format(thing)) 
+        raise errors.LogoError("BUTFIRST doesn't like `{}` as input.".format(wordlist)) 
     return wordlist[1:]
 
 def process_butfirsts(logo, lst):
@@ -116,6 +118,14 @@ def process_butfirsts(logo, lst):
             raise errors.LogoError("BUTFIRST doesn't like `{}` as input.".format(item))
         l.append(item[1:])
     return l
+
+def process_butlast(logo, wordlist):
+    """
+    The BUTLAST command.
+    """
+    if len(wordlist) == 0:
+        raise errors.LogoError("BUTLAST doesn't like `{}` as input.".format(wordlist)) 
+    return wordlist[:-1]
 
 def process_combine(logo, thing1, thing2):
     """
