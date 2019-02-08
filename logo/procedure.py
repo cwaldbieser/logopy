@@ -1,6 +1,7 @@
 
 import attr
 import collections
+import random
 from logo import errors
 
 
@@ -80,6 +81,7 @@ def create_primitives_map():
     m['localmake'] = make_primitive("localmake", ['varname', 'value'], [], None, 2, process_localmake)
     m['lput'] = make_primitive("lput", ['thing', 'list'], [], None, 2, process_lput)
     m['make'] = make_primitive("make", ['varname', 'value'], [], None, 2, process_make)
+    m['pick'] = make_primitive("pick", ['list'], [], None, 1, process_pick)
     m['print'] = make_primitive("print", ['thing'], [], 'others', 1, process_print)
     m['pr'] = m['print']
     m['reverse'] = make_primitive("reverse", ['list'], [], None, 1, process_reverse)
@@ -213,6 +215,14 @@ def process_make(logo, varname, value):
     """
     global_scope = logo.scope_stack[0]
     global_scope[varname] = value 
+
+def process_pick(logo, lst):
+    """
+    The PICK command.
+    """
+    if len(lst) == 0:
+        raise errors.LogoError("PICK does not like `{}` as input.".format(lst))
+    return random.choice(lst)
 
 def process_print(logo, *args):
     """
