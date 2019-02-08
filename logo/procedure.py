@@ -72,6 +72,7 @@ def create_primitives_map():
     m['butlast'] = make_primitive("butlast", ['wordlist'], [], None, 1, process_butlast)
     m['bl'] = m['butlast']
     m['combine'] = make_primitive("combine", ['thing1', 'thing2'], [], None, 2, process_combine)
+    m['dequeue'] = make_primitive("dequeue", ['queuename'], [], None, 1, process_dequeue)
     m['first'] = make_primitive("first", ['thing'], [], None, 1, process_first)
     m['firsts'] = make_primitive("firsts", ['list'], [], None, 1, process_firsts)
     m['fput'] = make_primitive("fput", ['thing', 'list'], [], None, 2, process_fput)
@@ -86,6 +87,7 @@ def create_primitives_map():
     m['print'] = make_primitive("print", ['thing'], [], 'others', 1, process_print)
     m['pr'] = m['print']
     m['push'] = make_primitive("push", ['stackname', 'thing'], [], None, 2, process_push)
+    m['queue'] = make_primitive("queue", ['queuename', 'thing'], [], None, 2, process_queue)
     m['quoted'] = make_primitive("quoted", ['thing'], [], None, 1, process_quoted)
     m['remove'] = make_primitive("remove", ['thing', 'list'], [], None, 2, process_remove)
     m['remdup'] = make_primitive("remdup", ['list'], [], None, 1, process_remdup)
@@ -143,6 +145,18 @@ def process_combine(logo, thing1, thing2):
         return process_fput(logo, thing1, thing2)
     else:
         return process_word(logo, thing1, thing2)
+
+def process_dequeue(logo, queuename):
+    """
+    The DEQUEUE command.
+    """
+    q = logo.get_variable_value(queuename)
+    try:
+        return q.pop()      
+    except AttributeError:
+        raise errors.LogoError("Tried to DEQUEUE from `{}`, but is not a list.".format(queuename))
+    except IndexError:
+        raise errors.LogoError("Tried to DEQUEUE from an empty list, `{}`.".format(queuename))
 
 def process_first(logo, thing):
     """
@@ -237,7 +251,7 @@ def process_pop(logo, stackname):
     try:
         return stack.pop(0)      
     except AttributeError:
-        raise errors.LogoError("The object referred to by `{}` is not a list.".format(stackname))
+        raise errors.LogoError("Tried to POP from `{}`, but it is not a list.".format(stackname))
     except IndexError:
         raise errors.LogoError("Tried to POP from empty stack, `{}`.".format(stackname))
 
@@ -261,7 +275,17 @@ def process_push(logo, stackname, thing):
     try:
         stack.insert(0, thing)      
     except AttributeError:
-        raise errors.LogoError("The object referred to by `{}` is not a list.".format(stackname))
+        raise errors.LogoError("Tried to PUSH to `{}`, but is not a list.".format(stackname))
+
+def process_queue(logo, queuename, thing):
+    """
+    The QUEUE command.
+    """
+    q = logo.get_variable_value(queuename)
+    try:
+        q.insert(0, thing)      
+    except AttributeError:
+        raise errors.LogoError("Tried to QUEUE to `{}`, but it is not a list.".format(queuename))
 
 def process_quoted(logo, thing):
     """
