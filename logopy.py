@@ -2,6 +2,7 @@
 
 import argparse
 import collections
+import itertools
 import numbers
 import string
 import sys
@@ -19,6 +20,7 @@ class LogoInterpreter:
     primitives = attr.ib(default=attr.Factory(dict))
     procedures = attr.ib(default=attr.Factory(dict))
     scope_stack = attr.ib(default=attr.Factory(list))
+    debug_procs = attr.ib(default=False)
 
     @classmethod
     def create_interpreter(cls):
@@ -48,22 +50,25 @@ class LogoInterpreter:
                 self.process_special_form(stream)
             else:
                 command = token.lower()
-                if command in primitives:
-                    if command == 'to':
-                        procedure.process_to(self, tokens)
-                        continue 
+                if command == 'to': 
+                    procedure.process_to(self, tokens)
+                elif command in primitives:
                     proc = primitives[command]
                     args = self.evaluate_args_for_command(proc.default_arity, tokens)
                     return self.execute_procedure(proc, args)
                 elif command in procedures:
-                    raise NotImplementedError()
+                    proc = procedures[command]
+                    args = self.evaluate_args_for_command(proc.default_arity, tokens)
+                    if self.debug_procs:
+                        print("COMMAND:", command, "PROCEDURE ARGS:", args)
+                    return self.execute_procedure(proc, args)
 
     def get_variable_value(self, varname):
         """
         Get the value of the named variable from the dynamic scope.
         """
         scopes = self.scope_stack
-        for scope in scopes:
+        for scope in reversed(scopes):
             if varname in scope:
                 return scope[varname]
         raise LogoError("No scope has a variable named `{}`.".format(varname))
@@ -118,6 +123,24 @@ class LogoInterpreter:
         """
         if proc.primitive_func:
             return proc.primitive_func(self, *args)
+        tokens = TokenStream.make_stream(proc.tokens)
+        scope = {}
+        scope_stack = self.scope_stack
+        scope_stack.append(scope) 
+        formal_params = itertools.chain(proc.required_inputs, proc.optional_inputs)
+        rest_args = []
+        rest_input = proc.rest_input
+        for varname, value in itertools.zip_longest(formal_params, args):
+            if args is None:
+                break
+            if varname is None:
+                rest_args.append(value)
+            else:
+                scope[varname] = value
+        if rest_input:
+            scope[rest_input] = rest_args
+        self.process_commands(tokens)
+        scope_stack.pop()
 
     def process_special_form(self, tokens):
         """

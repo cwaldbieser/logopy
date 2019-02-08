@@ -14,7 +14,7 @@ class LogoProcedure:
     optional_inputs = attr.ib(default=attr.Factory(list))
     rest_input = attr.ib(default=None)
     default_arity = attr.ib(default=None)
-    procedure_tokens = attr.ib(default=None)
+    tokens = attr.ib(default=None)
     primitive_func = attr.ib(default=None)
    
     @classmethod 
@@ -25,7 +25,7 @@ class LogoProcedure:
         p.optional_inputs = optional_inputs
         p.rest_input = rest_input
         p.default_arity = default_arity
-        p.procedure_tokens = tokens
+        p.tokens = tokens
         return p
 
     @classmethod
@@ -86,14 +86,14 @@ def process_make(logo, varname, value):
     """
     The MAKE command.
     """
-    global_scope = logo.scope_stack[-1]
+    global_scope = logo.scope_stack[0]
     global_scope[varname] = value 
 
 def process_localmake(logo, varname, value):
     """
     The LOCALMAKE command.
     """
-    scope = logo.scope_stack[0]
+    scope = logo.scope_stack[-1]
     global_scope[varname] = value
 
 def process_print(logo, *args):
