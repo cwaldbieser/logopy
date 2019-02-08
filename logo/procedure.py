@@ -85,6 +85,7 @@ def create_primitives_map():
     m['print'] = make_primitive("print", ['thing'], [], 'others', 1, process_print)
     m['pr'] = m['print']
     m['remove'] = make_primitive("remove", ['thing', 'list'], [], None, 2, process_remove)
+    m['remdup'] = make_primitive("remdup", ['list'], [], None, 1, process_remdup)
     m['reverse'] = make_primitive("reverse", ['list'], [], None, 1, process_reverse)
     m['sentence'] = make_primitive("sentence", ['thing1', 'thing2'], [], 'others', 2, process_sentence)
     m['se'] = m["sentence"]
@@ -245,6 +246,21 @@ def process_remove(logo, thing, lst):
         return [x for x in lst if x != thing]
     else:
         return lst.replace(thing, "")
+
+def process_remdup(logo, lst):
+    """
+    The REMDUP command.
+    """
+    l = collections.deque([])
+    s = set([])
+    for x in reversed(lst):
+        if not x in s:
+            l.appendleft(x)
+            s.add(x)
+    if isinstance(lst, list):
+        return list(l)
+    else:
+        return ''.join(l)
 
 def process_reverse(logo, lst):
     """
