@@ -21,6 +21,7 @@ class LogoInterpreter:
     procedures = attr.ib(default=attr.Factory(dict))
     scope_stack = attr.ib(default=attr.Factory(list))
     debug_procs = attr.ib(default=False)
+    debug_primitives = attr.ib(default=False)
 
     @classmethod
     def create_interpreter(cls):
@@ -42,10 +43,10 @@ class LogoInterpreter:
         while len(tokens) > 0:
             token = tokens.popleft()  
             is_cmd = is_command(token)
-            is_lst = is_list(token)
-            if not is_cmd and not is_lst:
+            is_spcl_frm = is_special_form(token)
+            if not is_cmd and not is_spcl_frm:
                 raise errors.LogoError("Expected a command.  Instead, got `{}`.".format(token))
-            if is_lst:
+            if is_spcl_frm:
                 stream = TokenStream.make_stream(token)
                 self.process_special_form(stream)
             else:
@@ -55,12 +56,14 @@ class LogoInterpreter:
                 elif command in primitives:
                     proc = primitives[command]
                     args = self.evaluate_args_for_command(proc.default_arity, tokens)
+                    if self.debug_primitives:
+                        print("PRIMITIVE:", command, "ARGS:", args)
                     return self.execute_procedure(proc, args)
                 elif command in procedures:
                     proc = procedures[command]
                     args = self.evaluate_args_for_command(proc.default_arity, tokens)
                     if self.debug_procs:
-                        print("COMMAND:", command, "PROCEDURE ARGS:", args)
+                        print("PROCEDURE:", command, "ARGS:", args)
                     return self.execute_procedure(proc, args)
 
     def get_variable_value(self, varname):
@@ -80,10 +83,12 @@ class LogoInterpreter:
         token = tokens.peek()
         if token is None:
             raise LogoError("Expected a value but instead got EOF.")
-        if isinstance(token, list):
+        if is_list(token):
             lst_tokens = TokenStream.make_stream(tokens.popleft())
-            lst_tokens.processed = list(tokens.processed)
             return self.evaluate_list(lst_tokens)
+        if is_special_form(token):
+            spcl_frm_tokens = TokenStream.make_stream(tokens.popleft())
+            return self.process_special_form(spcl_frm_tokens)
         if isinstance(token, numbers.Number):
             return tokens.popleft()
         if not quoted:
@@ -162,7 +167,6 @@ class LogoInterpreter:
             args.append(self.evaluate_value(tokens))
         max_arity = proc.max_arity
         if max_arity != -1 and len(args) > max_arity:
-            print("max_arity: {}, args: {}".format(max_arity, args))
             raise errors.LogoError("There are too many arguments for `{}`.".format(command_token))
         if len(args) < proc.min_arity:
             raise errors.LogoError("Not enough arguments for `{}`.".format(command_token))
@@ -232,7 +236,7 @@ def make_token_grammar():
         | '[' ws itemlist:lst ws ']' -> lst
         | '[' ws ']' -> []
         | word:w (ws comment)* -> w
-        | '(' itemlist:lst ')' -> lst 
+        | '(' itemlist:lst ')' -> tuple(lst) 
     word = expr | <(word_char+)>:val -> val
     ascii_lower = :x ?(x in 'abcdefghijklmnopqrstuvwxyz') -> x
     ascii_upper = :x ?(x in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ') -> x
@@ -289,6 +293,9 @@ def run_tests(grammar):
 def is_command(token):
     return hasattr(token, "lower")
 
+def is_special_form(token):
+    return isinstance(token, tuple)
+
 def is_list(token):
     return isinstance(token, list)
 
@@ -301,14 +308,19 @@ def main(args):
         run_tests(grammar)
     script = args.file.read()
     tokens = parse_tokens(grammar, script)
+    if args.debug_tokens:
+        print("PARSED TOKENS:", tokens)
     interpreter = LogoInterpreter.create_interpreter()
+    if args.debug_procs:
+        interpreter.debug_procs = True
     try:
         interpreter.process_commands(tokens)
     except Exception as ex:
         print("Processed tokens: {}".format(tokens.processed), file=sys.stderr)
         raise ex
-    print("")
-    print(interpreter)
+    if args.debug_interpreter:
+        print("")
+        print(interpreter)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Logo programming language interpreter")
@@ -321,5 +333,22 @@ if __name__ == "__main__":
         "--tests",
         action="store_true",
         help="Run preliminary tests.")
+    parser.add_argument(
+        "--debug-procs",
+        action="store_true",
+        help="Debug procedures.")
+    parser.add_argument(
+        "--debug-primitives",
+        action="store_true",
+        help="Debug procedures.")
+    parser.add_argument(
+        "--debug-tokens",
+        action="store_true",
+        help="Debug parsed tokens.")
+    parser.add_argument(
+        "--debug-interpreter",
+        action="store_true",
+        help="Dump interpreter state after script completes.")
     args = parser.parse_args()
     main(args)
+
