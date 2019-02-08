@@ -8,8 +8,7 @@ import sys
 import attr
 import parsley
 from logo import errors
-from logo import primitive
-from logo.primitive import LogoProcedure
+from logo import procedure
 
 
 @attr.s
@@ -25,10 +24,7 @@ class LogoInterpreter:
     def create_interpreter(cls):
         interpreter = cls()
         interpreter.scope_stack.append({})
-        interpreter.primitives['to'] = True
-        interpreter.primitives['print'] = LogoProcedure.make_primitive("print", ['thing'], [], 'others', 1, primitive.process_print)
-        interpreter.primitives['pr'] = interpreter.primitives['print']
-        interpreter.primitives['show'] = LogoProcedure.make_primitive("show", ['thing'], [], 'others', 1, primitive.process_show)
+        interpreter.primitives.update(procedure.create_primitives_map())
         return interpreter
 
     def process_commands(self, tokens):
@@ -54,7 +50,7 @@ class LogoInterpreter:
                 command = token.lower()
                 if command in primitives:
                     if command == 'to':
-                        primitive.process_to(self, tokens)
+                        procedure.process_to(self, tokens)
                         continue 
                     proc = primitives[command]
                     args = self.evaluate_args_for_command(proc.default_arity, tokens)

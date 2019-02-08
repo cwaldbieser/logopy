@@ -3,6 +3,7 @@ import attr
 import collections
 from logo import errors
 
+
 @attr.s
 class LogoProcedure:
     """
@@ -57,6 +58,18 @@ class LogoProcedure:
         return len(self.required_inputs)
 
 
+def create_primitives_map():
+    """
+    Create a mapping of primitives names to procedure information.
+    """
+    m = {}
+    m['print'] = LogoProcedure.make_primitive("print", ['thing'], [], 'others', 1, process_print)
+    m['pr'] = m['print']
+    m['show'] = LogoProcedure.make_primitive("show", ['thing'], [], 'others', 1, process_show)
+    m['make'] = LogoProcedure.make_primitive("make", ['varname', 'value'], [], None, 2, process_make)
+    m['localmake'] = LogoProcedure.make_primitive("localmake", ['varname', 'value'], [], None, 2, process_localmake)
+    return m
+    
 def _is_dots_name(token):
     """
     Is the token a formal parameter or a reference to some value?
@@ -68,6 +81,20 @@ def _is_dots_name(token):
     if not len(token) > 1:
         return False
     return True
+
+def process_make(logo, varname, value):
+    """
+    The MAKE command.
+    """
+    global_scope = logo.scope_stack[-1]
+    global_scope[varname] = value 
+
+def process_localmake(logo, varname, value):
+    """
+    The LOCALMAKE command.
+    """
+    scope = logo.scope_stack[0]
+    global_scope[varname] = value
 
 def process_print(logo, *args):
     """
