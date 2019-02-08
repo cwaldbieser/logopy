@@ -273,9 +273,9 @@ def process_print(logo, *args):
     """
     reps = []
     for arg in args:
-        if isinstance(arg, list):
+        if _datatypename(arg) == 'list':
             reps.append(_list_contents_repr(arg, include_braces=False))
-        else:
+        elif _datatypename(arg) == 'word':
             reps.append(str(arg))
     print(' '.join(reps))
 
@@ -303,7 +303,7 @@ def process_quoted(logo, thing):
     """
     The QUOTED command.
     """
-    if isinstance(thing, list):
+    if _datatypename(thing) != 'word':
         return thing
     return '"{}'.format(thing)
 
@@ -311,10 +311,12 @@ def process_remove(logo, thing, lst):
     """
     The REMOVE command.
     """
-    if isinstance(lst, list):
+    if _datatypename(lst) == 'list':
         return [x for x in lst if x != thing]
-    else:
+    elif _datatypename(lst) == 'word':
         return lst.replace(thing, "")
+    else:
+        raise errors.LogoError("REMOVE cannot be used on a {}.".format(_datatypename(lst)))
 
 def process_remdup(logo, lst):
     """
