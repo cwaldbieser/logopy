@@ -66,6 +66,7 @@ def create_primitives_map():
     make_primitive = LogoProcedure.make_primitive
     m['combine'] = make_primitive("combine", ['thing1', 'thing2'], [], None, 2, process_combine)
     m['first'] = make_primitive("first", ['thing'], [], None, 1, process_first)
+    m['firsts'] = make_primitive("firsts", ['list'], [], None, 1, process_firsts)
     m['fput'] = make_primitive("fput", ['thing', 'list'], [], None, 2, process_fput)
     m['list'] = make_primitive("list", ['thing1', 'thing2'], [], 'others', 2, process_list)
     m['localmake'] = make_primitive("localmake", ['varname', 'value'], [], None, 2, process_localmake)
@@ -109,6 +110,17 @@ def process_first(logo, thing):
         return ""
     else:
         return thing[0] 
+
+def process_firsts(logo, lst):
+    """
+    The FIRSTS command.
+    """
+    l = []
+    for item in lst:
+        if len(item) == 0:
+            raise errors.LogoError("FIRSTS doesn't like `{}` as input.".format(item))
+        l.append(item[0])
+    return l
 
 def process_fput(logo, thing, lst):
     """
