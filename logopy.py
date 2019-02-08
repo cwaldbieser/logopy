@@ -237,6 +237,7 @@ def make_token_grammar():
         | '[' ws ']' -> []
         | word:w (ws comment)* -> w
         | '(' itemlist:lst ')' -> tuple(lst) 
+        | (ws comment)
     word = expr | <(word_char+)>:val -> val
     ascii_lower = :x ?(x in 'abcdefghijklmnopqrstuvwxyz') -> x
     ascii_upper = :x ?(x in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ') -> x
