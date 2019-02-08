@@ -64,6 +64,7 @@ def create_primitives_map():
     """
     m = {}
     make_primitive = LogoProcedure.make_primitive
+    m['fput'] = make_primitive("fput", ['thing', 'list'], [], None, 2, process_fput)
     m['list'] = make_primitive("list", ['thing1', 'thing2'], [], 'others', 2, process_list)
     m['localmake'] = make_primitive("localmake", ['varname', 'value'], [], None, 2, process_localmake)
     m['make'] = make_primitive("make", ['varname', 'value'], [], None, 2, process_make)
@@ -86,6 +87,14 @@ def _is_dots_name(token):
     if not len(token) > 1:
         return False
     return True
+
+def process_fput(logo, thing, lst):
+    """
+    The FPUT command.
+    """
+    l = [thing]
+    l.extend(lst)
+    return l
 
 def process_word(logo, *args):
     """
