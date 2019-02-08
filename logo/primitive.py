@@ -28,12 +28,33 @@ class LogoProcedure:
         return p
 
     @classmethod
-    def make_primitive(cls, name, default_arity, func):
+    def make_primitive(cls, name, required_inputs, optional_inputs, rest_input, default_arity, func):
         p = cls()
         p.name = name
         p.default_arity = default_arity
+        p.required_inputs = required_inputs
+        p.optional_inputs = optional_inputs
+        p.rest_input = rest_input
+        p.default_arity = default_arity
         p.primitive_func = func
         return p
+
+    @property
+    def max_arity(self):
+        """
+        Return the maximum arity for the proc.
+        Return -1 for unlimited arity.
+        """
+        if self.rest_input:
+            return -1
+        return len(self.required_inputs) + len(self.optional_inputs)
+
+    @property
+    def min_arity(self):
+        """
+        Return the minimum arity for the proc.
+        """
+        return len(self.required_inputs)
 
 
 def _is_dots_name(token):
@@ -48,8 +69,25 @@ def _is_dots_name(token):
         return False
     return True
 
-def process_print(logo, tokens):
-    pass
+def process_print(logo, *args):
+    """
+    The PRINT command.
+    """
+    reps = []
+    for arg in args:
+        if isinstance(arg, list):
+            reps.append(_list_contents_repr(arg, include_braces=False))
+        else:
+            reps.append(str(arg))
+    print(' '.join(reps))
+
+def _list_contents_repr(o, include_braces=True):
+    if isinstance(o, list):
+        rep = ' '.join([_list_contents_repr(x) for x in o])
+        if include_braces:
+            rep = "[{}]".format(rep)
+        return rep
+    return str(o)
 
 def process_show(logo, tokens):
     pass

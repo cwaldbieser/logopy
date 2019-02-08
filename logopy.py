@@ -19,14 +19,16 @@ class LogoInterpreter:
     """
     primitives = attr.ib(default=attr.Factory(dict))
     procedures = attr.ib(default=attr.Factory(dict))
+    scope_stack = attr.ib(default=attr.Factory(list))
 
     @classmethod
     def create_interpreter(cls):
         interpreter = cls()
+        interpreter.scope_stack.append({})
         interpreter.primitives['to'] = True
-        interpreter.primitives['print'] = LogoProcedure.make_primitive("print", 1, primitive.process_print)
+        interpreter.primitives['print'] = LogoProcedure.make_primitive("print", ['thing'], [], 'others', 1, primitive.process_print)
         interpreter.primitives['pr'] = interpreter.primitives['print']
-        interpreter.primitives['show'] = LogoProcedure.make_primitive("show", 1, primitive.process_show)
+        interpreter.primitives['show'] = LogoProcedure.make_primitive("show", ['thing'], [], 'others', 1, primitive.process_show)
         return interpreter
 
     def process_commands(self, tokens):
@@ -46,12 +48,11 @@ class LogoInterpreter:
             if not is_cmd and not is_lst:
                 raise errors.LogoError("Expected a command.  Instead, got `{}`.".format(token))
             if is_lst:
-                self.process_special_form(token)
+                stream = TokenStream.make_stream(token)
+                self.process_special_form(stream)
             else:
                 command = token.lower()
-                print("COMMAND: {}".format(command))
                 if command in primitives:
-                    print("Processing primitive ...")
                     if command == 'to':
                         primitive.process_to(self, tokens)
                         continue 
@@ -59,14 +60,17 @@ class LogoInterpreter:
                     args = self.evaluate_args_for_command(proc.default_arity, tokens)
                     return self.execute_procedure(proc, args)
                 elif command in procedures:
-                    print("Processing procedure ...")
+                    raise NotImplementedError()
 
     def get_variable_value(self, varname):
         """
         Get the value of the named variable from the dynamic scope.
         """
-        #TODO
-        return "baz"
+        scopes = self.scope_stack
+        for scope in scopes:
+            if varname in scope:
+                return scope[varname]
+        raise LogoError("No scope has a variable named `{}`.".format(varname))
 
     def evaluate_value(self, tokens, quoted=False):
         """
@@ -119,13 +123,31 @@ class LogoInterpreter:
         if proc.primitive_func:
             return proc.primitive_func(self, *args)
 
-    def process_special_form(self, sf):
+    def process_special_form(self, tokens):
         """
         Process command special form.
-        Command token and all args will be in the list `sf`.
+        Command token and all args will be in the token stream.
         """
-        raise NotImplementedError()
-
+        primitives = self.primitives
+        procedures = self.procedures
+        command_token = tokens.popleft()
+        command = command_token.lower()
+        if command in primitives:
+            proc = primitives[command]
+        elif command in procedures:
+            proc = procedures[command]
+        else:
+            raise LogoError("I don't know how to `{}`.".format(command_token)) 
+        args = []
+        while len(tokens) > 0:
+            args.append(self.evaluate_value(tokens))
+        max_arity = proc.max_arity
+        if max_arity != -1 and len(args) > max_arity:
+            print("max_arity: {}, args: {}".format(max_arity, args))
+            raise errors.LogoError("There are too many arguments for `{}`.".format(command_token))
+        if len(args) < proc.min_arity:
+            raise errors.LogoError("Not enough arguments for `{}`.".format(command_token))
+        return self.execute_procedure(proc, args)
 
 @attr.s
 class TokenStream:
@@ -266,6 +288,7 @@ def main(args):
     except Exception as ex:
         print("Processed tokens: {}".format(tokens.processed), file=sys.stderr)
         raise ex
+    print("")
     print(interpreter)
 
 if __name__ == "__main__":
