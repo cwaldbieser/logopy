@@ -1,6 +1,7 @@
 
 import attr
 import collections
+import numbers
 import random
 from logo import errors
 
@@ -328,10 +329,13 @@ def process_remdup(logo, lst):
         if not x in s:
             l.appendleft(x)
             s.add(x)
-    if isinstance(lst, list):
+    dtype = _datatypename(lst)
+    if dtype == 'list':
         return list(l)
-    else:
+    elif dtype == 'word':
         return ''.join(l)
+    else:
+        raise errors.LogoError("REMDUP cannot be used on a {}.".format(dtype))
 
 def process_reverse(logo, lst):
     """
@@ -347,11 +351,14 @@ def process_sentence(logo, *args):
     """
     sentence = []
     for item in args:
-        if isinstance(item, list):
+        dtype = _datatypename(item)
+        if dtype == 'list':
             for subitem in item:
                 sentence.append(subitem)
-        else:
+        elif dtype == 'word':
             sentence.append(item)
+        else:
+            raise errors.LogoError("SENTENCE cannot be used on a {}.".format(dtype))
     return sentence
 
 def process_word(logo, *args):
@@ -359,15 +366,17 @@ def process_word(logo, *args):
     The WORD command.
     """
     for arg in args:
-        if not isinstance(arg, str):
-            raise errors.LogoError("Expected a word, but got a {} instead.".format(_datatypename(arg)))
+        dtype = _datatypename(arg)
+        if dtype != 'word':
+            raise errors.LogoError("Expected a word, but got a {} instead.".format(dtype))
     return ''.join(args)
 
 def process_wordp(logo, thing):
     """
     The WORDP command.
     """
-    if isinstance(thing, str):
+    dtype = _datatypename(thing)
+    if dtype == 'word':
         return 'true'
     return 'false'
 
@@ -375,19 +384,23 @@ def _datatypename(o):
     """
     Returns a sting corresponding to the Logo data type name.
     """
-    if isinstance(o, str):
+    if isinstance(o, str) or isinstance(o, numbers.Number):
         return 'word'
     if isinstance(o, list):
         return 'list'
     return 'unknown'
 
 def _list_contents_repr(o, include_braces=True):
-    if isinstance(o, list):
+    dtype = _datatypename(o)
+    if dtype == 'list':
         rep = ' '.join([_list_contents_repr(x) for x in o])
         if include_braces:
             rep = "[{}]".format(rep)
         return rep
-    return str(o)
+    elif dtype == 'word':
+        return str(o)
+    else:
+        raise errors.LogoError("Unknown data type for `{}`.".format(o))
 
 def process_show(logo, *args):
     """
@@ -395,10 +408,13 @@ def process_show(logo, *args):
     """
     reps = []
     for arg in args:
-        if isinstance(arg, list):
+        dtype = _datatypename(arg)
+        if dtype == 'list':
             reps.append(_list_contents_repr(arg))
-        else:
+        elif dtype == 'word':
             reps.append(str(arg))
+        else:
+            raise errors.LogoError("SHOW doesn't know how to show type {}.".format(dtype))
     print(' '.join(reps))
 
 def process_to(logo, tokens):
@@ -421,7 +437,7 @@ def process_to(logo, tokens):
     while True:
         if len(tokens) > 0:
             peek = tokens[0]
-            if isinstance(peek, list) and len(peek) > 1:
+            if _datatypename(peek) == 'list' and len(peek) > 1:
                 opt_name = peek[0]
                 if _is_dots_name(opt_name):
                     optional_inputs.append((opt_name[1:], tokens.popleft()[1:]))
@@ -430,7 +446,7 @@ def process_to(logo, tokens):
     rest_input = None
     if len(tokens) > 0:
         peek = tokens[0]
-        if isinstance(peek, list) and len(peek) ==1:
+        if _datatypename(peek) == 'list' and len(peek) == 1:
             rest_name = peek[0]
             if _is_dots_name(rest_name):
                 rest_input = tokens.popleft()[1:]
