@@ -66,7 +66,9 @@ def create_primitives_map():
     """
     m = {}
     make_primitive = LogoProcedure.make_primitive
+    m['.eq'] = make_primitive(".eq", ['thing1', 'thing2'], [], None, 2, process_dot_eq)
     m['beforep'] = make_primitive("beforep", ['word1', 'word2'], [], None, 2, process_beforep)
+    m['before?'] = m['beforep']
     m['butfirst'] = make_primitive("butfirst", ['wordlist'], [], None, 1, process_butfirst)
     m['bf'] = m['butfirst']
     m['butfirsts'] = make_primitive("butfirsts", ['list'], [], None, 1, process_butfirsts)
@@ -121,6 +123,15 @@ def _is_dots_name(token):
     if not len(token) > 1:
         return False
     return True
+
+def process_dot_eq(logo, thing1, thing2):
+    """
+    The .EQ command.
+    """
+    if thing1 is thing2:
+        return 'true'
+    else:
+        return 'false'
 
 def process_beforep(logo, word1, word2):
     """
