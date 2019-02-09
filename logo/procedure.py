@@ -66,6 +66,7 @@ def create_primitives_map():
     """
     m = {}
     make_primitive = LogoProcedure.make_primitive
+    m['beforep'] = make_primitive("beforep", ['word1', 'word2'], [], None, 2, process_beforep)
     m['butfirst'] = make_primitive("butfirst", ['wordlist'], [], None, 1, process_butfirst)
     m['bf'] = m['butfirst']
     m['butfirsts'] = make_primitive("butfirsts", ['list'], [], None, 1, process_butfirsts)
@@ -120,6 +121,20 @@ def _is_dots_name(token):
     if not len(token) > 1:
         return False
     return True
+
+def process_beforep(logo, word1, word2):
+    """
+    The BEFOREP command.
+    """
+    dtype1 = _datatypename(word1)
+    dtype2 = _datatypename(word2)
+    for dtype in (dtype1, dtype2):
+        if dtype != 'word':
+            raise errors.LogoError("BEFOREP expects a word but got {} instead.".format(dtype))
+    if str(word1) < str(word2):
+        return 'true'
+    else:
+        return 'false'
 
 def process_butfirst(logo, wordlist):
     """
