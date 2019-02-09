@@ -92,6 +92,8 @@ def create_primitives_map():
     m['localmake'] = make_primitive("localmake", ['varname', 'value'], [], None, 2, process_localmake)
     m['lput'] = make_primitive("lput", ['thing', 'list'], [], None, 2, process_lput)
     m['make'] = make_primitive("make", ['varname', 'value'], [], None, 2, process_make)
+    m['memberp'] = make_primitive("memberp", ['thing1', 'thing2'], [], None, 2, process_memberp)
+    m['member?'] = m['memberp']
     m['notequalp'] = make_primitive("notequalp", ['thing1', 'thing2'], [], None, 2, process_notequalp)
     m['notequal?'] = m['notequalp'] 
     m['pick'] = make_primitive("pick", ['list'], [], None, 1, process_pick)
@@ -297,6 +299,15 @@ def process_make(logo, varname, value):
     """
     global_scope = logo.scope_stack[0]
     global_scope[varname] = value 
+
+def process_memberp(logo, thing1, thing2):
+    """
+    The MEMBERP command.
+    """
+    if thing1 in thing2:
+        return 'true'
+    else:
+        return 'false'
 
 def process_notequalp(logo, thing1, thing2):
     """
