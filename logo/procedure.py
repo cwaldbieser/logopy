@@ -75,6 +75,7 @@ def create_primitives_map():
     m['bfs'] = m['butfirsts']
     m['butlast'] = make_primitive("butlast", ['wordlist'], [], None, 1, process_butlast)
     m['bl'] = m['butlast']
+    m['char'] = make_primitive("char", ['int'], [], None, 1, process_char)
     m['combine'] = make_primitive("combine", ['thing1', 'thing2'], [], None, 2, process_combine)
     m['count'] = make_primitive("count", ['thing'], [], None, 1, process_count)
     m['dequeue'] = make_primitive("dequeue", ['queuename'], [], None, 1, process_dequeue)
@@ -114,6 +115,7 @@ def create_primitives_map():
     m['show'] = make_primitive("show", ['thing'], [], 'others', 1, process_show)
     m['substringp'] = make_primitive("substringp", ['thing1', 'thing2'], [], None, 2, process_substringp)
     m['substring?'] = m['substringp']
+    m['unicode'] = make_primitive("unicode", ['char'], [], None, 1, process_unicode)
     m['word'] = make_primitive("word", ['word1', 'word2'], [], 'words', 2, process_word)
     m['wordp'] = make_primitive("wordp", ['thing'], [], None, 1, process_wordp)
     m['word?'] = m['wordp']
@@ -180,6 +182,15 @@ def process_butlast(logo, wordlist):
     if len(wordlist) == 0:
         raise errors.LogoError("BUTLAST doesn't like `{}` as input.".format(wordlist)) 
     return wordlist[:-1]
+
+def process_char(logo, codepoint):
+    """
+    The CHAR command.
+    """
+    try:
+        return chr(codepoint)
+    except TypeError:   
+        raise errors.LogoError("CHAR expects an integer, but got `{}` instead.".format(codepoint))
 
 def process_combine(logo, thing1, thing2):
     """
@@ -466,6 +477,15 @@ def process_substringp(logo, thing1, thing2):
         return 'true'
     else:
         return 'false'
+
+def process_unicode(logo, char):
+    """
+    The UNICODE command.
+    """
+    try:
+        return ord(char)
+    except TypeError:
+        raise errors.LogoError("UNICODE expects a single character, but got `{}`.".format(char))
 
 def process_word(logo, *args):
     """
