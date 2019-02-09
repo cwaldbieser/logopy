@@ -227,7 +227,11 @@ def make_token_grammar():
     """
     grammar = parsley.makeGrammar("""
     digit = anything:x ?(x in '0123456789')
-    number = <'-'{0, 1} digit+>:ds -> int(ds)
+    digits = <digit*>
+    digit1_9 = :x ?(x in '123456789')
+    float = <'-'{0, 1} digit1_9 digit* '.' digit+>:ds -> float(ds)
+    int = <'-'{0, 1} digit1_9 digit*>:ds -> int(ds)
+    number = float | int
     itemlist = 
           ws item:first (ws item)*:rest ws -> [first] + rest
         | ws item:only ws -> [only]
