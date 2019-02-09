@@ -74,6 +74,8 @@ def create_primitives_map():
     m['bl'] = m['butlast']
     m['combine'] = make_primitive("combine", ['thing1', 'thing2'], [], None, 2, process_combine)
     m['dequeue'] = make_primitive("dequeue", ['queuename'], [], None, 1, process_dequeue)
+    m['emptyp'] = make_primitive("emptyp", ['thing'], [], None, 1, process_emptyp)
+    m['empty?'] = m['emptyp']
     m['first'] = make_primitive("first", ['thing'], [], None, 1, process_first)
     m['firsts'] = make_primitive("firsts", ['list'], [], None, 1, process_firsts)
     m['fput'] = make_primitive("fput", ['thing', 'list'], [], None, 2, process_fput)
@@ -162,6 +164,15 @@ def process_dequeue(logo, queuename):
         raise errors.LogoError("Tried to DEQUEUE from `{}`, but is not a list.".format(queuename))
     except IndexError:
         raise errors.LogoError("Tried to DEQUEUE from an empty list, `{}`.".format(queuename))
+
+def process_emptyp(logo, thing):
+    """
+    The EMPTYP command.
+    """
+    if len(thing) == 0:
+        return 'true'
+    else:
+        return 'false'
 
 def process_first(logo, thing):
     """
