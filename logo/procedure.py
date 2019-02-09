@@ -109,6 +109,8 @@ def create_primitives_map():
     m['sentence'] = make_primitive("sentence", ['thing1', 'thing2'], [], 'others', 2, process_sentence)
     m['se'] = m["sentence"]
     m['show'] = make_primitive("show", ['thing'], [], 'others', 1, process_show)
+    m['substringp'] = make_primitive("substringp", ['thing1', 'thing2'], [], None, 2, process_substringp)
+    m['substring?'] = m['substringp']
     m['word'] = make_primitive("word", ['word1', 'word2'], [], 'words', 2, process_word)
     m['wordp'] = make_primitive("wordp", ['thing'], [], None, 1, process_wordp)
     m['word?'] = m['wordp']
@@ -430,6 +432,19 @@ def process_sentence(logo, *args):
         else:
             raise errors.LogoError("SENTENCE cannot be used on a {}.".format(dtype))
     return sentence
+
+def process_substringp(logo, thing1, thing2):
+    """
+    The SUBSTRINGP command.
+    """
+    for thing in (thing1, thing2):
+        dtype = _datatypename(thing)
+        if dtype != 'word':
+            raise errors.LogoError("SUBSTRINGP expects a word, but got a {} instead.".format(dtype))
+    if str(thing1) in str(thing2):
+        return 'true'
+    else:
+        return 'false'
 
 def process_word(logo, *args):
     """

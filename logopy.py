@@ -229,9 +229,12 @@ def make_token_grammar():
     digit = anything:x ?(x in '0123456789')
     digits = <digit*>
     digit1_9 = :x ?(x in '123456789')
-    float = <'-'{0, 1} digit1_9 digit* '.' digit+>:ds -> float(ds)
+    float = 
+          <'-'{0, 1} (digit1_9 digit)+ '.' digit+>:ds -> float(ds)
+        | <'-'{0, 1} digit '.' digit+>:ds -> float(ds)
     int = <'-'{0, 1} digit1_9 digit*>:ds -> int(ds)
-    number = float | int
+    zero = '0' -> int(0)
+    number = float | int | zero
     itemlist = 
           ws item:first (ws item)*:rest ws -> [first] + rest
         | ws item:only ws -> [only]
