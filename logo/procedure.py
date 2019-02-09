@@ -94,6 +94,7 @@ def create_primitives_map():
     m['localmake'] = make_primitive("localmake", ['varname', 'value'], [], None, 2, process_localmake)
     m['lput'] = make_primitive("lput", ['thing', 'list'], [], None, 2, process_lput)
     m['make'] = make_primitive("make", ['varname', 'value'], [], None, 2, process_make)
+    m['member'] = make_primitive("member", ['thing1', 'thing2'], [], None, 2, process_member)
     m['memberp'] = make_primitive("memberp", ['thing1', 'thing2'], [], None, 2, process_memberp)
     m['member?'] = m['memberp']
     m['notequalp'] = make_primitive("notequalp", ['thing1', 'thing2'], [], None, 2, process_notequalp)
@@ -324,6 +325,30 @@ def process_make(logo, varname, value):
     """
     global_scope = logo.scope_stack[0]
     global_scope[varname] = value 
+
+def process_member(logo, thing1, thing2):
+    """
+    The MEMBER command.
+    """
+    dtype1 = _datatypename(thing1)
+    dtype2 = _datatypename(thing2)
+    if dtype1 == dtype2 == 'word':
+        value2 = str(thing2)
+        value1 = str(thing1)
+        i = value2.find(value1)
+        if i == -1:
+            return ""
+        else:
+            return value2[i:]
+    elif dtype2 == 'word':
+        return ""
+    elif dtype2 == 'list':
+        try:
+            return thing2[thing2.index(thing1):]
+        except ValueError:
+            return []
+    else:
+        raise errors.LogoError("MEMBER expects a word or list for thing2 but got a {}.".format(dtype2))
 
 def process_memberp(logo, thing1, thing2):
     """
