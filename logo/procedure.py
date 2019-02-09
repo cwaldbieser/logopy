@@ -96,6 +96,8 @@ def create_primitives_map():
     m['member?'] = m['memberp']
     m['notequalp'] = make_primitive("notequalp", ['thing1', 'thing2'], [], None, 2, process_notequalp)
     m['notequal?'] = m['notequalp'] 
+    m['numberp'] = make_primitive("numberp", ['thing'], [], None, 1, process_numberp)
+    m['number?'] = m['numberp']
     m['pick'] = make_primitive("pick", ['list'], [], None, 1, process_pick)
     m['pop'] = make_primitive("pop", ['stackname'], [], None, 1, process_pop)
     m['print'] = make_primitive("print", ['thing'], [], 'others', 1, process_print)
@@ -316,6 +318,15 @@ def process_notequalp(logo, thing1, thing2):
     The NOTEQUALP command.
     """
     if thing1 != thing2:
+        return 'true'
+    else:
+        return 'false'
+
+def process_numberp(logo, thing):
+    """
+    The NUMBERP command.
+    """
+    if isinstance(thing, numbers.Number):
         return 'true'
     else:
         return 'false'
