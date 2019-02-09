@@ -76,6 +76,7 @@ def create_primitives_map():
     m['butlast'] = make_primitive("butlast", ['wordlist'], [], None, 1, process_butlast)
     m['bl'] = m['butlast']
     m['combine'] = make_primitive("combine", ['thing1', 'thing2'], [], None, 2, process_combine)
+    m['count'] = make_primitive("count", ['thing'], [], None, 1, process_count)
     m['dequeue'] = make_primitive("dequeue", ['queuename'], [], None, 1, process_dequeue)
     m['emptyp'] = make_primitive("emptyp", ['thing'], [], None, 1, process_emptyp)
     m['empty?'] = m['emptyp']
@@ -188,6 +189,15 @@ def process_combine(logo, thing1, thing2):
         return process_fput(logo, thing1, thing2)
     else:
         return process_word(logo, thing1, thing2)
+
+def process_count(logo, thing):
+    """
+    The COUNT command.
+    """
+    try:
+        return len(thing)
+    except TypeError:
+        return len(str(thing))
 
 def process_dequeue(logo, queuename):
     """
