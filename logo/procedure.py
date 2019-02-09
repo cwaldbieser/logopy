@@ -76,6 +76,8 @@ def create_primitives_map():
     m['dequeue'] = make_primitive("dequeue", ['queuename'], [], None, 1, process_dequeue)
     m['emptyp'] = make_primitive("emptyp", ['thing'], [], None, 1, process_emptyp)
     m['empty?'] = m['emptyp']
+    m['equalp'] = make_primitive("equalp", ['thing1', 'thing2'], [], None, 2, process_equalp)
+    m['equal?'] = m['equalp'] 
     m['first'] = make_primitive("first", ['thing'], [], None, 1, process_first)
     m['firsts'] = make_primitive("firsts", ['list'], [], None, 1, process_firsts)
     m['fput'] = make_primitive("fput", ['thing', 'list'], [], None, 2, process_fput)
@@ -87,6 +89,8 @@ def create_primitives_map():
     m['localmake'] = make_primitive("localmake", ['varname', 'value'], [], None, 2, process_localmake)
     m['lput'] = make_primitive("lput", ['thing', 'list'], [], None, 2, process_lput)
     m['make'] = make_primitive("make", ['varname', 'value'], [], None, 2, process_make)
+    m['notequalp'] = make_primitive("notequalp", ['thing1', 'thing2'], [], None, 2, process_notequalp)
+    m['notequal?'] = m['notequalp'] 
     m['pick'] = make_primitive("pick", ['list'], [], None, 1, process_pick)
     m['pop'] = make_primitive("pop", ['stackname'], [], None, 1, process_pop)
     m['print'] = make_primitive("print", ['thing'], [], 'others', 1, process_print)
@@ -170,6 +174,15 @@ def process_emptyp(logo, thing):
     The EMPTYP command.
     """
     if len(thing) == 0:
+        return 'true'
+    else:
+        return 'false'
+
+def process_equalp(logo, thing1, thing2):
+    """
+    The EQUALP command.
+    """
+    if thing1 == thing2:
         return 'true'
     else:
         return 'false'
@@ -258,6 +271,15 @@ def process_make(logo, varname, value):
     """
     global_scope = logo.scope_stack[0]
     global_scope[varname] = value 
+
+def process_notequalp(logo, thing1, thing2):
+    """
+    The NOTEQUALP command.
+    """
+    if thing1 != thing2:
+        return 'true'
+    else:
+        return 'false'
 
 def process_pick(logo, lst):
     """
