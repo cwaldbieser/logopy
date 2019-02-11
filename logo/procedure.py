@@ -101,6 +101,7 @@ def create_primitives_map():
     m['member'] = make_primitive("member", ['thing1', 'thing2'], [], None, 2, process_member)
     m['memberp'] = make_primitive("memberp", ['thing1', 'thing2'], [], None, 2, process_memberp)
     m['member?'] = m['memberp']
+    m['modulo'] = make_primitive("modulo", ['num1', 'num2'], [], None, 2, process_modulo)
     m['notequalp'] = make_primitive("notequalp", ['thing1', 'thing2'], [], None, 2, process_notequalp)
     m['notequal?'] = m['notequalp'] 
     m['numberp'] = make_primitive("numberp", ['thing'], [], None, 1, process_numberp)
@@ -115,6 +116,7 @@ def create_primitives_map():
     m['quoted'] = make_primitive("quoted", ['thing'], [], None, 1, process_quoted)
     m['quotient'] = make_primitive("quotient", ['num1', 'num2'], [], None, 2, process_quotient)
     m['readlist'] = make_primitive("readlist", [], [], None, 0, process_readlist)
+    m['remainder'] = make_primitive("remainder", ['num1', 'num2'], [], None, 2, process_remainder)
     m['rl'] = m['readlist']
     m['remove'] = make_primitive("remove", ['thing', 'list'], [], None, 2, process_remove)
     m['remdup'] = make_primitive("remdup", ['list'], [], None, 1, process_remdup)
@@ -388,6 +390,19 @@ def process_memberp(logo, thing1, thing2):
     else:
         return 'false'
 
+def process_modulo(logo, num1, num2):
+    """
+    The MODULO command.
+    """
+    for arg in (num1, num2):
+        if not isinstance(arg, numbers.Number):
+            raise errors.LogoError("MODULO expected a number but got `{}` instead.".format(arg))
+    absval = abs(num1 % num2)
+    if num2 < 0:
+        return -absval
+    else:
+        return absval
+
 def process_notequalp(logo, thing1, thing2):
     """
     The NOTEQUALP command.
@@ -492,6 +507,19 @@ def process_readlist(logo):
     data = "[{}]".format(data)
     lst = logo.evaluate_readlist(data)
     return lst
+
+def process_remainder(logo, num1, num2):
+    """
+    The REMAINDER command.
+    """
+    for arg in (num1, num2):
+        if not isinstance(arg, numbers.Number):
+            raise errors.LogoError("REMAINDER expected a number but got `{}` instead.".format(arg))
+    absval = abs(num1 % num2)
+    if num1 < 0:
+        return -absval
+    else:
+        return absval
 
 def process_remove(logo, thing, lst):
     """

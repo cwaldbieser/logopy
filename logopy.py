@@ -36,7 +36,7 @@ class LogoInterpreter:
         Evaluate input as READLIST.
         """
         stream = TokenStream.make_stream(self.grammar(data).itemlist())
-        return self.evaluate_value(stream) 
+        return self.evaluate(stream) 
 
     def process_commands(self, tokens):
         while len(tokens) > 0:
@@ -84,6 +84,20 @@ class LogoInterpreter:
                 return scope[varname]
         raise errors.LogoError("No scope has a variable named `{}`.".format(varname))
 
+    def evaluate(self, tokens):
+        """
+        Evaluate and check for infix.
+        """
+        value = self.evaluate_value(tokens)
+        while isinstance(value, numbers.Number):
+            peek = tokens.peek()
+            if peek == '-':
+                tokens.popleft()
+                value -= self.evaluate_value(tokens)
+            else:
+                break
+        return value
+
     def evaluate_value(self, tokens, quoted=False):
         """
         Evaluate the next value from the token stream.
@@ -98,7 +112,8 @@ class LogoInterpreter:
             spcl_frm_tokens = TokenStream.make_stream(tokens.popleft())
             return self.process_special_form(spcl_frm_tokens)
         if isinstance(token, numbers.Number):
-            return tokens.popleft()
+            num = tokens.popleft()
+            return num
         if not quoted:
             if token.startswith('"'):
                 return tokens.popleft()[1:]
@@ -127,7 +142,7 @@ class LogoInterpreter:
         """
         args = []
         while len(args) < arity:
-            args.append(self.evaluate_value(tokens))
+            args.append(self.evaluate(tokens))
         return args
 
     def execute_procedure(self, proc, args):
@@ -172,7 +187,7 @@ class LogoInterpreter:
             raise LogoError("I don't know how to `{}`.".format(command_token)) 
         args = []
         while len(tokens) > 0:
-            args.append(self.evaluate_value(tokens))
+            args.append(self.evaluate(tokens))
         max_arity = proc.max_arity
         if max_arity != -1 and len(args) > max_arity:
             raise errors.LogoError("There are too many arguments for `{}`.".format(command_token))
@@ -294,14 +309,13 @@ def make_token_grammar():
     value = number | parens
     factor = value | word
     add = '+' ws expr2:n -> ('+', n)
-    sub = '-' ws expr2:n -> ('-', n)
     mul = '*' ws factor:n -> ('*', n)
     div = '/' ws factor:n -> ('/', n)
 
-    addsub = ws (add | sub)
+    addonly = ws add
     muldiv = ws (mul | div)
 
-    expr = expr2:left addsub*:right -> calculate(left, right)
+    expr = expr2:left addonly*:right -> calculate(left, right)
     expr2 = factor:left muldiv*:right -> calculate(left, right)
     """, {"calculate": calculate})
     
