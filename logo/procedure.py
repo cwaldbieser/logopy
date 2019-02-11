@@ -1,7 +1,9 @@
 
 import attr
 import collections
+import functools
 import numbers
+import operator
 import random
 from logo import errors
 
@@ -79,6 +81,7 @@ def create_primitives_map():
     m['combine'] = make_primitive("combine", ['thing1', 'thing2'], [], None, 2, process_combine)
     m['count'] = make_primitive("count", ['thing'], [], None, 1, process_count)
     m['dequeue'] = make_primitive("dequeue", ['queuename'], [], None, 1, process_dequeue)
+    m['difference'] = make_primitive("difference", ['num1', 'num2'], [], None, 2, process_difference)
     m['emptyp'] = make_primitive("emptyp", ['thing'], [], None, 1, process_emptyp)
     m['empty?'] = m['emptyp']
     m['equalp'] = make_primitive("equalp", ['thing1', 'thing2'], [], None, 2, process_equalp)
@@ -106,9 +109,11 @@ def create_primitives_map():
     m['pop'] = make_primitive("pop", ['stackname'], [], None, 1, process_pop)
     m['print'] = make_primitive("print", ['thing'], [], 'others', 1, process_print)
     m['pr'] = m['print']
+    m['product'] = make_primitive("product", ['num1', 'num2'], [], 'nums', 2, process_product)
     m['push'] = make_primitive("push", ['stackname', 'thing'], [], None, 2, process_push)
     m['queue'] = make_primitive("queue", ['queuename', 'thing'], [], None, 2, process_queue)
     m['quoted'] = make_primitive("quoted", ['thing'], [], None, 1, process_quoted)
+    m['quotient'] = make_primitive("quotient", ['num1', 'num2'], [], None, 2, process_quotient)
     m['readlist'] = make_primitive("readlist", [], [], None, 0, process_readlist)
     m['rl'] = m['readlist']
     m['remove'] = make_primitive("remove", ['thing', 'list'], [], None, 2, process_remove)
@@ -228,6 +233,15 @@ def process_dequeue(logo, queuename):
         raise errors.LogoError("Tried to DEQUEUE from `{}`, but is not a list.".format(queuename))
     except IndexError:
         raise errors.LogoError("Tried to DEQUEUE from an empty list, `{}`.".format(queuename))
+
+def process_difference(logo, num1, num2):
+    """
+    The DIFFERENCE command.
+    """
+    for arg in (num1, num2):
+        if not isinstance(arg, numbers.Number):
+            raise errors.LogoError("DIFFERENCE expected a number but got `{}` instead.".format(arg))
+    return num1 - num2
 
 def process_emptyp(logo, thing):
     """
@@ -424,6 +438,15 @@ def process_print(logo, *args):
             reps.append(str(arg))
     print(' '.join(reps))
 
+def process_product(logo, *args):
+    """
+    The PRODUCT command.
+    """
+    for arg in args:
+        if not isinstance(arg, numbers.Number):
+            raise errors.LogoError("PRODUCT expected a number but got `{}` instead.".format(arg))
+    return functools.reduce(operator.mul, args)
+
 def process_push(logo, stackname, thing):
     """
     The PUSH command.
@@ -451,6 +474,15 @@ def process_quoted(logo, thing):
     if _datatypename(thing) != 'word':
         return thing
     return '"{}'.format(thing)
+
+def process_quotient(logo, num1, num2):
+    """
+    The QUOTIENT command.
+    """
+    for arg in (num1, num2):
+        if not isinstance(arg, numbers.Number):
+            raise errors.LogoError("QUOTIENT expected a number but got `{}` instead.".format(arg))
+    return num1 / num2
 
 def process_readlist(logo):
     """
