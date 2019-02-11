@@ -117,6 +117,7 @@ def create_primitives_map():
     m['show'] = make_primitive("show", ['thing'], [], 'others', 1, process_show)
     m['substringp'] = make_primitive("substringp", ['thing1', 'thing2'], [], None, 2, process_substringp)
     m['substring?'] = m['substringp']
+    m['type'] = make_primitive("type", ['thing'], [], 'others', 1, process_type)
     m['unicode'] = make_primitive("unicode", ['char'], [], None, 1, process_unicode)
     m['uppercase'] = make_primitive("uppercase", ['word'], [], None, 1, process_uppercase)
     m['word'] = make_primitive("word", ['word1', 'word2'], [], 'words', 2, process_word)
@@ -513,6 +514,18 @@ def process_substringp(logo, thing1, thing2):
         return 'true'
     else:
         return 'false'
+
+def process_type(logo, *args):
+    """
+    The TYPE command.
+    """
+    reps = []
+    for arg in args:
+        if _datatypename(arg) == 'list':
+            reps.append(_list_contents_repr(arg, include_braces=False))
+        elif _datatypename(arg) == 'word':
+            reps.append(str(arg))
+    print(' '.join(reps), end="")
 
 def process_unicode(logo, char):
     """
