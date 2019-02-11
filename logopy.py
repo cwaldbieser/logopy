@@ -20,6 +20,7 @@ class LogoInterpreter:
     primitives = attr.ib(default=attr.Factory(dict))
     procedures = attr.ib(default=attr.Factory(dict))
     scope_stack = attr.ib(default=attr.Factory(list))
+    grammar = attr.ib(default=None)
     debug_procs = attr.ib(default=False)
     debug_primitives = attr.ib(default=False)
 
@@ -29,6 +30,13 @@ class LogoInterpreter:
         interpreter.scope_stack.append({})
         interpreter.primitives.update(procedure.create_primitives_map())
         return interpreter
+
+    def evaluate_readlist(self, data):
+        """
+        Evaluate input as READLIST.
+        """
+        stream = TokenStream.make_stream(self.grammar(data).itemlist())
+        return self.evaluate_value(stream) 
 
     def process_commands(self, tokens):
         while len(tokens) > 0:
@@ -82,7 +90,7 @@ class LogoInterpreter:
         """
         token = tokens.peek()
         if token is None:
-            raise LogoError("Expected a value but instead got EOF.")
+            raise errors.LogoError("Expected a value but instead got EOF.")
         if is_list(token):
             lst_tokens = TokenStream.make_stream(tokens.popleft())
             return self.evaluate_list(lst_tokens)
@@ -316,6 +324,7 @@ def main(args):
     if args.debug_tokens:
         print("PARSED TOKENS:", tokens)
     interpreter = LogoInterpreter.create_interpreter()
+    interpreter.grammar = grammar
     if args.debug_procs:
         interpreter.debug_procs = True
     try:

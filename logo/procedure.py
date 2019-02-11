@@ -109,10 +109,12 @@ def create_primitives_map():
     m['push'] = make_primitive("push", ['stackname', 'thing'], [], None, 2, process_push)
     m['queue'] = make_primitive("queue", ['queuename', 'thing'], [], None, 2, process_queue)
     m['quoted'] = make_primitive("quoted", ['thing'], [], None, 1, process_quoted)
+    m['readlist'] = make_primitive("readlist", [], [], None, 0, process_readlist)
+    m['rl'] = m['readlist']
     m['remove'] = make_primitive("remove", ['thing', 'list'], [], None, 2, process_remove)
     m['remdup'] = make_primitive("remdup", ['list'], [], None, 1, process_remdup)
     m['reverse'] = make_primitive("reverse", ['list'], [], None, 1, process_reverse)
-    m['sentence'] = make_primitive("sentence", ['thing1', 'thing2'], [], 'others', 2, process_sentence)
+    m['sentence'] = make_primitive("sentence", ['thing'], [], 'others', 2, process_sentence)
     m['se'] = m["sentence"]
     m['show'] = make_primitive("show", ['thing'], [], 'others', 1, process_show)
     m['substringp'] = make_primitive("substringp", ['thing1', 'thing2'], [], None, 2, process_substringp)
@@ -448,6 +450,15 @@ def process_quoted(logo, thing):
     if _datatypename(thing) != 'word':
         return thing
     return '"{}'.format(thing)
+
+def process_readlist(logo):
+    """
+    The READLIST command.
+    """
+    data = input()
+    data = "[{}]".format(data)
+    lst = logo.evaluate_readlist(data)
+    return lst
 
 def process_remove(logo, thing, lst):
     """
