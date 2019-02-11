@@ -272,11 +272,20 @@ def make_token_grammar():
         | ws item:only ws -> [only]
     item =
           itemlist
-        | '[' ws itemlist:lst ws ']' -> lst
+        | '[' ws quoted_itemlist:lst ws ']' -> lst
         | '[' ws ']' -> []
         | expr:e (ws comment)* -> e
         | word:w (ws comment)* -> w
         | '(' itemlist:lst ')' -> tuple(lst) 
+        | (ws comment)
+    quoted_itemlist = 
+          ws quoted_item:first (ws quoted_item)*:rest ws -> [first] + rest
+        | ws quoted_item:only ws -> [only]
+    quoted_item =
+          quoted_itemlist
+        | '[' ws quoted_itemlist:lst ws ']' -> lst
+        | '[' ws ']' -> []
+        | word:w (ws comment)* -> w
         | (ws comment)
     word = <(word_char+)>:val -> val
     word_char = ascii | digit | punctuation
