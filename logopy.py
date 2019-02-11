@@ -180,6 +180,7 @@ class LogoInterpreter:
             raise errors.LogoError("Not enough arguments for `{}`.".format(command_token))
         return self.execute_procedure(proc, args)
 
+
 @attr.s
 class TokenStream:
     """
@@ -216,17 +217,39 @@ class TokenStream:
             return None
 
 
+@attr.s
+class DelayedValue:
+    op = attr.ib(default=None)
+    left = attr.ib(default=None)
+    right = attr.ib(default=None)
+
+
 def calculate(start, pairs):
     result = start
     for op, value in pairs:
+        immediate_value = False
+        if isinstance(result, numbers.Number) and isinstance(value, numbers.Number):
+            immediate_value = True
         if op == '+':
-            result += value
+            if immediate_value:
+                result += value
+            else:
+                result = DelayedValue('sum', result, value)
         elif op == '-':
-            result -= value
+            if immediate_value:
+                result -= value
+            else:
+                result = DelayedValue('difference', result, value)
         elif op == '*':
-            result *= value
+            if immediate_value:
+                result *= value
+            else:
+                result = DelayedValue('product', result, value)
         elif op == '/':
-            result /= value
+            if immediate_value:
+                result /= value
+            else:
+                result = DelayedValue('quotient', result, value)
     return result
 
 def make_token_grammar():
@@ -234,12 +257,16 @@ def make_token_grammar():
     Make the token grammar.
     """
     grammar = parsley.makeGrammar("""
+    punctuation = :x ?(x in "+-*/!'#$%&\,.:<=>?@^_`" '"')
     digit = anything:x ?(x in '0123456789')
     digits = <digit*>
     float = 
           <'-'{0, 1} (digit)* '.' digit+>:ds -> float(ds)
     int = <'-'{0, 1} digit+>:ds -> int(ds)
     number = float | int 
+    ascii_lower = :x ?(x in 'abcdefghijklmnopqrstuvwxyz') -> x
+    ascii_upper = :x ?(x in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ') -> x
+    ascii = ascii_lower | ascii_upper
     itemlist = 
           ws item:first (ws item)*:rest ws -> [first] + rest
         | ws item:only ws -> [only]
@@ -247,39 +274,57 @@ def make_token_grammar():
           itemlist
         | '[' ws itemlist:lst ws ']' -> lst
         | '[' ws ']' -> []
+        | expr:e (ws comment)* -> e
         | word:w (ws comment)* -> w
         | '(' itemlist:lst ')' -> tuple(lst) 
         | (ws comment)
-    word = expr | <(word_char+)>:val -> val
-    ascii_lower = :x ?(x in 'abcdefghijklmnopqrstuvwxyz') -> x
-    ascii_upper = :x ?(x in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ') -> x
-    ascii = ascii_lower | ascii_upper
-    identifier_char = ascii | digit | '.'
-    punctuation = :x ?(x in "+-*/!'#$%&\,.:<=>?@^_`" '"')
+    word = <(word_char+)>:val -> val
     word_char = ascii | digit | punctuation
     comment = ';' rest_of_line 
     rest_of_line = <('\\\\n' | (~'\\n' anything))*>
     parens = '(' ws expr:e ws ')' -> e
     value = number | parens
+    factor = value | word
     add = '+' ws expr2:n -> ('+', n)
     sub = '-' ws expr2:n -> ('-', n)
-    mul = '*' ws value:n -> ('*', n)
-    div = '/' ws value:n -> ('/', n)
+    mul = '*' ws factor:n -> ('*', n)
+    div = '/' ws factor:n -> ('/', n)
 
     addsub = ws (add | sub)
     muldiv = ws (mul | div)
 
     expr = expr2:left addsub*:right -> calculate(left, right)
-    expr2 = value:left muldiv*:right -> calculate(left, right)
+    expr2 = factor:left muldiv*:right -> calculate(left, right)
     """, {"calculate": calculate})
+    
     return grammar
+
+def transform_tokens(tokens):
+    """
+    Transform the shape of the tokens.
+    """
+    tmp = []
+    for item in tokens:
+        if isinstance(item, DelayedValue):
+            tmp.append(item.op)
+            tmp.append(item.left)
+            tmp.append(item.right)
+        elif is_list(item):
+            tmp.append(transform_tokens(item))
+        elif isinstance(item, tuple):
+            tmp.append(tuple(transform_tokens(item)))
+        else:
+            tmp.append(item)
+    return tmp 
 
 def parse_tokens(grammar, script):
     """
     Parse a Logo script.
     Return a list of tokens.
     """
-    return TokenStream.make_stream(grammar(script).itemlist())
+    token_lst = grammar(script).itemlist()
+    token_lst = transform_tokens(token_lst)
+    return TokenStream.make_stream(token_lst)
 
 def run_tests(grammar):
     """
