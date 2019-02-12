@@ -99,6 +99,8 @@ def create_primitives_map():
     m['list?'] = m['listp']
     m['localmake'] = make_primitive("localmake", ['varname', 'value'], [], None, 2, process_localmake)
     m['lput'] = make_primitive("lput", ['thing', 'list'], [], None, 2, process_lput)
+    m['log'] = make_primitive("log", ['num'], [], None, 1, process_log)
+    m['log10'] = make_primitive("log10", ['num'], [], None, 1, process_log10)
     m['lowercase'] = make_primitive("lowercase", ['word'], [], None, 1, process_lowercase)
     m['make'] = make_primitive("make", ['varname', 'value'], [], None, 2, process_make)
     m['member'] = make_primitive("member", ['thing1', 'thing2'], [], None, 2, process_member)
@@ -355,6 +357,24 @@ def process_localmake(logo, varname, value):
     """
     scope = logo.scope_stack[-1]
     global_scope[varname] = value
+
+def process_log(logo, num):
+    """
+    The LOG command.
+    """
+    try:
+        return math.log(num)
+    except ValueError:
+        raise errors.LogoError("LOG expected a number, but received `{}` instead.".format(num))
+
+def process_log10(logo, num):
+    """
+    The LOG10 command.
+    """
+    try:
+        return math.log10(num)
+    except ValueError:
+        raise errors.LogoError("LOG10 expected a number, but received `{}` instead.".format(num))
 
 def process_lowercase(logo, word):
     """
