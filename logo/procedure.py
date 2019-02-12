@@ -93,10 +93,18 @@ def create_primitives_map():
     m['first'] = make_primitive("first", ['thing'], [], None, 1, process_first)
     m['firsts'] = make_primitive("firsts", ['list'], [], None, 1, process_firsts)
     m['fput'] = make_primitive("fput", ['thing', 'list'], [], None, 2, process_fput)
+    m['greaterequalp'] = make_primitive("greaterequalp", ['num1', 'num2'], [], None, 2, process_greaterequalp)
+    m['greaterequal?'] = m['greaterequalp']
+    m['greaterp'] = make_primitive("greaterp", ['num1', 'num2'], [], None, 2, process_greaterp)
+    m['greater?'] = m['greaterp']
     m['int'] = make_primitive("int", ['num'], [], None, 1, process_int)
     m['iseq'] = make_primitive("iseq", ['from', 'to'], [], None, 2, process_iseq)
     m['item'] = make_primitive("item", ['index', 'thing'], [], None, 2, process_item)
     m['last'] = make_primitive("last", ['thing'], [], None, 1, process_last)
+    m['lessequalp'] = make_primitive("lessequalp", ['num1', 'num2'], [], None, 2, process_lessequalp)
+    m['lessequal?'] = m['lessequalp']
+    m['lessp'] = make_primitive("lessp", ['num1', 'num2'], [], None, 2, process_lessp)
+    m['less?'] = m['lessp']
     m['list'] = make_primitive("list", ['thing1', 'thing2'], [], 'others', 2, process_list)
     m['listp'] = make_primitive("listp", ['thing'], [], None, 1, process_listp)
     m['list?'] = m['listp']
@@ -351,6 +359,30 @@ def process_fput(logo, thing, lst):
     l.extend(lst)
     return l
 
+def process_greaterequalp(logo, num1, num2):
+    """
+    The GREATEREQUALP command.
+    """
+    for arg in (num1, num2):
+        if not isinstance(arg, numbers.Number):
+            raise errors.LogoError("GREATEREQUALP expects numbers, but received `{}` instead.".format(arg))
+    if num1 >= num2:
+        return 'true'
+    else:
+        return 'false'
+
+def process_greaterp(logo, num1, num2):
+    """
+    The GREATERP command.
+    """
+    for arg in (num1, num2):
+        if not isinstance(arg, numbers.Number):
+            raise errors.LogoError("GREATERP expects numbers, but received `{}` instead.".format(arg))
+    if num1 > num2:
+        return 'true'
+    else:
+        return 'false'
+
 def process_int(logo, num):
     """
     The INT command.
@@ -396,6 +428,30 @@ def process_last(logo, thing):
         raise errors.LogoError("FIRST doesn't like `{}` as input.".format(thing)) 
     else:
         return thing[-1] 
+
+def process_lessequalp(logo, num1, num2):
+    """
+    The LESSEQUALP command.
+    """
+    for arg in (num1, num2):
+        if not isinstance(arg, numbers.Number):
+            raise errors.LogoError("LESSEQUALP expects numbers, but received `{}` instead.".format(arg))
+    if num1 <= num2:
+        return 'true'
+    else:
+        return 'false'
+
+def process_lessp(logo, num1, num2):
+    """
+    The LESSP command.
+    """
+    for arg in (num1, num2):
+        if not isinstance(arg, numbers.Number):
+            raise errors.LogoError("LESSP expects numbers, but received `{}` instead.".format(arg))
+    if num1 < num2:
+        return 'true'
+    else:
+        return 'false'
 
 def process_list(logo, *args):
     """
