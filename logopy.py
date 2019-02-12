@@ -294,6 +294,11 @@ class DelayedValue:
     right = attr.ib(default=None)
 
 
+@attr.s
+class Comment:
+    text = attr.ib()
+
+
 def calculate(start, pairs):
     result = start
     for op, value in pairs:
@@ -358,7 +363,7 @@ def make_token_grammar():
         | '[' ws ']' -> []
     word = <(word_char+)>:val -> val
     word_char = ascii | digit | punctuation
-    comment = ';' rest_of_line 
+    comment = <';' rest_of_line>:c -> Comment(c)  
     rest_of_line = <('\\\\n' | (~'\\n' anything))*>
     parens = '(' ws expr:e ws ')' -> e
     value = number | parens
@@ -372,7 +377,7 @@ def make_token_grammar():
 
     expr = expr2:left addonly*:right -> calculate(left, right)
     expr2 = factor:left muldiv*:right -> calculate(left, right)
-    """, {"calculate": calculate})
+    """, {"calculate": calculate, "Comment": Comment})
     
     return grammar
 
@@ -386,6 +391,8 @@ def transform_tokens(tokens):
             tmp.append(item.op)
             tmp.append(item.left)
             tmp.append(item.right)
+        elif isinstance(item, Comment):
+            continue
         elif is_list(item):
             tmp.append(transform_tokens(item))
         elif isinstance(item, tuple):
