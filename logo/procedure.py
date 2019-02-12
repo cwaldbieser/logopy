@@ -70,6 +70,7 @@ def create_primitives_map():
     m = {}
     make_primitive = LogoProcedure.make_primitive
     m['.eq'] = make_primitive(".eq", ['thing1', 'thing2'], [], None, 2, process_dot_eq)
+    m['arctan'] = make_primitive("arctan", ['x'], ['y'], None, 1, process_arctan)
     m['beforep'] = make_primitive("beforep", ['word1', 'word2'], [], None, 2, process_beforep)
     m['before?'] = m['beforep']
     m['butfirst'] = make_primitive("butfirst", ['wordlist'], [], None, 1, process_butfirst)
@@ -122,6 +123,7 @@ def create_primitives_map():
     m['queue'] = make_primitive("queue", ['queuename', 'thing'], [], None, 2, process_queue)
     m['quoted'] = make_primitive("quoted", ['thing'], [], None, 1, process_quoted)
     m['quotient'] = make_primitive("quotient", ['num1', 'num2'], [], None, 2, process_quotient)
+    m['radarctan'] = make_primitive("radarctan", ['x'], ['y'], None, 1, process_radarctan)
     m['radcos'] = make_primitive("radcos", ['radians'], [], None, 1, process_radcos)
     m['radsin'] = make_primitive("radsin", ['radians'], [], None, 1, process_radsin)
     m['readlist'] = make_primitive("readlist", [], [], None, 0, process_readlist)
@@ -167,6 +169,32 @@ def process_dot_eq(logo, thing1, thing2):
         return 'true'
     else:
         return 'false'
+
+def process_arctan(logo, *args):
+    """
+    The ARCTAN command.
+    """
+    if len(args) == 1:
+        x = args[0]
+        try:
+            return (math.arctan(x) * 180) / math.pi
+        except (TypeError, ValueError):
+            raise errors.LogoError("ARCTAN expected a number, but got `{}` instead.".format(x))
+    elif len(args) == 2:
+        x = args[0]
+        y = args[1]
+        if x != 0:
+            try:
+                return (math.arctan(y / x) * 180) / math.pi
+            except (TypeError, ValueError):
+                raise errors.LogoError("ARCTAN expected a number, but got `{}` instead.".format(x))
+        else:
+            if y < 0:
+                return -90
+            elif y > 0:
+                return 90
+            else:
+                raise ZeroDivisionError()
 
 def process_beforep(logo, word1, word2):
     """
@@ -563,6 +591,32 @@ def process_quotient(logo, num1, num2):
         if not isinstance(arg, numbers.Number):
             raise errors.LogoError("QUOTIENT expected a number but got `{}` instead.".format(arg))
     return num1 / num2
+
+def process_radarctan(logo, *args):
+    """
+    The RADARCTAN command.
+    """
+    if len(args) == 1:
+        x = args[0]
+        try:
+            return math.arctan(x)
+        except (TypeError, ValueError):
+            raise errors.LogoError("RADARCTAN expected a number, but got `{}` instead.".format(x))
+    elif len(args) == 2:
+        x = args[0]
+        y = args[1]
+        if x != 0:
+            try:
+                return math.arctan(y / x)
+            except (TypeError, ValueError):
+                raise errors.LogoError("RADARCTAN expected a number, but got `{}` instead.".format(x))
+        else:
+            if y < 0:
+                return -(math.pi / 2.0)
+            elif y > 0:
+                return (math.pi / 2.0)
+            else:
+                raise ZeroDivisionError()
 
 def process_radcos(logo, radians):
     """

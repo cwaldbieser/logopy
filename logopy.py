@@ -89,14 +89,27 @@ class LogoInterpreter:
         Evaluate and check for infix.
         """
         value = self.evaluate_value(tokens)
-        while isinstance(value, numbers.Number):
-            peek = tokens.peek()
-            if peek == '-':
-                tokens.popleft()
-                value -= self.evaluate_value(tokens)
-            else:
-                break
-        return value
+        if isinstance(value, numbers.Number):
+            terms = [value]
+            while True:
+                peek = tokens.peek()
+                if peek == '-':
+                    tokens.popleft()
+                    terms.append(-self.evaluate_value(tokens))
+                elif peek == '+':
+                    tokens.popleft()
+                    terms.append(self.evaluate_value(tokens))
+                elif peek == '*':
+                    tokens.popleft()
+                    terms[-1] *= self.evaluate_value(tokens)
+                elif peek == '/':
+                    tokens.popleft()
+                    terms[-1] /= self.evaluate_value(tokens)
+                else:
+                    break
+            return sum(terms)
+        else:
+            return value
 
     def evaluate_value(self, tokens, quoted=False):
         """
@@ -111,6 +124,9 @@ class LogoInterpreter:
         if is_special_form(token):
             spcl_frm_tokens = TokenStream.make_stream(tokens.popleft())
             return self.process_special_form(spcl_frm_tokens)
+        if is_paren_expr(token):
+            expr_tokens = TokenStream.make_stream(tokens.popleft())
+            return self.evaluate(expr_tokens)
         if isinstance(token, numbers.Number):
             num = tokens.popleft()
             return num
@@ -184,7 +200,7 @@ class LogoInterpreter:
         elif command in procedures:
             proc = procedures[command]
         else:
-            raise LogoError("I don't know how to `{}`.".format(command_token)) 
+            raise errors.LogoError("I don't know how to `{}`.".format(command_token)) 
         args = []
         while len(tokens) > 0:
             args.append(self.evaluate(tokens))
@@ -370,11 +386,30 @@ def run_tests(grammar):
         print(parse_tokens(grammar, prog))
     print("Tests completed.")
 
-def is_command(token):
-    return hasattr(token, "lower")
-
 def is_special_form(token):
-    return isinstance(token, tuple)
+    if not isinstance(token, tuple):
+        return False
+    first = token[0]
+    if is_command(first):
+        return True
+    return False
+
+def is_paren_expr(token):
+    if not isinstance(token, tuple):
+        return False
+    first = token[0]
+    if is_command(first):
+        return False
+    return True
+        
+def is_command(token):
+    if not isinstance(token, str):
+        return False
+    if token.startswith(":"):
+        return False
+    if token.startswith('"'):
+        return False
+    return True
 
 def is_list(token):
     return isinstance(token, list)
