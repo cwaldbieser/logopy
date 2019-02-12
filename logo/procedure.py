@@ -87,6 +87,7 @@ def create_primitives_map():
     m['empty?'] = m['emptyp']
     m['equalp'] = make_primitive("equalp", ['thing1', 'thing2'], [], None, 2, process_equalp)
     m['equal?'] = m['equalp'] 
+    m['exp'] = make_primitive("exp", ['num'], [], None, 1, process_exp)
     m['first'] = make_primitive("first", ['thing'], [], None, 1, process_first)
     m['firsts'] = make_primitive("firsts", ['list'], [], None, 1, process_firsts)
     m['fput'] = make_primitive("fput", ['thing', 'list'], [], None, 2, process_fput)
@@ -267,6 +268,15 @@ def process_equalp(logo, thing1, thing2):
         return 'true'
     else:
         return 'false'
+
+def process_exp(logo, num):
+    """
+    The EXP command.
+    """
+    try:
+        return math.exp(num)
+    except ValueError:
+        raise errors.LogoError("EXP expected a number, but received `{}` instead.".format(num))
 
 def process_first(logo, thing):
     """
