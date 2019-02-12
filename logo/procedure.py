@@ -94,6 +94,7 @@ def create_primitives_map():
     m['firsts'] = make_primitive("firsts", ['list'], [], None, 1, process_firsts)
     m['fput'] = make_primitive("fput", ['thing', 'list'], [], None, 2, process_fput)
     m['int'] = make_primitive("int", ['num'], [], None, 1, process_int)
+    m['iseq'] = make_primitive("iseq", ['from', 'to'], [], None, 2, process_iseq)
     m['item'] = make_primitive("item", ['index', 'thing'], [], None, 2, process_item)
     m['last'] = make_primitive("last", ['thing'], [], None, 1, process_last)
     m['list'] = make_primitive("list", ['thing1', 'thing2'], [], 'others', 2, process_list)
@@ -356,6 +357,23 @@ def process_int(logo, num):
     if not isinstance(num, numbers.Number):
         raise errors.LogoError("INT expects a number but received `{}`.".format(num))
     return int(num)
+
+def process_iseq(logo, frm, to):
+    """
+    The ISEQ command.
+    """
+    if frm <= to:
+        start = frm
+        stop = to + 1
+        step = 1
+    else:
+        start = frm
+        stop = to - 1
+        step = -1
+    try:
+        return list(range(start, stop, step)) 
+    except TypeError:
+        raise errors.LogoError("ISEQ expects numbers, but received `{}`, `{}` instead.".format(frm, to))
 
 def process_item(logo, index, thing):
     """
