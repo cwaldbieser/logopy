@@ -81,6 +81,7 @@ def create_primitives_map():
     m['char'] = make_primitive("char", ['int'], [], None, 1, process_char)
     m['combine'] = make_primitive("combine", ['thing1', 'thing2'], [], None, 2, process_combine)
     m['count'] = make_primitive("count", ['thing'], [], None, 1, process_count)
+    m['cos'] = make_primitive("cos", ['degrees'], [], None, 1, process_cos)
     m['dequeue'] = make_primitive("dequeue", ['queuename'], [], None, 1, process_dequeue)
     m['difference'] = make_primitive("difference", ['num1', 'num2'], [], None, 2, process_difference)
     m['emptyp'] = make_primitive("emptyp", ['thing'], [], None, 1, process_emptyp)
@@ -121,6 +122,8 @@ def create_primitives_map():
     m['queue'] = make_primitive("queue", ['queuename', 'thing'], [], None, 2, process_queue)
     m['quoted'] = make_primitive("quoted", ['thing'], [], None, 1, process_quoted)
     m['quotient'] = make_primitive("quotient", ['num1', 'num2'], [], None, 2, process_quotient)
+    m['radcos'] = make_primitive("radcos", ['radians'], [], None, 1, process_radcos)
+    m['radsin'] = make_primitive("radsin", ['radians'], [], None, 1, process_radsin)
     m['readlist'] = make_primitive("readlist", [], [], None, 0, process_readlist)
     m['remainder'] = make_primitive("remainder", ['num1', 'num2'], [], None, 2, process_remainder)
     m['rl'] = m['readlist']
@@ -131,6 +134,7 @@ def create_primitives_map():
     m['sentence'] = make_primitive("sentence", ['thing'], [], 'others', 2, process_sentence)
     m['se'] = m["sentence"]
     m['show'] = make_primitive("show", ['thing'], [], 'others', 1, process_show)
+    m['sin'] = make_primitive("sin", ['degrees'], [], None, 1, process_sin)
     m['sqrt'] = make_primitive("sqrt", ['num'], [], None, 1, process_sqrt)
     m['substringp'] = make_primitive("substringp", ['thing1', 'thing2'], [], None, 2, process_substringp)
     m['substring?'] = m['substringp']
@@ -222,6 +226,15 @@ def process_combine(logo, thing1, thing2):
         return process_fput(logo, thing1, thing2)
     else:
         return process_word(logo, thing1, thing2)
+
+def process_cos(logo, degrees):
+    """
+    The COS command.
+    """
+    try:
+        return math.cos((degrees * math.pi) / 180.0)
+    except (TypeError, ValueError):
+        raise errors.LogoError("COS expected a number in degrees, but got `{}` instead.".format(degrees))
 
 def process_count(logo, thing):
     """
@@ -551,6 +564,24 @@ def process_quotient(logo, num1, num2):
             raise errors.LogoError("QUOTIENT expected a number but got `{}` instead.".format(arg))
     return num1 / num2
 
+def process_radcos(logo, radians):
+    """
+    The RADCOS command.
+    """
+    try:
+        return math.cos(radians)
+    except (TypeError, ValueError):
+        raise errors.LogoError("RADCOS expected a number in radians, but got `{}` instead.".format(radians))
+
+def process_radsin(logo, radians):
+    """
+    The RADSIN command.
+    """
+    try:
+        return math.sin(radians)
+    except (TypeError, ValueError):
+        raise errors.LogoError("RADSIN expected a number in radians, but got `{}` instead.".format(radians))
+
 def process_readlist(logo):
     """
     The READLIST command.
@@ -634,6 +665,15 @@ def process_sentence(logo, *args):
         else:
             raise errors.LogoError("SENTENCE cannot be used on a {}.".format(dtype))
     return sentence
+
+def process_sin(logo, degrees):
+    """
+    The SIN command.
+    """
+    try:
+        return math.sin((degrees * math.pi) / 180.0)
+    except (TypeError, ValueError):
+        raise errors.LogoError("SIN expected a number in degrees, but got `{}` instead.".format(degrees))
 
 def process_sqrt(logo, num):
     """
