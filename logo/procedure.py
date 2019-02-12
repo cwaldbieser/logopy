@@ -110,6 +110,7 @@ def create_primitives_map():
     m['number?'] = m['numberp']
     m['pick'] = make_primitive("pick", ['list'], [], None, 1, process_pick)
     m['pop'] = make_primitive("pop", ['stackname'], [], None, 1, process_pop)
+    m['power'] = make_primitive("power", ['num1', 'num2'], [], None, 2, process_power)
     m['print'] = make_primitive("print", ['thing'], [], 'others', 1, process_print)
     m['pr'] = m['print']
     m['product'] = make_primitive("product", ['num1', 'num2'], [], 'nums', 2, process_product)
@@ -452,6 +453,15 @@ def process_pop(logo, stackname):
         raise errors.LogoError("Tried to POP from `{}`, but it is not a list.".format(stackname))
     except IndexError:
         raise errors.LogoError("Tried to POP from empty stack, `{}`.".format(stackname))
+
+def process_power(logo, num1, num2):
+    """
+    The POWER command.
+    """
+    try:
+        return math.pow(num1, num2)
+    except ValueError:
+        raise errors.LogoError("POWER expected a number, but received [{}, {}] instead.".format(num1, num2))
 
 def process_print(logo, *args):
     """
