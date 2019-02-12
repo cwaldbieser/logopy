@@ -2,6 +2,7 @@
 import attr
 import collections
 import functools
+import math
 import numbers
 import operator
 import random
@@ -126,6 +127,7 @@ def create_primitives_map():
     m['sentence'] = make_primitive("sentence", ['thing'], [], 'others', 2, process_sentence)
     m['se'] = m["sentence"]
     m['show'] = make_primitive("show", ['thing'], [], 'others', 1, process_show)
+    m['sqrt'] = make_primitive("sqrt", ['num'], [], None, 1, process_sqrt)
     m['substringp'] = make_primitive("substringp", ['thing1', 'thing2'], [], None, 2, process_substringp)
     m['substring?'] = m['substringp']
     m['sum'] = make_primitive("sum", ['num1', 'num2'], [], 'nums', 2, process_sum)
@@ -592,6 +594,17 @@ def process_sentence(logo, *args):
         else:
             raise errors.LogoError("SENTENCE cannot be used on a {}.".format(dtype))
     return sentence
+
+def process_sqrt(logo, num):
+    """
+    The SQRT command.
+    """
+    try:
+        return math.sqrt(num)
+    except TypeError:
+        raise errors.LogoError("SQRT expects a number, but received `{}` instead.".format(num))
+    except ValueError as ex:
+        raise errors.LogoError("SQRT expects a non-negative number, but received `{}` instead.".format(num))
 
 def process_substringp(logo, thing1, thing2):
     """
