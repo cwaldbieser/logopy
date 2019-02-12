@@ -156,6 +156,7 @@ def create_primitives_map():
     m['substringp'] = make_primitive("substringp", ['thing1', 'thing2'], [], None, 2, process_substringp)
     m['substring?'] = m['substringp']
     m['sum'] = make_primitive("sum", ['num1', 'num2'], [], 'nums', 2, process_sum)
+    m['thing'] = make_primitive("thing", ['thing'], [], None, 1, process_thing)
     m['type'] = make_primitive("type", ['thing'], [], 'others', 1, process_type)
     m['unicode'] = make_primitive("unicode", ['char'], [], None, 1, process_unicode)
     m['uppercase'] = make_primitive("uppercase", ['word'], [], None, 1, process_uppercase)
@@ -932,6 +933,12 @@ def process_sum(logo, *args):
         if not isinstance(arg, numbers.Number):
             raise errors.LogoError("SUM expected a number but got `{}` instead.".format(arg))
     return sum(args)
+
+def process_thing(logo, varname):
+    """
+    The THING command.
+    """
+    return logo.get_variable_value(varname) 
 
 def process_type(logo, *args):
     """
