@@ -121,11 +121,29 @@ class LogoInterpreter:
                     tokens.popleft()
                     p = self.primitives['greaterequalp'].primitive_func
                     return p(self, sum(terms), self.evaluate_value(tokens))
+                elif peek == '=':
+                    tokens.popleft()
+                    p = self.primitives['equalp'].primitive_func
+                    return p(self, sum(terms), self.evaluate_value(tokens))
+                elif peek == '<>':
+                    tokens.popleft()
+                    p = self.primitives['notequalp'].primitive_func
+                    return p(self, sum(terms), self.evaluate_value(tokens))
                 else:
                     break
             return sum(terms)
         else:
-            return value
+            peek = tokens.peek()
+            if peek == '=':
+                tokens.popleft()
+                p = self.primitives['equalp'].primitive_func
+                return p(self, value, self.evaluate_value(tokens))
+            elif peek == '<>':
+                tokens.popleft()
+                p = self.primitives['notequalp'].primitive_func
+                return p(self, value, self.evaluate_value(tokens))
+            else:
+                return value
 
     def evaluate_value(self, tokens, quoted=False):
         """
