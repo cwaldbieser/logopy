@@ -70,6 +70,7 @@ def create_primitives_map():
     m = {}
     make_primitive = LogoProcedure.make_primitive
     m['.eq'] = make_primitive(".eq", ['thing1', 'thing2'], [], None, 2, process_dot_eq)
+    m['and'] = make_primitive("and", ['tf1', 'tf2'], [], 'tfs', 2, process_and)
     m['arctan'] = make_primitive("arctan", ['x'], ['y'], None, 1, process_arctan)
     m['beforep'] = make_primitive("beforep", ['word1', 'word2'], [], None, 2, process_beforep)
     m['before?'] = m['beforep']
@@ -118,10 +119,12 @@ def create_primitives_map():
     m['memberp'] = make_primitive("memberp", ['thing1', 'thing2'], [], None, 2, process_memberp)
     m['member?'] = m['memberp']
     m['modulo'] = make_primitive("modulo", ['num1', 'num2'], [], None, 2, process_modulo)
+    m['not'] = make_primitive("not", ['tf'], [], None, 1, process_not)
     m['notequalp'] = make_primitive("notequalp", ['thing1', 'thing2'], [], None, 2, process_notequalp)
     m['notequal?'] = m['notequalp'] 
     m['numberp'] = make_primitive("numberp", ['thing'], [], None, 1, process_numberp)
     m['number?'] = m['numberp']
+    m['or'] = make_primitive("or", ['tf1', 'tf2'], [], 'tfs', 2, process_or)
     m['pick'] = make_primitive("pick", ['list'], [], None, 1, process_pick)
     m['pop'] = make_primitive("pop", ['stackname'], [], None, 1, process_pop)
     m['power'] = make_primitive("power", ['num1', 'num2'], [], None, 2, process_power)
@@ -180,6 +183,18 @@ def process_dot_eq(logo, thing1, thing2):
         return 'true'
     else:
         return 'false'
+
+def process_and(logo, *args):
+    """
+    The AND command.
+    """
+    truth_map = {'true': True, 'false': False}
+    for arg in args:
+        if not arg in truth_map:
+            raise errors.LogoError("AND expects true/false values but received `{}` instead.".format(arg))
+        if not truth_map[arg]:
+            return 'false'
+    return 'true'
 
 def process_arctan(logo, *args):
     """
@@ -563,6 +578,17 @@ def process_modulo(logo, num1, num2):
     else:
         return absval
 
+def process_not(logo, tf):
+    """
+    The NOT command.
+    """
+    if tf == 'true':
+        return 'false'
+    elif tf == 'false':
+        return 'true'
+    else:
+        raise errors.LogoError("AND expects true/false values but received `{}` instead.".format(arg))
+
 def process_notequalp(logo, thing1, thing2):
     """
     The NOTEQUALP command.
@@ -580,6 +606,18 @@ def process_numberp(logo, thing):
         return 'true'
     else:
         return 'false'
+
+def process_or(logo, *args):
+    """
+    The OR command.
+    """
+    truth_map = {'true': True, 'false': False}
+    for arg in args:
+        if not arg in truth_map:
+            raise errors.LogoError("OR expects true/false values but received `{}` instead.".format(arg))
+        if truth_map[arg]:
+            return 'true'
+    return 'false'
 
 def process_pick(logo, lst):
     """
