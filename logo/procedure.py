@@ -149,6 +149,7 @@ def create_primitives_map():
     m['round'] = make_primitive("round", ['num'], [], None, 1, process_round)
     m['rseq'] = make_primitive("rseq", ['from', 'to', 'count'], [], None, 3, process_rseq)
     m['run'] = make_primitive("run", ['instructionlist'], [], None, 1, process_run)
+    m['runresult'] = make_primitive("runresult", ['instructionlist'], [], None, 1, process_runresult)
     m['sentence'] = make_primitive("sentence", ['thing'], [], 'others', 2, process_sentence)
     m['se'] = m["sentence"]
     m['show'] = make_primitive("show", ['thing'], [], 'others', 1, process_show)
@@ -881,6 +882,19 @@ def process_run(logo, instructionlist):
     """
     The RUN command.
     """
+    return _process_run_like("RUN", logo, instructionlist)
+
+def process_runresult(logo, instructionlist):
+    """
+    The RUNRESULT command.
+    """
+    result = _process_run_like("RUNRESULT", logo, instructionlist)
+    if result is None:
+        return []
+    else:
+        return [result]
+
+def _process_run_like(cmd, logo, instructionlist):
     dtype = _datatypename(instructionlist)
     if dtype == 'list':
         script = _list_contents_repr(instructionlist, include_braces=False)
@@ -888,7 +902,7 @@ def process_run(logo, instructionlist):
     elif dtype == 'word':
         return logo.process_instructionlist(instructionlist)
     else:
-        raise errors.LogoError("RUN expects a word or list, but received `{}` instead.".format(instructionlist))
+        raise errors.LogoError("{} expects a word or list, but received `{}` instead.".format(cmd, instructionlist))
 
 def process_sentence(logo, *args):
     """
