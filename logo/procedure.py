@@ -148,6 +148,7 @@ def create_primitives_map():
     m['reverse'] = make_primitive("reverse", ['list'], [], None, 1, process_reverse)
     m['round'] = make_primitive("round", ['num'], [], None, 1, process_round)
     m['rseq'] = make_primitive("rseq", ['from', 'to', 'count'], [], None, 3, process_rseq)
+    m['run'] = make_primitive("run", ['instructionlist'], [], None, 1, process_run)
     m['sentence'] = make_primitive("sentence", ['thing'], [], 'others', 2, process_sentence)
     m['se'] = m["sentence"]
     m['show'] = make_primitive("show", ['thing'], [], 'others', 1, process_show)
@@ -875,6 +876,19 @@ def process_rseq(logo, frm, to, count):
         return list(map(p, range(count)))
     except TypeError:
         raise errors.LogoError("RSEQ expected numbers, but got `{}`, `{}`, `{}` instead.".format(frm, to, count))
+
+def process_run(logo, instructionlist):
+    """
+    The RUN command.
+    """
+    dtype = _datatypename(instructionlist)
+    if dtype == 'list':
+        script = _list_contents_repr(instructionlist, include_braces=False)
+        return logo.process_instructionlist(script) 
+    elif dtype == 'word':
+        return logo.process_instructionlist(instructionlist)
+    else:
+        raise errors.LogoError("RUN expects a word or list, but received `{}` instead.".format(instructionlist))
 
 def process_sentence(logo, *args):
     """

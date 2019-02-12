@@ -38,9 +38,18 @@ class LogoInterpreter:
         stream = TokenStream.make_stream(self.grammar(data).itemlist())
         return self.evaluate(stream) 
 
+    def process_instructionlist(self, script):
+        """
+        Process a script, which should represent a list of instructions
+        when tokenized.
+        """
+        stream = parse_tokens(self.grammar, script)
+        return self.process_commands(stream)
+
     def process_commands(self, tokens):
         while len(tokens) > 0:
-            self.process_command(tokens)
+            result = self.process_command(tokens)
+        return result
 
     def process_command(self, tokens):
         """
