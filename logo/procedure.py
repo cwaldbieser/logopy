@@ -135,6 +135,7 @@ def create_primitives_map():
     m['radarctan'] = make_primitive("radarctan", ['x'], ['y'], None, 1, process_radarctan)
     m['radcos'] = make_primitive("radcos", ['radians'], [], None, 1, process_radcos)
     m['radsin'] = make_primitive("radsin", ['radians'], [], None, 1, process_radsin)
+    m['random'] = make_primitive("random", ['start'], ['end'], None, 1, process_random)
     m['readlist'] = make_primitive("readlist", [], [], None, 0, process_readlist)
     m['remainder'] = make_primitive("remainder", ['num1', 'num2'], [], None, 2, process_remainder)
     m['rl'] = m['readlist']
@@ -710,6 +711,21 @@ def process_radsin(logo, radians):
         return math.sin(radians)
     except (TypeError, ValueError):
         raise errors.LogoError("RADSIN expected a number in radians, but got `{}` instead.".format(radians))
+
+def process_random(logo, *args):
+    """
+    The RANDOM command.
+    """
+    if len(args) == 1:
+        try:
+            return random.randrange(0, args[0])
+        except ValueError:
+            raise errors.LogoError("RANDOM expects a non-negative integer, but received `{}` instead.".format(args[0]))
+    else:
+        try:
+            return random.randint(args[0], args[1])
+        except ValueError:
+            raise errors.LogoError("RANDOM expects integers `start` <= `end` but received `{}`, `{}` instead.".format(args[0], args[1]))
 
 def process_readlist(logo):
     """
