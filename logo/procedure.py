@@ -89,6 +89,7 @@ def create_primitives_map():
     m['first'] = make_primitive("first", ['thing'], [], None, 1, process_first)
     m['firsts'] = make_primitive("firsts", ['list'], [], None, 1, process_firsts)
     m['fput'] = make_primitive("fput", ['thing', 'list'], [], None, 2, process_fput)
+    m['int'] = make_primitive("int", ['num'], [], None, 1, process_int)
     m['item'] = make_primitive("item", ['index', 'thing'], [], None, 2, process_item)
     m['last'] = make_primitive("last", ['thing'], [], None, 1, process_last)
     m['list'] = make_primitive("list", ['thing1', 'thing2'], [], 'others', 2, process_list)
@@ -121,6 +122,7 @@ def create_primitives_map():
     m['remove'] = make_primitive("remove", ['thing', 'list'], [], None, 2, process_remove)
     m['remdup'] = make_primitive("remdup", ['list'], [], None, 1, process_remdup)
     m['reverse'] = make_primitive("reverse", ['list'], [], None, 1, process_reverse)
+    m['round'] = make_primitive("round", ['num'], [], None, 1, process_round)
     m['sentence'] = make_primitive("sentence", ['thing'], [], 'others', 2, process_sentence)
     m['se'] = m["sentence"]
     m['show'] = make_primitive("show", ['thing'], [], 'others', 1, process_show)
@@ -290,6 +292,14 @@ def process_fput(logo, thing, lst):
     l = [thing]
     l.extend(lst)
     return l
+
+def process_int(logo, num):
+    """
+    The INT command.
+    """
+    if not isinstance(num, numbers.Number):
+        raise errors.LogoError("INT expects a number but received `{}`.".format(num))
+    return int(num)
 
 def process_item(logo, index, thing):
     """
@@ -557,6 +567,15 @@ def process_reverse(logo, lst):
     r = list(lst)
     r.reverse()
     return r
+
+def process_round(logo, num):
+    """
+    The ROUND command.
+    """
+    try:
+        return round(num)
+    except TypeError:
+        raise errors.LogoError("ROUND expects a number, but received `{}` instead.".format(num))
 
 def process_sentence(logo, *args):
     """
