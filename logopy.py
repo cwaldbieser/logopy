@@ -73,6 +73,8 @@ class LogoInterpreter:
                     if self.debug_procs:
                         print("PROCEDURE:", command, "ARGS:", args)
                     return self.execute_procedure(proc, args)
+                else:
+                    raise errors.LogoError("I don't know how to `{}`.".format(token))
 
     def get_variable_value(self, varname):
         """
@@ -81,7 +83,10 @@ class LogoInterpreter:
         scopes = self.scope_stack
         for scope in reversed(scopes):
             if varname in scope:
-                return scope[varname]
+                value = scope[varname]
+                if value is None:
+                    raise errors.LogoError("`{}` has no value.".format(varname))
+                return value
         raise errors.LogoError("No scope has a variable named `{}`.".format(varname))
 
     def evaluate(self, tokens):

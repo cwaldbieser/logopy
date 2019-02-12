@@ -109,6 +109,7 @@ def create_primitives_map():
     m['list'] = make_primitive("list", ['thing1', 'thing2'], [], 'others', 2, process_list)
     m['listp'] = make_primitive("listp", ['thing'], [], None, 1, process_listp)
     m['list?'] = m['listp']
+    m['local'] = make_primitive("local", ['varname'], [], 'varnames', 1, process_local)
     m['localmake'] = make_primitive("localmake", ['varname', 'value'], [], None, 2, process_localmake)
     m['lput'] = make_primitive("lput", ['thing', 'list'], [], None, 2, process_lput)
     m['log10'] = make_primitive("log10", ['num'], [], None, 1, process_log10)
@@ -483,12 +484,37 @@ def process_listp(logo, thing):
         return 'true'
     return 'false'
 
+def process_local(logo, *args):
+    """
+    The LOCAL command.
+    """
+    scope = logo.scope_stack[-1]
+    if len(args) == 1:
+        arg = args[0]
+        dtype = _datatypename(arg)
+        if dtype == 'word':
+            scope[arg] = None
+        elif dtype == 'list':
+            for varname in arg:
+                dtype2 = _datatypename(varname)
+                if dtype2 != 'word':
+                    raise errors.LogoError("LOCAL expects a list of words, but received `{}` instead.".format(varname))
+                scope[varname] = None
+        else:
+            raise errors.LogoError("LOCAL expects a word or a list or words, but received `{}` instead.".format(arg))
+    else:
+        for varname in args:
+            dtype = _datatypename(varname)
+            if dtype != 'word':
+                raise errors.LogoError("LOCAL expects a list of words, but received `{}` instead.".format(varname))
+            scope[varname] = None
+     
 def process_localmake(logo, varname, value):
     """
     The LOCALMAKE command.
     """
     scope = logo.scope_stack[-1]
-    global_scope[varname] = value
+    scope[varname] = value
 
 def process_log10(logo, num):
     """
@@ -529,6 +555,11 @@ def process_make(logo, varname, value):
     """
     The MAKE command.
     """
+    scopes = logo.scope_stack
+    for scope in reversed(scopes):
+        if varname in scope:
+            scope[varname] = value
+            return
     global_scope = logo.scope_stack[0]
     global_scope[varname] = value 
 
