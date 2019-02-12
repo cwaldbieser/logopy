@@ -105,6 +105,22 @@ class LogoInterpreter:
                 elif peek == '/':
                     tokens.popleft()
                     terms[-1] /= self.evaluate_value(tokens)
+                elif peek == '<':
+                    tokens.popleft()
+                    p = self.primitives['lessp'].primitive_func
+                    return p(self, sum(terms), self.evaluate_value(tokens))
+                elif peek == '<=':
+                    tokens.popleft()
+                    p = self.primitives['lessequalp'].primitive_func
+                    return p(self, sum(terms), self.evaluate_value(tokens))
+                elif peek == '>':
+                    tokens.popleft()
+                    p = self.primitives['greaterp'].primitive_func
+                    return p(self, sum(terms), self.evaluate_value(tokens))
+                elif peek == '>=':
+                    tokens.popleft()
+                    p = self.primitives['greaterequalp'].primitive_func
+                    return p(self, sum(terms), self.evaluate_value(tokens))
                 else:
                     break
             return sum(terms)
