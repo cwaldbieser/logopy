@@ -134,6 +134,7 @@ def create_primitives_map():
     m['remdup'] = make_primitive("remdup", ['list'], [], None, 1, process_remdup)
     m['reverse'] = make_primitive("reverse", ['list'], [], None, 1, process_reverse)
     m['round'] = make_primitive("round", ['num'], [], None, 1, process_round)
+    m['rseq'] = make_primitive("rseq", ['from', 'to', 'count'], [], None, 3, process_rseq)
     m['sentence'] = make_primitive("sentence", ['thing'], [], 'others', 2, process_sentence)
     m['se'] = m["sentence"]
     m['show'] = make_primitive("show", ['thing'], [], 'others', 1, process_show)
@@ -721,6 +722,17 @@ def process_round(logo, num):
         return round(num)
     except TypeError:
         raise errors.LogoError("ROUND expects a number, but received `{}` instead.".format(num))
+
+def process_rseq(logo, frm, to, count):
+    """
+    The RSEQ command.
+    """
+    pos_fn = lambda frm, to, count, i: (to * i + frm * (count - i - 1)) / (count - 1)
+    p = functools.partial(pos_fn, frm, to, count)
+    try:
+        return list(map(p, range(count)))
+    except TypeError:
+        raise errors.LogoError("RSEQ expected numbers, but got `{}`, `{}`, `{}` instead.".format(frm, to, count))
 
 def process_sentence(logo, *args):
     """
