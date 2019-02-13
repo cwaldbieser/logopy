@@ -341,7 +341,7 @@ def make_token_grammar():
     Make the token grammar.
     """
     grammar = parsley.makeGrammar(r"""
-    punctuation = :x ?(x in "+-*/!'#$%&\,.:<=>?@^_`" '"') -> x
+    punctuation = :x ?(x in "+-*/!'#$%&\,.:<=>?@^_`;" '"') -> x
     digit = anything:x ?(x in '0123456789')
     digits = <digit*>
     float = 
@@ -372,10 +372,14 @@ def make_token_grammar():
         | '[' ws quoted_itemlist:q ws ']' -> list(q)
         | '[' ws ']' -> []
     word = <(word_char+)>:val -> val
-    word_char = (ascii:a -> a) | (digit:d -> d) | (punctuation:p -> p)
+    word_char = (ascii:a -> a) | (digit:d -> d) | (~';' punctuation:p -> p)
     quote_word = '"' (quote_word_char+):l -> '"' + ''.join(l)
-    quote_word_char = (escaped_char:e -> e) | (word_char:c -> c)
-    escaped_char = '\\' ' ':c -> c
+    quote_word_char = (escaped_char:e -> e) | (~';' word_char:c -> c)
+    escaped_char = '\\' (
+          (' ':c -> c)
+        | ('\\':c -> c)
+        | (';':c -> c)
+    ) 
     comment = <';' rest_of_line>:c -> Comment(c)  
     rest_of_line = <('\\n' | (~'\n' anything))*>
     parens = '(' ws expr:e ws ')' -> e
