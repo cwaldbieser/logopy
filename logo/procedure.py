@@ -842,12 +842,12 @@ def process_repeat(logo, num, instructionlist):
     dtype = _datatypename(instructionlist)
     if dtype != 'list':
         raise errors.LogoError("REPEAT expects a number and an instructionlist, but received `{}` instead.".format(instructionlist))
-    scope = logo.scope_stack[-1]
+    logo.create_repcount_scope()
     for i in range(num):
-        scope['_#'] = i + 1
+        logo.set_repcount(i + 1)
         script = _list_contents_repr(instructionlist, include_braces=False)
         logo.process_instructionlist(script) 
-    del scope['_#']
+    logo.destroy_repcount_scope()
 
 def process_remdup(logo, lst):
     """

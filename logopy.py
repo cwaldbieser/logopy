@@ -20,6 +20,7 @@ class LogoInterpreter:
     primitives = attr.ib(default=attr.Factory(dict))
     procedures = attr.ib(default=attr.Factory(dict))
     scope_stack = attr.ib(default=attr.Factory(list))
+    repcount_stack = attr.ib(default=attr.Factory(list))
     grammar = attr.ib(default=None)
     debug_procs = attr.ib(default=False)
     debug_primitives = attr.ib(default=False)
@@ -97,6 +98,34 @@ class LogoInterpreter:
                     raise errors.LogoError("`{}` has no value.".format(varname))
                 return value
         raise errors.LogoError("No scope has a variable named `{}`.".format(varname))
+
+    def get_repcount(self):
+        """
+        Get the current REPCOUNT count.
+        Returns -1 on no REPEAT or FOREVER.
+        """
+        rep_scopes = self.repcount_stack
+        if len(rep_scopes) == 0:
+            return -1
+        return rep_scopes[-1]
+
+    def set_repcount(self, n):
+        """
+        Sets the current repcount.
+        """
+        self.repcount_stack[-1] = n
+
+    def create_repcount_scope(self):
+        """
+        Create a new repcount scope.
+        """
+        self.repcount_stack.append(-1)
+
+    def destroy_repcount_scope(self):
+        """
+        Destroy a repcount scope.
+        """
+        self.repcount_stack.pop()
 
     def evaluate(self, tokens):
         """
@@ -185,7 +214,7 @@ class LogoInterpreter:
                 return self.get_variable_value(tokens.popleft()[1:])
             if token == '#':
                 tokens.popleft()
-                return self.get_variable_value('_#')
+                return self.get_repcount()
             if token in self.primitives or token in self.procedures:
                 return self.process_command(tokens)
             else:
