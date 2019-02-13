@@ -145,6 +145,7 @@ def create_primitives_map():
     m['rl'] = m['readlist']
     m['remove'] = make_primitive("remove", ['thing', 'list'], [], None, 2, process_remove)
     m['remdup'] = make_primitive("remdup", ['list'], [], None, 1, process_remdup)
+    m['repcount'] = make_primitive("repcount", [], [], None, 0, process_repcount)
     m['repeat'] = make_primitive("repeat", ['num', 'instructionlist'], [], None, 2, process_repeat)
     m['reverse'] = make_primitive("reverse", ['list'], [], None, 1, process_reverse)
     m['round'] = make_primitive("round", ['num'], [], None, 1, process_round)
@@ -832,6 +833,12 @@ def process_remove(logo, thing, lst):
         return lst.replace(thing, "")
     else:
         raise errors.LogoError("REMOVE cannot be used on a {}.".format(_datatypename(lst)))
+
+def process_repcount(logo):
+    """
+    The REPCOUNT command.
+    """
+    return logo.get_repcount()
 
 def process_repeat(logo, num, instructionlist):
     """

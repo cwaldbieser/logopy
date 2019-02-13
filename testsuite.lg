@@ -1,0 +1,315 @@
+
+to heading :title
+print []
+print (sentence "= :title "=)
+end
+
+heading [Printing and expressions]
+print "hello
+print 0.25
+print (1.5 * 10.0)
+print (2 + 3)
+print (2 + 3.5)
+print 007
+print .7
+print [hello world]
+(print [hello world] "something [else] [and now for [the larch] something completely different ...])
+show [hello world]
+
+heading "MAKE
+make "name "Carl
+(print "Hello :name)
+
+heading [Dynamic Scopes]
+to greeting :name
+(print [Oh, why hello there,] :name)
+end
+
+greeting "Susan
+greeting "Garth
+greeting :name
+print [ ]
+to introduction
+print [Allow me to introduce myself.  I am Logo.]
+print [Why, yes!  It is Greek.  From logos-- meaning word or thought.]
+end
+
+to conversation :name
+greeting "Carl
+introduction
+(print [But you can call me] word :name ".)
+end
+
+conversation "Lo-lo
+print []
+print word "ABC "def
+print (word "ABC "def "GHI "jkl "MNO "pqr "STU "vwx "YZ)
+
+heading "SENTENCE
+show (sentence "The "quick [ brown fox [ jumps over ] the ] [lazy] "dog.)
+show list "A [B]
+show (list [1 2 3] "two [III])
+
+heading "FPUT
+show fput "elephant [dog cat]
+show lput "cyan [red blue green]
+
+heading "COMBINE
+show combine "a [b c]
+show combine "key "board
+show combine [1 2] [3]
+; Error condition - Expected word, got a list.
+; show combine [1 2] "three
+
+heading "REVERSE
+show reverse [one two three]
+
+heading "FIRST
+show first "Cookie
+show first [ green blue cyan]
+
+heading "FIRSTS
+make "planets [mercury venus earth mars jupiter saturn uranus neptune]
+show firsts :planets
+make "number.reps [[1 one i] [2 two ii] [3 three iii]]
+show firsts :number.reps
+; Next is an error.
+; show firsts [[2 2] [] [1] [3 3 3]]
+
+heading "LAST
+show last "Hello
+show last :planets
+show last :number.reps
+
+heading "BUTFIRST
+show bf "Cookie
+show bf :planets
+
+heading "BUTFIRSTS
+show bfs :planets
+show bfs :number.reps
+
+heading "BUTLAST
+show bf "Cookie
+show bl :planets
+
+heading "ITEM
+show item 4 "Cookie
+show item 3 :planets
+
+heading "PICK
+show pick "abcdefghijklmnopqrstuvwxyz
+show pick :planets
+
+heading "REMOVE
+show remove "o "Cookie
+show remove "uranus :planets
+
+heading "REMDUP
+show remdup "ebeleeue
+show remdup [one 3 two two 3]
+
+heading "QUOTED
+show quoted :name
+show quoted :planets
+
+heading [PUSH and POP]
+make "stack []
+push "stack "bottom print [Pushed bottom.]
+push "stack "middle print [Pushed middle.]
+push "stack "top print [Pushed top.]
+show :stack
+print [POPing values off stack ...]
+show pop "stack
+show pop "stack
+show pop "stack
+show :stack
+
+heading [QUEUE and DEQUEUE]
+make "queue []
+queue "queue "first print [Queued first.]
+queue "queue "second print [Queued second.]
+queue "queue "third print [Queued third.]
+show :queue
+print [DEQUEUEing values ...]
+show dequeue "queue
+show dequeue "queue
+show dequeue "queue
+show :queue
+
+heading [Predicates]
+print (sentence [wordp :name ?] wordp :name)
+print (sentence [wordp 14 ?] wordp 14)
+print (sentence [wordp 14.7 ?] wordp 14.7)
+print (sentence [wordp :planets ?] wordp :planets)
+print (sentence [listp :name ?] listp :name)
+print (sentence [listp :planets ?] listp :planets)
+print (sentence [emptyp :name ?] emptyp :name)
+print (sentence [emptyp :planets ?] emptyp :planets)
+print (sentence [emptyp [] ?] emptyp [])
+print (sentence [emptyp " ?] emptyp " )
+print (sentence [equalp :planets :planets ?] equalp :planets :planets)
+print (sentence [equalp :name :planets ?] equalp :name :planets)
+print (sentence [notequalp :name :planets ?] notequalp :name :planets)
+print (sentence [notequalp :planets :planets ?] notequalp :planets :planets)
+print (sentence [:planets = :planets ?] :planets = :planets)
+print (sentence [:name = :planets ?] :name = :planets)
+print (sentence [:name <> :planets ?] :name <> :planets)
+print (sentence [:planets <> :planets ?] :planets <> :planets)
+print (sentence [(2+3) * 2 = 100 / 10] (2+3) * 2 = 100 / 10)
+print (sentence [beforep "apple "banana ?] beforep "apple "banana)
+print (sentence [beforep 3 11 ?] beforep 3 11)
+print (sentence [.eq [tree] [tree] ?] .eq [tree] [tree])
+print (sentence [.eq "tree "tree ?] .eq "tree "tree)
+print (sentence [.eq :planets :planets ?] .eq :planets :planets)
+print (sentence [.eq 3 3 ?] .eq 3 3)
+print (sentence [memberp "venus :planets ?] memberp "venus :planets)
+print (sentence [memberp "pluto :planets ?] memberp "pluto :planets)
+print (sentence [memberp "o "book ?] memberp "o "book)
+print (sentence [memberp "e "book ?] memberp "e "book)
+print (sentence [substringp "book "bookkeeper ?] substringp "book "bookkeeper)
+print (sentence [substringp "book "boots ?] substringp "book "boots)
+print (sentence [substringp 0 707 ?] substringp 0 707)
+print (sentence [numberp "Hello ?] numberp "Hello)
+print (sentence [numberp 17 ?] numberp 17)
+print (sentence [numberp 0.17 ?] numberp 0.17)
+print (sentence [numberp 001 ?] numberp 001)
+
+heading "COUNT
+print (sentence [count :name ?] count :name)
+print (sentence [count :planets ?] count :planets)
+print (sentence [count 100 ?] count 100)
+
+heading [UNICODE and CHAR]
+print (sentence [unicode "A ?] unicode "A)
+print (sentence [char 65 ?] char 65)
+; Next line will cause an error.
+; print (sentence [unicode "AB ?] unicode "AB)
+
+heading "MEMBER
+print (sentence [member "mars :planets ?] member "mars :planets)
+print (sentence [member "k "donkey ?] member "k "donkey)
+
+heading [UPPERCASE and LOWERCASE]
+print (sentence [lowercase "MERCURY ?] lowercase "MERCURY)
+print (sentence [uppercase "jupiter ?] uppercase "jupiter)
+
+heading "TYPE
+type "book print "keeper
+
+;Uncomment for READLIST test.
+;heading "READLIST
+;print [Type something:] show (sentence readlist)
+
+heading [Arithmatic: SUM, DIFFERENCE, PRODUCT, QUOTIENT, +-*/]
+print [make "n 5] make "n 5
+print (sentence [sum 3 4 ?] sum 3 4)
+print (sentence [sum :n 2 ?] sum :n 2)
+print (sentence [:n + 2 ?] :n + 2)
+print (sentence [(sum :n 5 67) ?] (sum :n 5 67))
+print (sentence [difference 9 5 ?] difference 9 5)
+print (sentence [9 - :n ?] 9 - :n)
+print (sentence [product 2 3 ?] product 2 3)
+print (sentence [product :n 3 ?] product :n 3)
+print (sentence [product :n 3 3 ?] (product :n 3 3))
+print (sentence [quotient 360 15 ?] quotient 360 15)
+print (sentence [360 / :n ?] 360 / :n)
+print (sentence [2 * ((sum 3 -1) / -2) - 7 ?] 2 * ((sum 3 -1) / -2) - 7)
+
+heading [MODULO and REMAINDER]
+print (sentence [remainder 5 2 ?] remainder 5 2)
+print (sentence [remainder -5 2 ?] remainder -5 2)
+print (sentence [remainder 5 -2 ?] remainder 5 -2)
+print (sentence [modulo -5 2 ?] modulo -5 2)
+print (sentence [modulo 5 -2 ?] modulo 5 -2)
+
+heading [INT and ROUND]
+print (sentence [int -25.1 ?] int -25.1)
+print (sentence [int -25.7 ?] int -25.7)
+print (sentence [round -25.1 ?] round -25.1)
+print (sentence [round -25.7 ?] round -25.7)
+; Errors
+;print (sentence [int "bar ?] int "bar)
+;print (sentence [round [1 3] ?] round [1 3])
+
+heading [SQRT and POWER]
+print (sentence [sqrt 25 ?] sqrt 25)
+; Errors
+;print (sentence [sqrt -25 ?] sqrt -25)
+;print (sentence [sqrt "baz ?] sqrt "baz)
+print (sentence [power 2 5 ?] power 2 5)
+print (sentence [power 5 2 ?] power 5 2)
+print (sentence [power -1.5 3 ?] power -1.5 3)
+print (sentence [power 16 0.25 ?] power 16 0.25)
+
+heading [EXP, LN, and LOG10]
+print (sentence [exp 1 ?] exp 1)
+print (sentence [ln exp 5 ?] ln exp 5)
+print (sentence [log10 1000 ?] log10 1000)
+
+heading [Trig functions- COS, SIN, RADCOS, RADSIN, ARCTAN, RADARCTAN]
+print (sentence [cos 180 ?] cos 180)
+print (sentence [radcos 3.147 ?] radcos 3.147)
+print (sentence [sin 90 ?] sin 90)
+print (sentence [radsin 3.147 / 2 ?] radsin 3.147 / 2)
+print (sentence [2 * (radarctan 0 1) ?] 2 * (radarctan 0 1))
+
+heading [Sequence Generation- ISEQ, RSEQ]
+print (sentence [iseq 3 7 ?] iseq 3 7)
+print (sentence [iseq 7 -3 ?] iseq 7 -3)
+print (sentence [rseq 1 16 4 ?] rseq 1 16 4)
+print (sentence [rseq 16 1 4 ?] rseq 16 1 4)
+; Errors
+;print (sentence [rseq "a 1 4 ?] rseq "a 1 4)
+
+heading [Relational Operators- LESSP, LESSEQUALP, GREATERP GREATEREQUALP, < > <= >=]
+print (sentence [lessp 5 7 ?] lessp 5  7)
+print (sentence [5 < 7 ?] 5 < 7)
+print (sentence [lessp 5 5 ?] lessp 5  5)
+print (sentence [lessequalp 5 7 ?] lessequalp 5 7)
+print (sentence [5 <= 7 ?] 5 <= 7)
+print (sentence [lessequalp 5 5 ?] lessequalp 5 5)
+print (sentence [lessequalp 5 3 ?] lessequalp 5 3)
+print (sentence [greaterp 5 3 ?] greaterp 5  3)
+print (sentence [5 > 3 ?] 5 > 3)
+print (sentence [greaterp 5 5 ?] greaterp 5  5)
+print (sentence [greaterequalp 5 3 ?] greaterequalp 5 3)
+print (sentence [5 >= 3 ?] 5 >= 3)
+print (sentence [greaterequalp 5 5 ?] greaterequalp 5 5)
+print (sentence [greaterequalp 5 7 ?] greaterequalp 5 7)
+; Errors
+;print (sentence [5 >= "a ?] 5 >= "a)
+
+heading "RANDOM
+print (sentence [random 10 ?] random 10)
+print (sentence [(random 70 79) ?] (random 70 79))
+
+heading [Logical Operators-- AND, OR, NOT]
+print (sentence [and 5 <= 7 7 < 3] and 5 <= 7 7 < 3) 
+print (sentence [and "true "true ?] and "true "true) 
+print (sentence [and "true "false ?] and "true "false) 
+print (sentence [and "false "true ?] and "false "true) 
+print (sentence [and "false "false ?] and "false "false) 
+print (sentence [or "true "true ?] or "true "true) 
+print (sentence [or "true "false ?] or "true "false) 
+print (sentence [or "false "true ?] or "false "true) 
+print (sentence [or "false "false ?] or "false "false) 
+print (sentence [not "true ?] not "true) 
+print (sentence [not "false ?] not "false) 
+
+heading "THING
+print (sentence [thing "planets ?] thing "planets)
+
+heading [RUN and RUNRESULT]
+print [make "result run [sum 5 2]] 
+make "result run [sum 5 2]
+print (sentence [:result ?] :result)
+type (sentence [runresult sum 7 7 ?]) type "\  show runresult [sum 7 7]
+type (sentence [runresult print "Hello ?]) type "\  show runresult [print "Hello]
+
+heading [REPEAT and REPCOUNT]
+print (sentence [repeat 3 [print repcount]] [:])
+repeat 3 [print repcount]
+print (sentence [repeat 3 [make "j # repeat 3 [show (list # "* j "= # * j)]]] [:])
+repeat 3 [make "j # repeat 3 [print (list # "* :j "= # * :j)]]
+
