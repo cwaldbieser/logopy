@@ -183,6 +183,9 @@ class LogoInterpreter:
                 return tokens.popleft()[1:]
             if token.startswith(':'):
                 return self.get_variable_value(tokens.popleft()[1:])
+            if token == '#':
+                tokens.popleft()
+                return self.get_variable_value('_#')
             if token in self.primitives or token in self.procedures:
                 return self.process_command(tokens)
             else:

@@ -145,6 +145,7 @@ def create_primitives_map():
     m['rl'] = m['readlist']
     m['remove'] = make_primitive("remove", ['thing', 'list'], [], None, 2, process_remove)
     m['remdup'] = make_primitive("remdup", ['list'], [], None, 1, process_remdup)
+    m['repeat'] = make_primitive("repeat", ['num', 'instructionlist'], [], None, 2, process_repeat)
     m['reverse'] = make_primitive("reverse", ['list'], [], None, 1, process_reverse)
     m['round'] = make_primitive("round", ['num'], [], None, 1, process_round)
     m['rseq'] = make_primitive("rseq", ['from', 'to', 'count'], [], None, 3, process_rseq)
@@ -831,6 +832,22 @@ def process_remove(logo, thing, lst):
         return lst.replace(thing, "")
     else:
         raise errors.LogoError("REMOVE cannot be used on a {}.".format(_datatypename(lst)))
+
+def process_repeat(logo, num, instructionlist):
+    """
+    The REPEAT command.
+    """
+    if not isinstance(num, numbers.Number):
+        raise errors.LogoError("REPEAT expects a number and an instructionlist, but received `{}` instead.".format(num))
+    dtype = _datatypename(instructionlist)
+    if dtype != 'list':
+        raise errors.LogoError("REPEAT expects a number and an instructionlist, but received `{}` instead.".format(instructionlist))
+    scope = logo.scope_stack[-1]
+    for i in range(num):
+        scope['_#'] = i + 1
+        script = _list_contents_repr(instructionlist, include_braces=False)
+        logo.process_instructionlist(script) 
+    del scope['_#']
 
 def process_remdup(logo, lst):
     """
