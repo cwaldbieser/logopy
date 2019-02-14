@@ -425,7 +425,6 @@ def process_if(logo, tf, instrlist, instrlist2=None):
             raise errors.LogoError("IF expects instructionlist but received `{}` instead.".format(instrlist2))
     if tf == 'true':
         script = _list_contents_repr(instrlist, include_braces=False)
-        print("SCRIPT:", script)
         return logo.process_instructionlist(script) 
     elif instrlist2 != None:
         script = _list_contents_repr(instrlist2, include_braces=False)
@@ -1067,28 +1066,6 @@ def process_wordp(logo, thing):
         return 'true'
     return 'false'
 
-def _datatypename(o):
-    """
-    Returns a sting corresponding to the Logo data type name.
-    """
-    if isinstance(o, str) or isinstance(o, numbers.Number):
-        return 'word'
-    if isinstance(o, list):
-        return 'list'
-    return 'unknown'
-
-def _list_contents_repr(o, include_braces=True):
-    dtype = _datatypename(o)
-    if dtype == 'list':
-        rep = ' '.join([_list_contents_repr(x) for x in o])
-        if include_braces:
-            rep = "[{}]".format(rep)
-        return rep
-    elif dtype == 'word':
-        return str(o)
-    else:
-        raise errors.LogoError("Unknown data type for `{}`.".format(o))
-
 def process_show(logo, *args):
     """
     The SHOW command.
@@ -1162,4 +1139,34 @@ def process_to(logo, tokens):
         default_arity=default_arity,
         tokens=procedure_tokens)
     logo.procedures[procedure_name.lower()] = procedure 
+
+def _datatypename(o):
+    """
+    Returns a sting corresponding to the Logo data type name.
+    """
+    if isinstance(o, str) or isinstance(o, numbers.Number):
+        return 'word'
+    if isinstance(o, list):
+        return 'list'
+    return 'unknown'
+
+def _list_contents_repr(o, include_braces=True):
+    dtype = _datatypename(o)
+    if dtype == 'list':
+        rep = ' '.join([_list_contents_repr(x) for x in o])
+        if include_braces:
+            rep = "[{}]".format(rep)
+        return rep
+    elif dtype == 'word':
+        return _escape_word_chars(str(o))
+    else:
+        raise errors.LogoError("Unknown data type for `{}`.".format(o))
+
+def _escape_word_chars(word):
+    chars = []
+    for c in word:
+        if c in (' ', ';', '\\', '[', ']'):
+            c = r"\{}".format(c)
+        chars.append(c)
+    return ''.join(chars)
 
