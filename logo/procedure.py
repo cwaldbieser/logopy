@@ -98,6 +98,7 @@ def create_primitives_map():
     m['greaterequal?'] = m['greaterequalp']
     m['greaterp'] = make_primitive("greaterp", ['num1', 'num2'], [], None, 2, process_greaterp)
     m['greater?'] = m['greaterp']
+    m['if'] = make_primitive("if", ['tf', 'instructionlist'], ['instructionlist2'], None, 2, process_if)
     m['int'] = make_primitive("int", ['num'], [], None, 1, process_int)
     m['iseq'] = make_primitive("iseq", ['from', 'to'], [], None, 2, process_iseq)
     m['item'] = make_primitive("item", ['index', 'thing'], [], None, 2, process_item)
@@ -404,6 +405,31 @@ def process_greaterp(logo, num1, num2):
         return 'true'
     else:
         return 'false'
+
+def process_if(logo, tf, instrlist, instrlist2=None):
+    """
+    The IF command.
+    """
+    try:
+        tf = tf.lower()
+    except AttributeError:
+        raise errors.LogoError("IF expects TRUE/FALSE but received `{}` instead.".format(tf))
+    if not tf in ('true', 'false'):
+        raise errors.LogoError("IF expects TRUE/FALSE but received `{}` instead.".format(tf))
+    dtype = _datatypename(instrlist)
+    if dtype != 'list':
+        raise errors.LogoError("IF expects instructionlist but received `{}` instead.".format(instrlist))
+    if instrlist2 is not None:
+        dtype2 = _datatypename(instrlist2)
+        if dtype != 'list':
+            raise errors.LogoError("IF expects instructionlist but received `{}` instead.".format(instrlist2))
+    if tf == 'true':
+        script = _list_contents_repr(instrlist, include_braces=False)
+        print("SCRIPT:", script)
+        return logo.process_instructionlist(script) 
+    elif instrlist2 != None:
+        script = _list_contents_repr(instrlist2, include_braces=False)
+        return logo.process_instructionlist(script) 
 
 def process_int(logo, num):
     """

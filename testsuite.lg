@@ -313,3 +313,8 @@ repeat 3 [print repcount]
 print (sentence [repeat 3 [make "j # repeat 3 [show (list # "* j "= # * j)]]] [:])
 repeat 3 [make "j # repeat 3 [print (list # "* :j "= # * :j)]]
 
+heading [IF]
+print (sentence [if equalp :name "Carl [type "Hello,\  print :name])
+if equalp :name "Carl [(print "Hello,\  :name]
+;if equalp :name "Carl [type "Hello,\  print :name]
+

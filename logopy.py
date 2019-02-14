@@ -24,6 +24,7 @@ class LogoInterpreter:
     grammar = attr.ib(default=None)
     debug_procs = attr.ib(default=False)
     debug_primitives = attr.ib(default=False)
+    debug_tokens = attr.ib(default=False)
 
     @classmethod
     def create_interpreter(cls):
@@ -44,7 +45,7 @@ class LogoInterpreter:
         Process a script, which should represent a list of instructions
         when tokenized.
         """
-        stream = parse_tokens(self.grammar, script)
+        stream = parse_tokens(self.grammar, script, debug=self.debug_tokens)
         return self.process_commands(stream)
 
     def process_commands(self, tokens):
@@ -387,31 +388,26 @@ def make_token_grammar():
           ws item:first (ws item)*:rest ws -> [first] + rest
         | ws item:only ws -> [only]
     item =
-          quote_word:qw (ws comment)* -> qw
+          word:qw (ws comment)* -> qw
         | itemlist
         | '[' ws quoted_itemlist:q ws ']' -> list(q)
         | '[' ws ']' -> []
         | expr:e (ws comment)* -> e
-        | word:w (ws comment)* -> w
         | '(' itemlist:lst ')' -> tuple(lst) 
         | (ws comment)
     quoted_itemlist = 
           ws quoted_item:first (ws quoted_item)*:rest ws -> [first] + rest
         | ws quoted_item:only ws -> [only]
     quoted_item =
-          <(~' ' ~'[' ~']' anything)+>:w (ws comment)* -> w
+          word:qw (ws comment)* -> qw
+        | <(~' ' ~'[' ~']' anything)+>:w (ws comment)* -> w
         | (ws comment)
         | '[' ws quoted_itemlist:q ws ']' -> list(q)
         | '[' ws ']' -> []
-    word = <(word_char+)>:val -> val
-    word_char = (ascii:a -> a) | (digit:d -> d) | (~';' punctuation:p -> p)
-    quote_word = '"' (quote_word_char+):l -> '"' + ''.join(l)
-    quote_word_char = (escaped_char:e -> e) | (~';' word_char:c -> c)
-    escaped_char = '\\' (
-          (' ':c -> c)
-        | ('\\':c -> c)
-        | (';':c -> c)
-    ) 
+    word = (word_char+):l -> ''.join(l)
+    word_char = (escaped_char:e -> e) | (~';' unescaped_char:u -> u)
+    unescaped_char = (ascii:a -> a) | (digit:d -> d) | (~';' punctuation:p -> p)
+    escaped_char = '\\' (anything:c -> c)
     comment = <';' rest_of_line>:c -> Comment(c)  
     rest_of_line = <('\\n' | (~'\n' anything))*>
     parens = '(' ws expr:e ws ')' -> e
@@ -450,14 +446,17 @@ def transform_tokens(tokens):
             tmp.append(item)
     return tmp 
 
-def parse_tokens(grammar, script):
+def parse_tokens(grammar, script, debug=False):
     """
     Parse a Logo script.
     Return a list of tokens.
     """
     token_lst = grammar(script).itemlist()
     token_lst = transform_tokens(token_lst)
-    return TokenStream.make_stream(token_lst)
+    tokens = TokenStream.make_stream(token_lst)
+    if debug:
+        print("PARSED TOKENS:", tokens)
+    return tokens
 
 def run_tests(grammar):
     """
@@ -517,10 +516,9 @@ def main(args):
     if args.tests:
         run_tests(grammar)
     script = args.file.read()
-    tokens = parse_tokens(grammar, script)
-    if args.debug_tokens:
-        print("PARSED TOKENS:", tokens)
+    tokens = parse_tokens(grammar, script, debug=args.debug_tokens)
     interpreter = LogoInterpreter.create_interpreter()
+    interpreter.debug_tokens = args.debug_tokens
     interpreter.grammar = grammar
     if args.debug_procs:
         interpreter.debug_procs = True
