@@ -1,0 +1,15 @@
+
+to inner
+print [Entered inner.]
+stop
+print [This will never be printed.]
+end
+
+to outer
+print [Entered outer.]
+inner
+print [This should be printed.]
+end
+
+outer
+

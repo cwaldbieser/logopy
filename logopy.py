@@ -264,8 +264,12 @@ class LogoInterpreter:
                 scope[varname] = value
         if rest_input:
             scope[rest_input] = rest_args
-        self.process_commands(tokens)
+        try:
+            result = self.process_commands(tokens)
+        except errors.StopSignal:
+            result = None 
         scope_stack.pop()
+        return result
 
     def process_special_form(self, tokens):
         """

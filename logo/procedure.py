@@ -159,6 +159,7 @@ def create_primitives_map():
     m['show'] = make_primitive("show", ['thing'], [], 'others', 1, process_show)
     m['sin'] = make_primitive("sin", ['degrees'], [], None, 1, process_sin)
     m['sqrt'] = make_primitive("sqrt", ['num'], [], None, 1, process_sqrt)
+    m['stop'] = make_primitive("stop", [], [], None, 0, process_stop)
     m['substringp'] = make_primitive("substringp", ['thing1', 'thing2'], [], None, 2, process_substringp)
     m['substring?'] = m['substringp']
     m['sum'] = make_primitive("sum", ['num1', 'num2'], [], 'nums', 2, process_sum)
@@ -1010,6 +1011,12 @@ def process_sqrt(logo, num):
         raise errors.LogoError("SQRT expects a number, but received `{}` instead.".format(num))
     except ValueError as ex:
         raise errors.LogoError("SQRT expects a non-negative number, but received `{}` instead.".format(num))
+
+def process_stop(logo):
+    """
+    The STOP command.
+    """
+    raise errors.StopSignal()
 
 def process_substringp(logo, thing1, thing2):
     """
