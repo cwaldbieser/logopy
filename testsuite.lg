@@ -4,6 +4,8 @@ print []
 print (sentence "= :title "=)
 end
 
+make "space "\ ; a quoted space
+
 heading [Printing and expressions]
 print "hello
 print 0.25
@@ -313,9 +315,10 @@ repeat 3 [print repcount]
 print (sentence [repeat 3 [make "j # repeat 3 [show (list # "* j "= # * j)]]] [:])
 repeat 3 [make "j # repeat 3 [print (list # "* :j "= # * :j)]]
 
-heading [IF]
+heading [IF, IFELSE]
 print (sentence [if equalp :name "Carl [(print "Hello, :name)]])
 if equalp :name "Carl [(print "Hello, :name)]
-type (sentence [(if :name = "Fred [print [This won't print]] [ print [But this will.] ]) ?]) type "\ 
+type (sentence [(if :name = "Fred [print [This won't print]] [ print [But this will.] ]) ?]) type :space 
 (if :name = "Fred [print [This won't print]] [ print [But this will.] ])
-
+type (sentence [ifelse :name = "Fred [print [This won't print]] [ print [But this will.] ] ?]) type :space 
+ifelse :name = "Fred [print [This won't print]] [ print [But this will.] ]
