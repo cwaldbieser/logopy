@@ -1,4 +1,6 @@
 
+import attr
+
 
 class LogoError(Exception):
     pass
@@ -6,3 +8,10 @@ class LogoError(Exception):
 
 class StopSignal(Exception):
     pass
+
+
+@attr.s
+class OutputSignal(Exception):
+    value = attr.ib()
+
+

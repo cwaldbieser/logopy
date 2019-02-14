@@ -1,0 +1,7 @@
+
+to baz
+output uppercase "uppercase\ me!
+end
+
+print baz
+

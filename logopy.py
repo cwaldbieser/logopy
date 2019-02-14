@@ -75,12 +75,18 @@ class LogoInterpreter:
                 elif command in primitives:
                     proc = primitives[command]
                     args = self.evaluate_args_for_command(proc.default_arity, tokens)
+                    for n, arg in enumerate(args):
+                        if arg is None:
+                            raise errors.LogoError("Primitive `{}` received a null value for argument {}.".format(command.upper(), n+1))
                     if self.debug_primitives:
                         print("PRIMITIVE:", command, "ARGS:", args)
                     return self.execute_procedure(proc, args)
                 elif command in procedures:
                     proc = procedures[command]
                     args = self.evaluate_args_for_command(proc.default_arity, tokens)
+                    for n, arg in enumerate(args):
+                        if arg is None:
+                            raise errors.LogoError("Procedure `{}` received a null value for argument {}.".format(command.upper(), n+1))
                     if self.debug_procs:
                         print("PROCEDURE:", command, "ARGS:", args)
                     return self.execute_procedure(proc, args)
@@ -264,10 +270,13 @@ class LogoInterpreter:
                 scope[varname] = value
         if rest_input:
             scope[rest_input] = rest_args
+        result = None
         try:
-            result = self.process_commands(tokens)
+            self.process_commands(tokens)
         except errors.StopSignal:
             result = None 
+        except errors.OutputSignal as output:
+            result = output.value
         scope_stack.pop()
         return result
 

@@ -128,6 +128,8 @@ def create_primitives_map():
     m['numberp'] = make_primitive("numberp", ['thing'], [], None, 1, process_numberp)
     m['number?'] = m['numberp']
     m['or'] = make_primitive("or", ['tf1', 'tf2'], [], 'tfs', 2, process_or)
+    m['output'] = make_primitive("output", ['value'], [], None, 1, process_output)
+    m['op'] = m['output']
     m['pick'] = make_primitive("pick", ['list'], [], None, 1, process_pick)
     m['pop'] = make_primitive("pop", ['stackname'], [], None, 1, process_pop)
     m['power'] = make_primitive("power", ['num1', 'num2'], [], None, 2, process_power)
@@ -702,6 +704,12 @@ def process_or(logo, *args):
         if truth_map[arg]:
             return 'true'
     return 'false'
+
+def process_output(logo, value):
+    """
+    The OUTPUT command.
+    """
+    raise errors.OutputSignal(value)
 
 def process_pick(logo, lst):
     """
