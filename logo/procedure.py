@@ -100,6 +100,7 @@ def create_primitives_map():
     m['greater?'] = m['greaterp']
     m['if'] = make_primitive("if", ['tf', 'instructionlist'], ['instructionlist2'], None, 2, process_if)
     m['ifelse'] = make_primitive("ifelse", ['tf', 'instrlist1', 'instrlist2'], [], None, 3, process_ifelse)
+    m['ignore'] = make_primitive("ignore", ['value'], [], None, 1, process_ignore)
     m['int'] = make_primitive("int", ['num'], [], None, 1, process_int)
     m['iseq'] = make_primitive("iseq", ['from', 'to'], [], None, 2, process_iseq)
     m['item'] = make_primitive("item", ['index', 'thing'], [], None, 2, process_item)
@@ -454,6 +455,12 @@ def process_ifelse(logo, tf, instrlist1, instrlist2):
     else:
         script = _list_contents_repr(instrlist2, include_braces=False)
         return logo.process_instructionlist(script) 
+
+def process_ignore(logo, value):
+    """
+    The IGNORE command.
+    """
+    return
 
 def process_int(logo, num):
     """
