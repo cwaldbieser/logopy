@@ -532,10 +532,12 @@ def main(args):
     if args.debug_procs:
         interpreter.debug_procs = True
     try:
-        interpreter.process_commands(tokens)
+        result = interpreter.process_commands(tokens)
     except Exception as ex:
         print("Processed tokens: {}".format(tokens.processed), file=sys.stderr)
         raise ex
+    if result is not None:
+        raise errors.LogoError("You don't say what to do with `{}`.".format(result))
     if args.debug_interpreter:
         print("")
         print(interpreter)
