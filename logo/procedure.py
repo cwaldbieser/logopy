@@ -93,6 +93,7 @@ def create_primitives_map():
     m['exp'] = make_primitive("exp", ['num'], [], None, 1, process_exp)
     m['first'] = make_primitive("first", ['thing'], [], None, 1, process_first)
     m['firsts'] = make_primitive("firsts", ['list'], [], None, 1, process_firsts)
+    m['for'] = make_primitive("for", ['forcontrol', 'instrlist'], [], None, 2, process_for)
     m['fput'] = make_primitive("fput", ['thing', 'list'], [], None, 2, process_fput)
     m['greaterequalp'] = make_primitive("greaterequalp", ['num1', 'num2'], [], None, 2, process_greaterequalp)
     m['greaterequal?'] = m['greaterequalp']
@@ -378,6 +379,34 @@ def process_firsts(logo, lst):
             raise errors.LogoError("FIRSTS doesn't like `{}` as input.".format(item))
         l.append(item[0])
     return l
+
+def process_for(logo, forcontrol, instrlist):
+    """
+    The FOR command.
+    """
+    for arg in (forcontrol, instrlist):
+        dtype = _datatypename(arg)
+        if dtype != 'list':
+            raise errors.LogoError("FOR expects a list but received `{}` instead.".format(arg))
+    if len(forcontrol) not in (3, 4):
+        raise errors.LogoError("FOR expects a control list with 3 or 4 members, but received `{}` instead.".format(forcontrol))
+    counter_name = forcontrol[0]
+    start = _process_run_like("FOR", logo, forcontrol[1])
+    limit = _process_run_like("FOR", logo, forcontrol[2])
+    if len(forcontrol) == 4:
+        step = _process_run_like("FOR", logo, forcontrol[3])
+    else:
+        if start <= limit:
+            step = 1
+        else:
+            step = -1
+    sign = functools.partial(math.copysign, 1)
+    for_scope = {counter_name: start} 
+    logo.scope_stack.append(for_scope)
+    while sign(for_scope[counter_name] - limit)  != sign(step) or for_scope[counter_name] == limit:
+        _process_run_like("FOR", logo, instrlist) 
+        for_scope[counter_name] += step 
+    logo.scope_stack.pop()
 
 def process_fput(logo, thing, lst):
     """
@@ -987,7 +1016,7 @@ def _process_run_like(cmd, logo, instructionlist):
         script = _list_contents_repr(instructionlist, include_braces=False)
         return logo.process_instructionlist(script) 
     elif dtype == 'word':
-        return logo.process_instructionlist(instructionlist)
+        return logo.process_instructionlist(str(instructionlist))
     else:
         raise errors.LogoError("{} expects a word or list, but received `{}` instead.".format(cmd, instructionlist))
 

@@ -322,3 +322,11 @@ type (sentence [(if :name = "Fred [print [This won't print]] [ print [But this w
 (if :name = "Fred [print [This won't print]] [ print [But this will.] ])
 type (sentence [ifelse :name = "Fred [print [This won't print]] [ print [But this will.] ] ?]) type :space 
 ifelse :name = "Fred [print [This won't print]] [ print [But this will.] ]
+
+heading [Loops- FOR]
+(print "n\ =\  :n)
+print (sentence [for [ x 1 7 2 ] [ print :x ] :])
+for [ x 1 7 2 ] [ print :x ]
+print (sentence [for [ x 1 [(:n + :n) - 3]] [ print :x ] :])
+for [ x 1 [(:n + :n) - 3]] [ print :x ]
+

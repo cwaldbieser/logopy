@@ -46,7 +46,7 @@ class LogoInterpreter:
         when tokenized.
         """
         stream = parse_tokens(self.grammar, script, debug=self.debug_tokens)
-        return self.process_commands(stream)
+        return self.evaluate(stream)
 
     def process_commands(self, tokens):
         while len(tokens) > 0:
@@ -410,7 +410,8 @@ def make_token_grammar():
           ws quoted_item:first (ws quoted_item)*:rest ws -> [first] + rest
         | ws quoted_item:only ws -> [only]
     quoted_item =
-          word:qw (ws comment)* -> qw
+          number:n (ws comment)* -> n
+        | word:qw (ws comment)* -> qw
         | <(~' ' ~'[' ~']' anything)+>:w (ws comment)* -> w
         | (ws comment)
         | '[' ws quoted_itemlist:q ws ']' -> list(q)
