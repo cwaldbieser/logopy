@@ -316,4 +316,6 @@ repeat 3 [make "j # repeat 3 [print (list # "* :j "= # * :j)]]
 heading [IF]
 print (sentence [if equalp :name "Carl [(print "Hello, :name)]])
 if equalp :name "Carl [(print "Hello, :name)]
+type (sentence [(if :name = "Fred [print [This won't print]] [ print [But this will.] ]) ?]) type "\ 
+(if :name = "Fred [print [This won't print]] [ print [But this will.] ])
 
