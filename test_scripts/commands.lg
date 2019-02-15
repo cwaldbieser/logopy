@@ -386,4 +386,26 @@ print case :color [
     [[blue green purple] cool]
     [else [I'm not sure about that color.]]
 ]
-
+print (sentence [>>> make "wordq [] queue "wordq "grape queue "wordq "orange queue "wordq "79th])
+print (sentence [>>> while [not emptyp :wordq] \[])
+print (sentence [... \ \ \ \     make "w dequeue "wordq])
+print (sentence [... \ \ \ \     type [Testing word "] type :w type [" ...] type "\ ])
+print (sentence [... \ \ \ \     cond \[])
+print (sentence [... \ \ \ \ \ \ \ \         [[memberp first :w "aeiou] print [Starts with a vowel.]]])
+print (sentence [... \ \ \ \ \ \ \ \         [[memberp first :w "qwrtypsdfghjklzxcvbnm] print [Starts with a consonant.]]])
+print (sentence [... \ \ \ \ \ \ \ \         [else print [Starts with neither a vowel nor a consonant.]]])
+print (sentence [... \ \ \ \     \]])
+print (sentence [... \]])
+make "wordq []
+queue "wordq "grape
+queue "wordq "orange
+queue "wordq "79th
+while [not emptyp :wordq] [
+    make "w dequeue "wordq
+    type [Testing word "] type :w type [" ...] type "\ 
+    cond [
+        [[memberp first :w "aeiou] print [Starts with a vowel.]]
+        [[memberp first :w "qwrtypsdfghjklzxcvbnm] print [Starts with a consonant.]]
+        [else print [Starts with neither a vowel nor a consonant.]]
+    ]
+]

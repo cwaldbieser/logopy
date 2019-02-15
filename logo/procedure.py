@@ -83,6 +83,7 @@ def create_primitives_map():
     m['case'] = make_primitive("case", ['value', 'clauses'], [], None, 2, process_case)
     m['char'] = make_primitive("char", ['int'], [], None, 1, process_char)
     m['combine'] = make_primitive("combine", ['thing1', 'thing2'], [], None, 2, process_combine)
+    m['cond'] = make_primitive("cond", ['clauses'], [], None, 1, process_cond)
     m['count'] = make_primitive("count", ['thing'], [], None, 1, process_count)
     m['cos'] = make_primitive("cos", ['degrees'], [], None, 1, process_cos)
     m['dequeue'] = make_primitive("dequeue", ['queuename'], [], None, 1, process_dequeue)
@@ -316,6 +317,21 @@ def process_combine(logo, thing1, thing2):
         return process_fput(logo, thing1, thing2)
     else:
         return process_word(logo, thing1, thing2)
+
+def process_cond(logo, clauses):
+    """
+    The COND command.
+    """
+    if not _is_list(clauses):
+        raise errors.LogoError("COND expected a list of clauses but received `{}` instead.".format(clauses))
+    for clause in clauses:
+        if (not _is_list(clause)) or len(clause) < 2 :
+            raise errors.LogoError("COND expects a clause to be a list with at least 2 members but received `{}` instead.".format(clause))
+        cond = clause[0]
+        matched = (_is_word(cond) and cond.lower() == 'else') or _is_true(_process_run_like("COND", logo, cond))
+        if matched:
+            instrlist = clause[1:]
+            return _process_run_like("COND", logo, instrlist)
 
 def process_cos(logo, degrees):
     """
