@@ -364,4 +364,11 @@ while [:n >= -3] [
     print :n 
     make "n (:n - 1)
 ]
+print (sentence [>>> make "n 3])
+print (sentence [>>> do.until [print :n make "n (:n - 1)] [:n < -3]])
+make "n 3
+do.until [
+    print :n
+    make "n (:n - 1)
+] [:n < -3]
 

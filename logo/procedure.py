@@ -86,6 +86,7 @@ def create_primitives_map():
     m['cos'] = make_primitive("cos", ['degrees'], [], None, 1, process_cos)
     m['dequeue'] = make_primitive("dequeue", ['queuename'], [], None, 1, process_dequeue)
     m['difference'] = make_primitive("difference", ['num1', 'num2'], [], None, 2, process_difference)
+    m['do.until'] = make_primitive("do.until", ['instrlist', 'tfexpr'], [], None, 2, process_dountil)
     m['do.while'] = make_primitive("do.while", ['instrlist', 'tfexpr'], [], None, 2, process_dowhile)
     m['emptyp'] = make_primitive("emptyp", ['thing'], [], None, 1, process_emptyp)
     m['empty?'] = m['emptyp']
@@ -205,9 +206,9 @@ def process_and(logo, *args):
     """
     truth_map = {'true': True, 'false': False}
     for arg in args:
-        if not arg in truth_map:
+        if not arg.lower() in truth_map:
             raise errors.LogoError("AND expects true/false values but received `{}` instead.".format(arg))
-        if not truth_map[arg]:
+        if not truth_map[arg.lower()]:
             return 'false'
     return 'true'
 
@@ -335,13 +336,22 @@ def process_difference(logo, num1, num2):
             raise errors.LogoError("DIFFERENCE expected a number but got `{}` instead.".format(arg))
     return num1 - num2
 
+def process_dountil(logo, instrlist, tfexpr):
+    """
+    The DO.UNTIL command.
+    """
+    while True:
+        _process_run_like("DO.UNTIL", logo, instrlist)
+        if _is_true(_process_run_like("DO.UNTIL", logo, tfexpr)):
+            break
+
 def process_dowhile(logo, instrlist, tfexpr):
     """
     The DO.WHILE command.
     """
     while True:
         _process_run_like("DO.WHILE", logo, instrlist)
-        if _process_run_like("DO.WHILE", logo, tfexpr) == 'false':
+        if _is_false(_process_run_like("DO.WHILE", logo, tfexpr)):
             break
 
 def process_emptyp(logo, thing):
@@ -489,7 +499,7 @@ def process_ifelse(logo, tf, instrlist1, instrlist2):
         dtype = _datatypename(instrlist)
         if dtype != 'list':
             raise errors.LogoError("IF expects instructionlist but received `{}` instead.".format(instrlist))
-    if tf == 'true':
+    if _is_true(tf):
         script = _list_contents_repr(instrlist1, include_braces=False)
         return logo.process_instructionlist(script) 
     else:
@@ -715,9 +725,9 @@ def process_not(logo, tf):
     """
     The NOT command.
     """
-    if tf == 'true':
+    if _is_true(tf):
         return 'false'
-    elif tf == 'false':
+    elif _is_false(tf):
         return 'true'
     else:
         raise errors.LogoError("AND expects true/false values but received `{}` instead.".format(arg))
@@ -746,9 +756,9 @@ def process_or(logo, *args):
     """
     truth_map = {'true': True, 'false': False}
     for arg in args:
-        if not arg in truth_map:
+        if not arg.lower() in truth_map:
             raise errors.LogoError("OR expects true/false values but received `{}` instead.".format(arg))
-        if truth_map[arg]:
+        if truth_map[arg.lower()]:
             return 'true'
     return 'false'
 
@@ -1135,7 +1145,7 @@ def process_while(logo, tfexpr, instrlist):
     """
     The WHILE command.
     """
-    while _process_run_like("WHILE", logo, tfexpr) == 'true':
+    while _is_true(_process_run_like("WHILE", logo, tfexpr)):
         _process_run_like("WHILE", logo, instrlist)
 
 def process_word(logo, *args):
@@ -1263,4 +1273,10 @@ def _escape_word_chars(word):
             c = r"\{}".format(c)
         chars.append(c)
     return ''.join(chars)
+
+def _is_true(tf):
+    return tf.lower() == 'true'
+
+def _is_false(tf):
+    return tf.lower() == 'false'
 
