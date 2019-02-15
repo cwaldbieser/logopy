@@ -378,3 +378,12 @@ until [:n < -2] [
     make "n (:n - 1)
 ]
 
+heading [CASE and COND]
+print (sentence [>>> make "color "green print case :color [ [[red orange yellow] warm] [[blue green purple] cool] [else [I'm not sure about that color.]] ]])
+make "color "green
+print case :color [
+    [[red orange yellow] warm]
+    [[blue green purple] cool]
+    [else [I'm not sure about that color.]]
+]
+

@@ -80,6 +80,7 @@ def create_primitives_map():
     m['bfs'] = m['butfirsts']
     m['butlast'] = make_primitive("butlast", ['wordlist'], [], None, 1, process_butlast)
     m['bl'] = m['butlast']
+    m['case'] = make_primitive("case", ['value', 'clauses'], [], None, 2, process_case)
     m['char'] = make_primitive("char", ['int'], [], None, 1, process_char)
     m['combine'] = make_primitive("combine", ['thing1', 'thing2'], [], None, 2, process_combine)
     m['count'] = make_primitive("count", ['thing'], [], None, 1, process_count)
@@ -279,6 +280,24 @@ def process_butlast(logo, wordlist):
     if len(wordlist) == 0:
         raise errors.LogoError("BUTLAST doesn't like `{}` as input.".format(wordlist)) 
     return wordlist[:-1]
+
+def process_case(logo, value, clauses):
+    """
+    The CASE command.
+    """
+    if not _is_list(clauses):
+        raise errors.LogoError("CASE expected a list of clauses but received `{}` instead.".format(clauses))
+    for clause in clauses:
+        if (not _is_list(clause)) or len(clause) != 2 :
+            raise errors.LogoError("CASE expects a clause to be a 2-member list but received `{}` instead.".format(clause))
+        values = clause[0]
+        matched = (
+            (_is_word(values) and values.upper() == 'ELSE')
+            or
+            (_is_list(values) and value in values)
+        )
+        if matched:
+            return clause[1]
 
 def process_char(logo, codepoint):
     """
@@ -1258,6 +1277,18 @@ def _datatypename(o):
     if isinstance(o, list):
         return 'list'
     return 'unknown'
+
+def _is_list(o):
+    """
+    Returns True if `o` is a Logo list.
+    """
+    return (_datatypename(o) == 'list')
+
+def _is_word(o):
+    """
+    Returns True if `o` is a Logo word.
+    """
+    return (_datatypename(o) == 'word')
 
 def _list_contents_repr(o, include_braces=True, escape_delimiters=True):
     dtype = _datatypename(o)
