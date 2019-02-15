@@ -172,6 +172,7 @@ def create_primitives_map():
     m['thing'] = make_primitive("thing", ['thing'], [], None, 1, process_thing)
     m['type'] = make_primitive("type", ['thing'], [], 'others', 1, process_type)
     m['unicode'] = make_primitive("unicode", ['char'], [], None, 1, process_unicode)
+    m['until'] = make_primitive("until", ['tfexpr', 'instrlist'], [], None, 2, process_until)
     m['uppercase'] = make_primitive("uppercase", ['word'], [], None, 1, process_uppercase)
     m['while'] = make_primitive("while", ['tfexpr', 'instrlist'], [], None, 2, process_while)
     m['word'] = make_primitive("word", ['word1', 'word2'], [], 'words', 2, process_word)
@@ -1131,6 +1132,13 @@ def process_unicode(logo, char):
         return ord(char)
     except TypeError:
         raise errors.LogoError("UNICODE expects a single character, but got `{}`.".format(char))
+
+def process_until(logo, tfexpr, instrlist):
+    """
+    The UNTIL command.
+    """
+    while _is_false(_process_run_like("UNTIL", logo, tfexpr)):
+        _process_run_like("UNTIL", logo, instrlist)
 
 def process_uppercase(logo, word):
     """
