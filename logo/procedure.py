@@ -794,7 +794,7 @@ def process_print(logo, *args):
     reps = []
     for arg in args:
         if _datatypename(arg) == 'list':
-            reps.append(_list_contents_repr(arg, include_braces=False))
+            reps.append(_list_contents_repr(arg, include_braces=False, escape_delimiters=False))
         elif _datatypename(arg) == 'word':
             reps.append(str(arg))
     print(' '.join(reps))
@@ -1158,7 +1158,7 @@ def process_show(logo, *args):
     for arg in args:
         dtype = _datatypename(arg)
         if dtype == 'list':
-            reps.append(_list_contents_repr(arg))
+            reps.append(_list_contents_repr(arg, escape_delimiters=False))
         elif dtype == 'word':
             reps.append(str(arg))
         else:
@@ -1234,15 +1234,18 @@ def _datatypename(o):
         return 'list'
     return 'unknown'
 
-def _list_contents_repr(o, include_braces=True):
+def _list_contents_repr(o, include_braces=True, escape_delimiters=True):
     dtype = _datatypename(o)
     if dtype == 'list':
-        rep = ' '.join([_list_contents_repr(x) for x in o])
+        rep = ' '.join([_list_contents_repr(x, escape_delimiters=escape_delimiters) for x in o])
         if include_braces:
             rep = "[{}]".format(rep)
         return rep
     elif dtype == 'word':
-        return _escape_word_chars(str(o))
+        if escape_delimiters:
+            return _escape_word_chars(str(o))
+        else:
+            return str(o)
     else:
         raise errors.LogoError("Unknown data type for `{}`.".format(o))
 

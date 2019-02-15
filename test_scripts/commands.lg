@@ -300,33 +300,50 @@ print (sentence [not "true ?] not "true)
 print (sentence [not "false ?] not "false) 
 
 heading "THING
-print (sentence [thing "planets ?] thing "planets)
+print (sentence [make "planets [mercury venus earth mars jupiter saturn uranus neptune]])
+make "planets [mercury venus earth mars jupiter saturn uranus neptune]
+print (sentence [>>> show thing "planets])
+show thing "planets
 
 heading [RUN and RUNRESULT]
-print [make "result run [sum 5 2]] 
+print [>>> make "result run [sum 5 2]] 
 make "result run [sum 5 2]
-print (sentence [:result ?] :result)
-type (sentence [runresult sum 7 7 ?]) type "\  show runresult [sum 7 7]
-type (sentence [runresult print "Hello ?]) type "\  show runresult [print "Hello]
+print (sentence [>>> print :result])
+print :result
+print (sentence [>>> show runresult [sum 7 7]]) 
+show runresult [sum 7 7]
+;print (sentence [>>> show runresult [make "greeting "Hello]])
+print (sentence [>>> show runresult [make "greeting "Hello] \;No output.])
+show runresult [make "greeting "Hello]
 
 heading [REPEAT and REPCOUNT]
-print (sentence [repeat 3 [print repcount]] [:])
+print (sentence [>>> repeat 3 [print repcount]])
 repeat 3 [print repcount]
-print (sentence [repeat 3 [make "j # repeat 3 [show (list # "* j "= # * j)]]] [:])
+print (sentence [>>> repeat 3 [make "j # repeat 3 [show (list # "* j "= # * j)]]])
 repeat 3 [make "j # repeat 3 [print (list # "* :j "= # * :j)]]
 
 heading [IF, IFELSE]
-print (sentence [if equalp :name "Carl [(print "Hello, :name)]])
+print (sentence [>>> make "name "Carl])
+make "name "Carl
+print (sentence [>>> if equalp :name "Carl [(print "Hello, :name)]])
 if equalp :name "Carl [(print "Hello, :name)]
-type (sentence [(if :name = "Fred [print [This won't print]] [ print [But this will.] ]) ?]) type :space 
-(if :name = "Fred [print [This won't print]] [ print [But this will.] ])
-type (sentence [ifelse :name = "Fred [print [This won't print]] [ print [But this will.] ] ?]) type :space 
+print (sentence [>>> (if :name = "Fred [print [This won't print]] [ print [But this will.]])]) 
+(if :name = "Fred [print [This won't print]] [ print [But this will.]])
+print (sentence [>>> ifelse :name = "Fred [print [This won't print]] [ print [But this will.] ]]) 
 ifelse :name = "Fred [print [This won't print]] [ print [But this will.] ]
 
-heading [Loops- FOR]
-(print "n\ =\  :n)
-print (sentence [for [ x 1 7 2 ] [ print :x ] :])
+heading [Loops- FOR, DO.WHILE]
+print (sentence [>>> make "n 5])
+make "n 5
+print (sentence [>>> for [ x 1 7 2 ] [ print :x ] :])
 for [ x 1 7 2 ] [ print :x ]
-print (sentence [for [ x 1 [(:n + :n) - 3]] [ print :x ] :])
+print (sentence [>>> for [ x 1 [(:n + :n) - 3]] [ print :x ] :])
 for [ x 1 [(:n + :n) - 3]] [ print :x ]
+print (sentence [>>> make "n 3])
+print (sentence [>>> do.while [print :n make "n (:n - 1)] [:n >= -3]])
+make "n 3
+do.while [
+    print :n
+    make "n (:n - 1)
+] [:n >= -3]
 

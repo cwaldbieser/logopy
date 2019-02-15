@@ -391,13 +391,9 @@ def make_token_grammar():
     """
     grammar = parsley.makeGrammar(r"""
     punctuation = :x ?(x in "+-*/!'#$%&\,.:<=>?@^_`;" '"') -> x
-    digits = <digit+>
-    float = ('-'? digits? '.' digits):ds -> float(ds)
-    int = ('-'? digits):ds -> int(ds)
-    number = float | int 
-    ascii_lower = :x ?(x in 'abcdefghijklmnopqrstuvwxyz') -> x
-    ascii_upper = :x ?(x in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ') -> x
-    ascii = ascii_lower | ascii_upper
+    float = <'-'{0, 1} digit* '.' digit+>:ds -> float(ds)
+    integer = <'-'{0, 1} digit+>:ds -> int(ds)
+    number = float | integer 
     itemlist = 
           ws item:first (ws item)*:rest ws -> [first] + rest
         | ws item:only ws -> [only]
@@ -414,14 +410,14 @@ def make_token_grammar():
         | ws quoted_item:only ws -> [only]
     quoted_item =
           number:n (ws comment)* -> n
-        | word:qw (ws comment)* -> qw
+        | word:w (ws comment)* -> w
         | <(~' ' ~'[' ~']' anything)+>:w (ws comment)* -> w
         | (ws comment)
         | '[' ws quoted_itemlist:q ws ']' -> list(q)
         | '[' ws ']' -> []
     word = (word_char+):l -> ''.join(l)
     word_char = (escaped_char:e -> e) | (~';' unescaped_char:u -> u)
-    unescaped_char = (ascii:a -> a) | (digit:d -> d) | (~';' punctuation:p -> p)
+    unescaped_char = (letterOrDigit:c -> c) | (~';' punctuation:p -> p)
     escaped_char = '\\' (anything:c -> c)
     comment = <';' rest_of_line>:c -> Comment(c)  
     rest_of_line = <('\\n' | (~'\n' anything))*>
@@ -436,7 +432,6 @@ def make_token_grammar():
     expr = expr2:left addonly*:right -> calculate(left, right)
     expr2 = factor:left muldiv*:right -> calculate(left, right)
     """, {"calculate": calculate, "Comment": Comment})
-    
     return grammar
 
 def transform_tokens(tokens):
