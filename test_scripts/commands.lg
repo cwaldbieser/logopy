@@ -344,7 +344,7 @@ print (sentence [>>> (if :name = "Fred [print [This won't print]] [ print [But t
 print (sentence [>>> ifelse :name = "Fred [print [This won't print]] [ print [But this will.] ]]) 
 ifelse :name = "Fred [print [This won't print]] [ print [But this will.] ]
 
-heading [Loops- FOR, DO.WHILE]
+heading [Loops- FOR, DO.WHILE, WHILE]
 print (sentence [>>> make "n 5])
 make "n 5
 print (sentence [>>> for [ x 1 7 2 ] [ print :x ] :])
@@ -358,4 +358,10 @@ do.while [
     print :n
     make "n (:n - 1)
 ] [:n >= -3]
+print (sentence [>>> make "n 3 while [:n >= -3] [print :n make "n (:n - 1)]])
+make "n 3
+while [:n >= -3] [
+    print :n 
+    make "n (:n - 1)
+]
 

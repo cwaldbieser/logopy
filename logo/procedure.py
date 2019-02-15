@@ -172,6 +172,7 @@ def create_primitives_map():
     m['type'] = make_primitive("type", ['thing'], [], 'others', 1, process_type)
     m['unicode'] = make_primitive("unicode", ['char'], [], None, 1, process_unicode)
     m['uppercase'] = make_primitive("uppercase", ['word'], [], None, 1, process_uppercase)
+    m['while'] = make_primitive("while", ['tfexpr', 'instrlist'], [], None, 2, process_while)
     m['word'] = make_primitive("word", ['word1', 'word2'], [], 'words', 2, process_word)
     m['wordp'] = make_primitive("wordp", ['thing'], [], None, 1, process_wordp)
     m['word?'] = m['wordp']
@@ -338,10 +339,9 @@ def process_dowhile(logo, instrlist, tfexpr):
     """
     The DO.WHILE command.
     """
-
     while True:
-        _process_run_like("WHILE", logo, instrlist)
-        if _process_run_like("WHILE", logo, tfexpr) == 'false':
+        _process_run_like("DO.WHILE", logo, instrlist)
+        if _process_run_like("DO.WHILE", logo, tfexpr) == 'false':
             break
 
 def process_emptyp(logo, thing):
@@ -1130,6 +1130,13 @@ def process_uppercase(logo, word):
         return word.upper()
     except AttributeError:
         raise errors.LogoError("UPPERCASE expected a word but got a {} instead.".format(_datatypename(word)))
+
+def process_while(logo, tfexpr, instrlist):
+    """
+    The WHILE command.
+    """
+    while _process_run_like("WHILE", logo, tfexpr) == 'true':
+        _process_run_like("WHILE", logo, instrlist)
 
 def process_word(logo, *args):
     """
