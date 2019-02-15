@@ -86,6 +86,7 @@ def create_primitives_map():
     m['cos'] = make_primitive("cos", ['degrees'], [], None, 1, process_cos)
     m['dequeue'] = make_primitive("dequeue", ['queuename'], [], None, 1, process_dequeue)
     m['difference'] = make_primitive("difference", ['num1', 'num2'], [], None, 2, process_difference)
+    m['do.while'] = make_primitive("do.while", ['instrlist', 'tfexpr'], [], None, 2, process_dowhile)
     m['emptyp'] = make_primitive("emptyp", ['thing'], [], None, 1, process_emptyp)
     m['empty?'] = m['emptyp']
     m['equalp'] = make_primitive("equalp", ['thing1', 'thing2'], [], None, 2, process_equalp)
@@ -332,6 +333,16 @@ def process_difference(logo, num1, num2):
         if not isinstance(arg, numbers.Number):
             raise errors.LogoError("DIFFERENCE expected a number but got `{}` instead.".format(arg))
     return num1 - num2
+
+def process_dowhile(logo, instrlist, tfexpr):
+    """
+    The DO.WHILE command.
+    """
+
+    while True:
+        _process_run_like("WHILE", logo, instrlist)
+        if _process_run_like("WHILE", logo, tfexpr) == 'false':
+            break
 
 def process_emptyp(logo, thing):
     """

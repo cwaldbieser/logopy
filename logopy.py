@@ -46,7 +46,10 @@ class LogoInterpreter:
         when tokenized.
         """
         stream = parse_tokens(self.grammar, script, debug=self.debug_tokens)
-        return self.evaluate(stream)
+        result = None
+        while len(stream) > 0:
+            result = self.evaluate(stream)
+        return result
 
     def process_commands(self, tokens):
         while len(tokens) > 0:
@@ -389,8 +392,8 @@ def make_token_grammar():
     grammar = parsley.makeGrammar(r"""
     punctuation = :x ?(x in "+-*/!'#$%&\,.:<=>?@^_`;" '"') -> x
     digits = <digit+>
-    float = ('-'{0, 1} digits? '.' digits):ds -> float(ds)
-    int = ('-'{0, 1} digits):ds -> int(ds)
+    float = ('-'? digits? '.' digits):ds -> float(ds)
+    int = ('-'? digits):ds -> int(ds)
     number = float | int 
     ascii_lower = :x ?(x in 'abcdefghijklmnopqrstuvwxyz') -> x
     ascii_upper = :x ?(x in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ') -> x
@@ -527,6 +530,8 @@ def main(args):
         run_tests(grammar)
     script = args.file.read()
     tokens = parse_tokens(grammar, script, debug=args.debug_tokens)
+    if args.tokenize_only:
+        return
     interpreter = LogoInterpreter.create_interpreter()
     interpreter.debug_tokens = args.debug_tokens
     interpreter.grammar = grammar
@@ -570,6 +575,10 @@ if __name__ == "__main__":
         "--debug-interpreter",
         action="store_true",
         help="Dump interpreter state after script completes.")
+    parser.add_argument(
+        "--tokenize-only",
+        action="store_true",
+        help="Only tokenize input.  Don't interpret.")
     args = parser.parse_args()
     main(args)
 
