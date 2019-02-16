@@ -69,6 +69,7 @@ def create_primitives_map():
     """
     m = {}
     make_primitive = LogoProcedure.make_primitive
+    m['?'] = make_primitive("?", [], ['pos'], None, 0, process_qmark)
     m['.eq'] = make_primitive(".eq", ['thing1', 'thing2'], [], None, 2, process_dot_eq)
     m['and'] = make_primitive("and", ['tf1', 'tf2'], [], 'tfs', 2, process_and)
     m['arctan'] = make_primitive("arctan", ['x'], ['y'], None, 1, process_arctan)
@@ -98,6 +99,7 @@ def create_primitives_map():
     m['first'] = make_primitive("first", ['thing'], [], None, 1, process_first)
     m['firsts'] = make_primitive("firsts", ['list'], [], None, 1, process_firsts)
     m['for'] = make_primitive("for", ['forcontrol', 'instrlist'], [], None, 2, process_for)
+    m['foreach'] = make_primitive("foreach", ['data', 'template'], ['args'], None, 2, process_foreach)
     m['fput'] = make_primitive("fput", ['thing', 'list'], [], None, 2, process_fput)
     m['greaterequalp'] = make_primitive("greaterequalp", ['num1', 'num2'], [], None, 2, process_greaterequalp)
     m['greaterequal?'] = m['greaterequalp']
@@ -193,6 +195,13 @@ def _is_dots_name(token):
     if not len(token) > 1:
         return False
     return True
+
+def process_qmark(logo, n=1):
+    """
+    Process the `?` in Logo command templates.
+    `n` is the 1-based index of the placeholder.
+    """
+    return logo.get_placeholder(n-1) 
 
 def process_dot_eq(logo, thing1, thing2):
     """
@@ -436,6 +445,75 @@ def process_firsts(logo, lst):
             raise errors.LogoError("FIRSTS doesn't like `{}` as input.".format(item))
         l.append(item[0])
     return l
+
+def process_foreach(logo, *args):
+    """
+    The FOREACH command.
+    """
+    if len(args) < 2:
+        raise errors.LogoError("FOREACH expects at least 2 arguments, but received `{}` instead.".format(args))
+    template = args[-1]
+    data_lists = args[:-1]
+    scope_stack = logo.scope_stack
+    result = None
+    for n, t in enumerate(zip(*data_lists)):
+        logo.push_placeholders(t)
+        logo.create_repcount_scope()
+        logo.set_repcount(n + 1) 
+        try:
+            if _is_list(template):
+                first_item = template[0]
+                is_named_proc_form = True
+                for item in template:
+                    if not _is_list(item):
+                        is_named_proc_form = False
+                        break
+                if is_named_proc_form:
+                    raise NotImplementedError('The "named procedure" template form has not been implemented at this time.')
+                elif _is_list(first_item):
+                    # lambda form
+                    data_list_count = len(t)
+                    named_slot_count = len(first_item)
+                    if data_list_count != named_slot_count:
+                        raise errors.LogoError("FOREACH received {} data lists, but its template contains {} named slots.".format(data_list_count, named_slot_count))
+                    real_template = template[1:]
+                    scope = dict(zip(first_item, t))
+                    scope_stack.append(scope)
+                    try:
+                        result = _process_run_like("FOREACH", logo, real_template)
+                        continue
+                    finally:
+                        scope_stack.pop()
+                else:
+                    # Question-mark form.  Just run and eval
+                    result = _process_run_like("FOREACH", logo, template)
+                    continue
+            elif _is_word(template):
+                # Named procedure form.
+                proc = logo.primitives.get(template)
+                if proc is None:
+                    proc = logo.procedures.get(template)
+                if proc is None:
+                    raise errors.LogoError("FOREACH received procedure name, `{}`, but I don't know how to `{}`.".format(template, template))
+                arity = len(t)
+                max_arity = proc.max_arity
+                min_arity = proc.min_arity
+                is_valid_arity = (
+                    (arity <= max_arity or max_arity == -1) 
+                    and
+                    (arity >= min_arity)
+                )
+                if is_valid_arity:
+                    result = logo.execute_procedure(proc, *t)
+                    continue
+                elif arity < min_arity:
+                    raise errors.LogoError("FOREACH received {} data lists, but named procedure `{}` takes at least {} arguments.".format(arity, template, min_arity))
+                else:
+                    raise errors.LogoError("FOREACH received {} data lists, but named procedure `{}` takes at most {} arguments.".format(arity, template, max_arity))
+        finally:
+            logo.destroy_repcount_scope()
+            logo.pop_placeholders()
+    return result
 
 def process_for(logo, forcontrol, instrlist):
     """

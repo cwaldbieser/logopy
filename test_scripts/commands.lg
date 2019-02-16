@@ -409,3 +409,16 @@ while [not emptyp :wordq] [
         [else print [Starts with neither a vowel nor a consonant.]]
     ]
 ]
+
+heading "FOREACH
+print (sentence [>>> foreach [a b c] [ type # type "\  print ? ]])
+foreach [a b c] [ type # type "\  print ? ]
+print (sentence [>>> (foreach [a b c] [3 5 7] [ type # type "\  print list ?2 ?1  ])])
+(foreach [a b c] [3 5 7] [ type # type "\  print list ?2 ?1  ])
+print (sentence [>>> make "planets [mercury venus earth mars jupiter staturn uranus neptune]])
+print (sentence [>>> make "kinds [terrestrial terrestrial terrestrial terrestrial jovan jovan jovan jovan]])
+print (sentence [>>> (foreach :planets :kinds [[planet kind] print (list # :planet :kind)])])
+make "planets [mercury venus earth mars jupiter staturn uranus neptune]
+make "kinds [terrestrial terrestrial terrestrial terrestrial jovan jovan jovan jovan]
+(foreach :planets :kinds [[planet kind] print (list # :planet :kind)])
+

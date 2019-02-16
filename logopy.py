@@ -21,6 +21,7 @@ class LogoInterpreter:
     procedures = attr.ib(default=attr.Factory(dict))
     scope_stack = attr.ib(default=attr.Factory(list))
     repcount_stack = attr.ib(default=attr.Factory(list))
+    placeholder_stack = attr.ib(default=attr.Factory(list))
     grammar = attr.ib(default=None)
     debug_procs = attr.ib(default=False)
     debug_primitives = attr.ib(default=False)
@@ -64,13 +65,14 @@ class LogoInterpreter:
         procedures = self.procedures
         while len(tokens) > 0:
             token = tokens.popleft()  
+            token = transform_qmark(token)
             is_cmd = is_command(token)
             is_spcl_frm = is_special_form(token)
             if not is_cmd and not is_spcl_frm:
                 raise errors.LogoError("Expected a command.  Instead, got `{}`.".format(token))
             if is_spcl_frm:
                 stream = TokenStream.make_stream(token)
-                self.process_special_form(stream)
+                return self.process_special_form(stream)
             else:
                 command = token.lower()
                 if command == 'to': 
@@ -136,6 +138,24 @@ class LogoInterpreter:
         Destroy a repcount scope.
         """
         self.repcount_stack.pop()
+
+    def push_placeholders(self, placeholders):
+        """
+        Push placeholders onto the stack.
+        """
+        self.placeholder_stack.append(placeholders)
+
+    def pop_placeholders(self):
+        """
+        Pop placeholders off of the stack.
+        """
+        return self.placeholder_stack.pop()
+
+    def get_placeholder(self, n):
+        """
+        Get the current placeholder at zero-based index, `n`.
+        """
+        return self.placeholder_stack[-1][n]
 
     def evaluate(self, tokens):
         """
@@ -225,10 +245,11 @@ class LogoInterpreter:
             if token == '#':
                 tokens.popleft()
                 return self.get_repcount()
-            if token in self.primitives or token in self.procedures:
-                return self.process_command(tokens)
-            else:
-                raise errors.LogoError("I don't know how to `{}`.".format(token))
+            #if token in self.primitives or token in self.procedures:
+            #    return self.process_command(tokens)
+            #else:
+            #    raise errors.LogoError("I don't know how to `{}`.".format(token))
+            return self.process_command(tokens)
         else:
             return tokens.popleft()
 
@@ -487,6 +508,21 @@ def run_tests(grammar):
     for prog in tests:
         print(parse_tokens(grammar, prog))
     print("Tests completed.")
+
+def transform_qmark(command):
+    """
+    If command is a `?` followed by a number, transform it to the
+    special form `(?, NUMBER)`.  Otherwise, return command unaltered.
+    """
+    if not hasattr(command, 'startswith'):
+        return command
+    if not command.startswith("?"):
+        return command
+    try:
+        pos = int(command[1:])
+    except ValueError:
+        return command
+    return ('?', pos)
 
 def is_special_form(token):
     if not isinstance(token, tuple):
