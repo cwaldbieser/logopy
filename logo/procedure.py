@@ -446,6 +446,45 @@ def process_firsts(logo, lst):
         l.append(item[0])
     return l
 
+def _extract_define_inputs_from_list(lst):
+    """
+    Extract required, optional, and rest inputs from a list compatible with the
+    DEFINE command format.
+    `lst` should be the first member list of the template.  It should NOT
+    include the other member lists, which are the actual procedure command text.
+    """
+    lst = collections.deque(lst)
+    required_inputs = []
+    optional_inputs = []
+    rest_input = None
+    while len(lst) > 0:
+        item = lst[0]
+        if _is_word(item):
+            required_inputs.append(item)
+            lst.popleft()
+        else:
+            break
+    while len(lst) > 0:
+        item = lst[0]
+        if _is_list(item) and len(item) == 2:
+            varname = item[0]
+            if not _is_word(varname):
+                raise erros.LogoError("Expected an optional parameter name, but received `{}` instead.".format(varname))
+            optional_inputs.append((varname, item[1]))
+        else:
+            break
+    if len(lst) > 0:
+        varname = lst[0]
+        if _is_word(varname):
+            rest_input = varname
+        else:
+            raise erros.LogoError("Expected a rest input parameter name, but received `{}` instead.".format(varname))
+    return (required_inputs, optional_inputs, rest_input)
+
+def __extendlst(a, b):
+    a.extend(b)
+    return a
+
 def _create_template(cmd, logo, data_lists, template):
     """
     Returns a template usable by commands like FOREACH, MAP, etc.
@@ -454,7 +493,7 @@ def _create_template(cmd, logo, data_lists, template):
     * `lambda-form` - Template is a tuple (varnames, instructionlist)
     * `qmark-form` - Template is an instructionlist.
     * `named-procedure` - Template is a procedure object.
-    * `procedure-text` - Not implemented.
+    * `procedure-text` - A Procedure object.
     """ 
     if not len(set([len(x) for x in data_lists])) == 1:
         raise errors.LogoError("{} expects all data lists to be of equal size.".format(cmd))
@@ -468,7 +507,16 @@ def _create_template(cmd, logo, data_lists, template):
                 is_proc_text_form = False
                 break
         if is_proc_text_form:
-            raise NotImplementedError('The "procedure text" template form has not been implemented at this time.')
+            required_inputs, optional_inputs, rest_input = _extract_define_inputs_from_list(first_item)
+            tokens = collections.deque(functools.reduce(__extendlst, template[1:]))
+            procedure = LogoProcedure.make_procedure(
+                name='lambda-procedure',
+                required_inputs=required_inputs,
+                optional_inputs=optional_inputs,
+                rest_input=rest_input,
+                default_arity=len(required_inputs),
+                tokens=tokens)
+            return ('procedure-text', procedure)
         elif _is_list(first_item):
             # lambda form
             named_slot_count = len(first_item)
@@ -534,6 +582,9 @@ def process_foreach(logo, *args):
             elif template_type == 'named-procedure':
                     result = logo.execute_procedure(template, *t)
                     continue
+            elif template_type == 'procedure-text':
+                result = logo.execute_procedure(template, t) 
+                continue
         finally:
             logo.destroy_repcount_scope()
             logo.pop_placeholders()
