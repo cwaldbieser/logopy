@@ -446,6 +446,61 @@ def process_firsts(logo, lst):
         l.append(item[0])
     return l
 
+def _create_template(cmd, logo, data_lists, template):
+    """
+    Returns a template usable by commands like FOREACH, MAP, etc.
+    Return value is a tuple (kind, template).  The various kinds are:
+    
+    * `lambda-form` - Template is a tuple (varnames, instructionlist)
+    * `qmark-form` - Template is an instructionlist.
+    * `named-procedure` - Template is a procedure object.
+    * `procedure-text` - Not implemented.
+    """ 
+    if not len(set([len(x) for x in data_lists])) == 1:
+        raise errors.LogoError("{} expects all data lists to be of equal size.".format(cmd))
+    data_size = len(data_lists[0])
+    data_list_count = len(data_lists)
+    if _is_list(template):
+        first_item = template[0]
+        is_proc_text_form = True
+        for item in template:
+            if not _is_list(item):
+                is_proc_text_form = False
+                break
+        if is_proc_text_form:
+            raise NotImplementedError('The "procedure text" template form has not been implemented at this time.')
+        elif _is_list(first_item):
+            # lambda form
+            named_slot_count = len(first_item)
+            if data_list_count != named_slot_count:
+                raise errors.LogoError("{} received {} data lists, but its template contains {} named slots.".format(cmd, data_list_count, named_slot_count))
+            real_template = template[1:]
+            return ('lambda-form', (first_item, real_template))
+        else:
+            # Question-mark form.  Just run and eval
+            return ('qmark-form', template)
+    elif _is_word(template):
+        # Named procedure form.
+        proc = logo.primitives.get(template)
+        if proc is None:
+            proc = logo.procedures.get(template)
+        if proc is None:
+            raise errors.LogoError("{} received procedure name, `{}`, but I don't know how to `{}`.".format(cmd, template, template))
+        arity = data_list_count
+        max_arity = proc.max_arity
+        min_arity = proc.min_arity
+        is_valid_arity = (
+            (arity <= max_arity or max_arity == -1) 
+            and
+            (arity >= min_arity)
+        )
+        if is_valid_arity:
+            return ('named-procedure', proc)
+        elif arity < min_arity:
+            raise errors.LogoError("FOREACH received {} data lists, but named procedure `{}` takes at least {} arguments.".format(arity, template, min_arity))
+        else:
+            raise errors.LogoError("FOREACH received {} data lists, but named procedure `{}` takes at most {} arguments.".format(arity, template, max_arity))
+
 def process_foreach(logo, *args):
     """
     The FOREACH command.
@@ -454,6 +509,9 @@ def process_foreach(logo, *args):
         raise errors.LogoError("FOREACH expects at least 2 arguments, but received `{}` instead.".format(args))
     template = args[-1]
     data_lists = args[:-1]
+    if not len(set([len(x) for x in data_lists])) == 1:
+        raise errors.LogoError("FOREACH expects all data lists to be of equal size.")
+    template_type, template = _create_template("FOREACH", logo, data_lists, template)
     scope_stack = logo.scope_stack
     result = None
     for n, t in enumerate(zip(*data_lists)):
@@ -461,55 +519,21 @@ def process_foreach(logo, *args):
         logo.create_repcount_scope()
         logo.set_repcount(n + 1) 
         try:
-            if _is_list(template):
-                first_item = template[0]
-                is_named_proc_form = True
-                for item in template:
-                    if not _is_list(item):
-                        is_named_proc_form = False
-                        break
-                if is_named_proc_form:
-                    raise NotImplementedError('The "named procedure" template form has not been implemented at this time.')
-                elif _is_list(first_item):
-                    # lambda form
-                    data_list_count = len(t)
-                    named_slot_count = len(first_item)
-                    if data_list_count != named_slot_count:
-                        raise errors.LogoError("FOREACH received {} data lists, but its template contains {} named slots.".format(data_list_count, named_slot_count))
-                    real_template = template[1:]
-                    scope = dict(zip(first_item, t))
-                    scope_stack.append(scope)
-                    try:
-                        result = _process_run_like("FOREACH", logo, real_template)
-                        continue
-                    finally:
-                        scope_stack.pop()
-                else:
-                    # Question-mark form.  Just run and eval
-                    result = _process_run_like("FOREACH", logo, template)
+            if template_type == 'lambda-form':
+                varnames, template_instrlist = template
+                scope = dict(zip(varnames, t))
+                scope_stack.append(scope)
+                try:
+                    result = _process_run_like("FOREACH", logo, template_instrlist)
                     continue
-            elif _is_word(template):
-                # Named procedure form.
-                proc = logo.primitives.get(template)
-                if proc is None:
-                    proc = logo.procedures.get(template)
-                if proc is None:
-                    raise errors.LogoError("FOREACH received procedure name, `{}`, but I don't know how to `{}`.".format(template, template))
-                arity = len(t)
-                max_arity = proc.max_arity
-                min_arity = proc.min_arity
-                is_valid_arity = (
-                    (arity <= max_arity or max_arity == -1) 
-                    and
-                    (arity >= min_arity)
-                )
-                if is_valid_arity:
-                    result = logo.execute_procedure(proc, *t)
+                finally:
+                    scope_stack.pop()
+            elif template_type == 'qmark-form':
+                result = _process_run_like("FOREACH", logo, template)
+                continue
+            elif template_type == 'named-procedure':
+                    result = logo.execute_procedure(template, *t)
                     continue
-                elif arity < min_arity:
-                    raise errors.LogoError("FOREACH received {} data lists, but named procedure `{}` takes at least {} arguments.".format(arity, template, min_arity))
-                else:
-                    raise errors.LogoError("FOREACH received {} data lists, but named procedure `{}` takes at most {} arguments.".format(arity, template, max_arity))
         finally:
             logo.destroy_repcount_scope()
             logo.pop_placeholders()
