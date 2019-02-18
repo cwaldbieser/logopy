@@ -433,3 +433,8 @@ print (sentence [... \])])
     [type [Kind of planet:] type "\  print :kind]
     [print []]
 ])
+
+heading "MAP
+print (sentence [>>> show map [product ? ?] [1 2 3]])
+show map [product ? ?] [1 2 3]
+

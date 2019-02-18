@@ -126,6 +126,7 @@ def create_primitives_map():
     m['lowercase'] = make_primitive("lowercase", ['word'], [], None, 1, process_lowercase)
     m['ln'] = make_primitive("ln", ['num'], [], None, 1, process_ln)
     m['make'] = make_primitive("make", ['varname', 'value'], [], None, 2, process_make)
+    m['map'] = make_primitive("map", ['template', 'data'], [], 'args', 2, process_map)
     m['member'] = make_primitive("member", ['thing1', 'thing2'], [], None, 2, process_member)
     m['memberp'] = make_primitive("memberp", ['thing1', 'thing2'], [], None, 2, process_memberp)
     m['member?'] = m['memberp']
@@ -863,6 +864,43 @@ def process_make(logo, varname, value):
             return
     global_scope = logo.scope_stack[0]
     global_scope[varname] = value 
+
+def process_map(logo, template, *data_lists):
+    """
+    The MAP command.
+    """
+    if not len(set([len(x) for x in data_lists])) == 1:
+        raise errors.LogoError("MAP expects all data lists to be of equal size.")
+    template_type, template = _create_template("MAP", logo, data_lists, template)
+    scope_stack = logo.scope_stack
+    results = []
+    for n, t in enumerate(zip(*data_lists)):
+        result = None
+        logo.push_placeholders(t)
+        logo.create_repcount_scope()
+        logo.set_repcount(n + 1) 
+        try:
+            if template_type == 'lambda-form':
+                varnames, template_instrlist = template
+                scope = dict(zip(varnames, t))
+                scope_stack.append(scope)
+                try:
+                    result = _process_run_like("MAP", logo, template_instrlist)
+                finally:
+                    scope_stack.pop()
+            elif template_type == 'qmark-form':
+                result = _process_run_like("MAP", logo, template)
+            elif template_type == 'named-procedure':
+                    result = logo.execute_procedure(template, *t)
+            elif template_type == 'procedure-text':
+                result = logo.execute_procedure(template, t) 
+        finally:
+            logo.destroy_repcount_scope()
+            logo.pop_placeholders()
+        if result is None:
+            raise errors.LogoError("MAP template must return a value.")
+        results.append(result)
+    return results
 
 def process_member(logo, thing1, thing2):
     """
