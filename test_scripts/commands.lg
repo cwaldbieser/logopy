@@ -439,3 +439,8 @@ print (sentence [>>> show map [product ? ?] [1 2 3]])
 show map [product ? ?] [1 2 3]
 print (sentence [>>> show map.se [butfirst ?] [[a b c] [x y z] rgb]])
 show map.se [butfirst ?] [[a b c] [x y z] rgb]
+
+heading "FILTER
+print (sentence [>>> show filter [memberp first ? "aeiou] [mercury venus earth mars jupiter saturn uranus neptune]])
+show filter [memberp first ? "aeiou] [mercury venus earth mars jupiter saturn uranus neptune] 
+
