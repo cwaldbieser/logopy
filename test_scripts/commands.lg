@@ -444,3 +444,9 @@ heading "FILTER
 print (sentence [>>> show filter [memberp first ? "aeiou] [mercury venus earth mars jupiter saturn uranus neptune]])
 show filter [memberp first ? "aeiou] [mercury venus earth mars jupiter saturn uranus neptune] 
 
+heading "FIND
+print (sentence [>>> show find [memberp first ? "aeiou] [mercury venus earth mars jupiter saturn uranus neptune]])
+show find [memberp first ? "aeiou] [mercury venus earth mars jupiter saturn uranus neptune] 
+print (sentence [>>> show find [(count ?) < 5 ] [mercury venus earth mars jupiter saturn uranus neptune]])
+show find [(count ?) < 5 ] [mercury venus earth mars jupiter saturn uranus neptune] 
+

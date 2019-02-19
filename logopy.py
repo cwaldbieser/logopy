@@ -245,10 +245,6 @@ class LogoInterpreter:
             if token == '#':
                 tokens.popleft()
                 return self.get_repcount()
-            #if token in self.primitives or token in self.procedures:
-            #    return self.process_command(tokens)
-            #else:
-            #    raise errors.LogoError("I don't know how to `{}`.".format(token))
             return self.process_command(tokens)
         else:
             return tokens.popleft()
@@ -327,6 +323,10 @@ class LogoInterpreter:
             raise errors.LogoError("There are too many arguments for `{}`.".format(command_token))
         if len(args) < proc.min_arity:
             raise errors.LogoError("Not enough arguments for `{}`.".format(command_token))
+        if self.debug_primitives and command in primitives:
+            print("PRIMITIVE:", command, "ARGS:", args)
+        if self.debug_procs and command in procedures:
+            print("PROCEDURE:", command, "ARGS:", args)
         return self.execute_procedure(proc, args)
 
 
@@ -566,8 +566,8 @@ def main(args):
     interpreter = LogoInterpreter.create_interpreter()
     interpreter.debug_tokens = args.debug_tokens
     interpreter.grammar = grammar
-    if args.debug_procs:
-        interpreter.debug_procs = True
+    interpreter.debug_primitives = args.debug_primitives
+    interpreter.debug_procs = args.debug_procs
     try:
         result = interpreter.process_commands(tokens)
     except Exception as ex:

@@ -97,6 +97,7 @@ def create_primitives_map():
     m['equal?'] = m['equalp'] 
     m['exp'] = make_primitive("exp", ['num'], [], None, 1, process_exp)
     m['filter'] = make_primitive("filter", ['tftemplate', 'data'], [], 'args', 2, process_filter)
+    m['find'] = make_primitive("find", ['tftemplate', 'data'], [], 'args', 2, process_find)
     m['first'] = make_primitive("first", ['thing'], [], None, 1, process_first)
     m['firsts'] = make_primitive("firsts", ['list'], [], None, 1, process_firsts)
     m['for'] = make_primitive("for", ['forcontrol', 'instrlist'], [], None, 2, process_for)
@@ -438,7 +439,7 @@ def process_filter(logo, tftemplate, data):
     results = []
     for n, item in enumerate(data):
         result = None
-        logo.push_placeholders((item))
+        logo.push_placeholders((item,))
         logo.create_repcount_scope()
         logo.set_repcount(n + 1) 
         try:
@@ -459,11 +460,49 @@ def process_filter(logo, tftemplate, data):
         finally:
             logo.destroy_repcount_scope()
             logo.pop_placeholders()
+        if _is_true(result):
+            results.append(item)
+        elif not _is_false(result):
+            raise errors.LogoError("FILTER template must return either true or false.")
+    return results
+
+def process_find(logo, tftemplate, data):
+    """
+    The FIND command.
+    """
+    template_type, template = _create_template("FIND", logo, [data], tftemplate)
+    scope_stack = logo.scope_stack
+    results = []
+    for n, item in enumerate(data):
+        result = None
+        logo.push_placeholders((item,))
+        logo.create_repcount_scope()
+        logo.set_repcount(n + 1) 
+        try:
+            if template_type == 'lambda-form':
+                varnames, template_instrlist = template
+                scope = dict(zip(varnames, [item]))
+                scope_stack.append(scope)
+                try:
+                    result = _process_run_like("FIND", logo, template_instrlist)
+                finally:
+                    scope_stack.pop()
+            elif template_type == 'qmark-form':
+                result = _process_run_like("FIND", logo, template)
+            elif template_type == 'named-procedure':
+                    result = logo.execute_procedure(template, item)
+            elif template_type == 'procedure-text':
+                result = logo.execute_procedure(template, item) 
+        finally:
+            logo.destroy_repcount_scope()
+            logo.pop_placeholders()
         if result is None:
             raise errors.LogoError("FILTER template must return either true or false.")
         if _is_true(result):
-            results.append(item)
-    return results
+            return item 
+        elif not _is_false(result):
+            raise errors.LogoError("FILTER template must return either true or false.")
+    return []
 
 def process_first(logo, thing):
     """
