@@ -450,3 +450,9 @@ show find [memberp first ? "aeiou] [mercury venus earth mars jupiter saturn uran
 print (sentence [>>> show find [(count ?) < 5 ] [mercury venus earth mars jupiter saturn uranus neptune]])
 show find [(count ?) < 5 ] [mercury venus earth mars jupiter saturn uranus neptune] 
 
+heading "REDUCE
+print (sentence [>>> show reduce [sum ?1 ?2] [1 2 3 4 5 6]])
+show reduce [sum ?1 ?2] [1 2 3 4 5 6]
+print (sentence [>>> show last reduce [[x y] list "label sum last :x last :y] [[a 1] [b 2] [c 3]]])
+show last reduce [[x y] list "label sum last :x last :y] [[a 1] [b 2] [c 3]]
+

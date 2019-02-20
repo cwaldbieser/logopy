@@ -87,6 +87,7 @@ def create_primitives_map():
     m['cond'] = make_primitive("cond", ['clauses'], [], None, 1, process_cond)
     m['count'] = make_primitive("count", ['thing'], [], None, 1, process_count)
     m['cos'] = make_primitive("cos", ['degrees'], [], None, 1, process_cos)
+    m['dec.str'] = make_primitive("dec.str", ['num'], [], None, 1, process_dec_str)
     m['dequeue'] = make_primitive("dequeue", ['queuename'], [], None, 1, process_dequeue)
     m['difference'] = make_primitive("difference", ['num1', 'num2'], [], None, 2, process_difference)
     m['do.until'] = make_primitive("do.until", ['instrlist', 'tfexpr'], [], None, 2, process_dountil)
@@ -100,6 +101,7 @@ def create_primitives_map():
     m['find'] = make_primitive("find", ['tftemplate', 'data'], [], 'args', 2, process_find)
     m['first'] = make_primitive("first", ['thing'], [], None, 1, process_first)
     m['firsts'] = make_primitive("firsts", ['list'], [], None, 1, process_firsts)
+    m['float'] = make_primitive("float", ['num'], [], None, 1, process_float)
     m['for'] = make_primitive("for", ['forcontrol', 'instrlist'], [], None, 2, process_for)
     m['foreach'] = make_primitive("foreach", ['data', 'template'], ['args'], None, 2, process_foreach)
     m['fput'] = make_primitive("fput", ['thing', 'list'], [], None, 2, process_fput)
@@ -159,6 +161,7 @@ def create_primitives_map():
     m['readlist'] = make_primitive("readlist", [], [], None, 0, process_readlist)
     m['remainder'] = make_primitive("remainder", ['num1', 'num2'], [], None, 2, process_remainder)
     m['rl'] = m['readlist']
+    m['reduce'] = make_primitive("reduce", ['template', 'data'], [], 'args', 2, process_reduce)
     m['remove'] = make_primitive("remove", ['thing', 'list'], [], None, 2, process_remove)
     m['remdup'] = make_primitive("remdup", ['list'], [], None, 1, process_remdup)
     m['repcount'] = make_primitive("repcount", [], [], None, 0, process_repcount)
@@ -364,6 +367,17 @@ def process_count(logo, thing):
     except TypeError:
         return len(str(thing))
 
+def process_dec_str(logo, num):
+    """
+    The DEC.STR command.
+    Converts numbers to decimal strings.
+    If `num` is already a string, return it unchanged.
+    """
+    if _is_word(num):
+        return str(num)
+    else:
+        raise errors.LogoError("DEC.STR expects a word argument but received `{}` instead.".format(num))
+
 def process_dequeue(logo, queuename):
     """
     The DEQUEUE command.
@@ -454,9 +468,9 @@ def process_filter(logo, tftemplate, data):
             elif template_type == 'qmark-form':
                 result = _process_run_like("FILTER", logo, template)
             elif template_type == 'named-procedure':
-                    result = logo.execute_procedure(template, item)
+                    result = logo.execute_procedure(template, [item])
             elif template_type == 'procedure-text':
-                result = logo.execute_procedure(template, item) 
+                result = logo.execute_procedure(template, [item]) 
         finally:
             logo.destroy_repcount_scope()
             logo.pop_placeholders()
@@ -490,9 +504,9 @@ def process_find(logo, tftemplate, data):
             elif template_type == 'qmark-form':
                 result = _process_run_like("FIND", logo, template)
             elif template_type == 'named-procedure':
-                    result = logo.execute_procedure(template, item)
+                    result = logo.execute_procedure(template, [item])
             elif template_type == 'procedure-text':
-                result = logo.execute_procedure(template, item) 
+                result = logo.execute_procedure(template, [item]) 
         finally:
             logo.destroy_repcount_scope()
             logo.pop_placeholders()
@@ -524,6 +538,15 @@ def process_firsts(logo, lst):
         l.append(item[0])
     return l
 
+def process_float(logo, num):
+    """
+    The FLOAT command.
+    """
+    try:
+        return float(num)
+    except ValueError:
+        raise errors.LogoError("FLOAT cannot convert `{}` into a number.".format(num))
+    
 def _extract_define_inputs_from_list(lst):
     """
     Extract required, optional, and rest inputs from a list compatible with the
@@ -556,7 +579,7 @@ def _extract_define_inputs_from_list(lst):
         if _is_word(varname):
             rest_input = varname
         else:
-            raise erros.LogoError("Expected a rest input parameter name, but received `{}` instead.".format(varname))
+            raise errors.LogoError("Expected a rest input parameter name, but received `{}` instead.".format(varname))
     return (required_inputs, optional_inputs, rest_input)
 
 def __extendlst(a, b):
@@ -783,9 +806,10 @@ def process_int(logo, num):
     """
     The INT command.
     """
-    if not isinstance(num, numbers.Number):
-        raise errors.LogoError("INT expects a number but received `{}`.".format(num))
-    return int(num)
+    try:
+        return int(num)
+    except ValueError:
+        raise errors.LogoError("INT cannot convert `{}` into an integer.".format(num))
 
 def process_iseq(logo, frm, to):
     """
@@ -820,10 +844,13 @@ def process_last(logo, thing):
     """
     The LAST command.
     """
-    if len(thing) == 0:
-        raise errors.LogoError("FIRST doesn't like `{}` as input.".format(thing)) 
-    else:
-        return thing[-1] 
+    try:
+        if len(thing) == 0:
+            raise errors.LogoError("LAST doesn't like `{}` as input.".format(thing)) 
+        else:
+            return thing[-1] 
+    except TypeError:
+        raise errors.LogoError("LAST doesn't like `{}` as input.".format(thing)) 
 
 def process_lessequalp(logo, num1, num2):
     """
@@ -1251,6 +1278,37 @@ def process_remainder(logo, num1, num2):
     else:
         return absval
 
+def process_reduce(logo, template, data):
+    """
+    The REDUCE command.
+    """
+    if len(data) == 1:
+        return data[0]
+    template_type, template = _create_template("REDUCE", logo, [data, data], template)
+    scope_stack = logo.scope_stack
+    accumulator = data[0]
+    data = data[1:] 
+    for item in data:
+        logo.push_placeholders((item, accumulator))
+        try:
+            if template_type == 'lambda-form':
+                varnames, template_instrlist = template
+                scope = dict(zip(varnames, [item, accumulator]))
+                scope_stack.append(scope)
+                try:
+                    accumulator = _process_run_like("REDUCE", logo, template_instrlist)
+                finally:
+                    scope_stack.pop()
+            elif template_type == 'qmark-form':
+                accumulator = _process_run_like("FILTER", logo, template)
+            elif template_type == 'named-procedure':
+                accumulator = logo.execute_procedure(template, [item, accumulator])
+            elif template_type == 'procedure-text':
+                accumulator = logo.execute_procedure(template, [item, accumulator]) 
+        finally:
+            logo.pop_placeholders()
+    return accumulator 
+
 def process_remove(logo, thing, lst):
     """
     The REMOVE command.
@@ -1416,7 +1474,7 @@ def process_sum(logo, *args):
     The SUM command.
     """
     for arg in args:
-        if not isinstance(arg, numbers.Number):
+        if not _is_number(arg):
             raise errors.LogoError("SUM expected a number but got `{}` instead.".format(arg))
     return sum(args)
 
@@ -1585,6 +1643,12 @@ def _is_word(o):
     """
     return (_datatypename(o) == 'word')
 
+def _is_number(o):
+    """
+    Returns True if `o` is a Logo number.
+    """
+    return isinstance(o, numbers.Number)
+
 def _list_contents_repr(o, include_braces=True, escape_delimiters=True):
     dtype = _datatypename(o)
     if dtype == 'list':
@@ -1613,4 +1677,10 @@ def _is_true(tf):
 
 def _is_false(tf):
     return tf.lower() == 'false'
+
+def _try_to_numify(w):
+    try:
+        return float(w)
+    except ValueError:
+        return w
 
