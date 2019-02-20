@@ -73,6 +73,8 @@ def create_primitives_map():
     m['.eq'] = make_primitive(".eq", ['thing1', 'thing2'], [], None, 2, process_dot_eq)
     m['and'] = make_primitive("and", ['tf1', 'tf2'], [], 'tfs', 2, process_and)
     m['arctan'] = make_primitive("arctan", ['x'], ['y'], None, 1, process_arctan)
+    m['back'] = make_primitive("back", ['dist'], [], None, 1, process_back)
+    m['bk'] = m['back']
     m['beforep'] = make_primitive("beforep", ['word1', 'word2'], [], None, 2, process_beforep)
     m['before?'] = m['beforep']
     m['butfirst'] = make_primitive("butfirst", ['wordlist'], [], None, 1, process_butfirst)
@@ -104,6 +106,8 @@ def create_primitives_map():
     m['float'] = make_primitive("float", ['num'], [], None, 1, process_float)
     m['for'] = make_primitive("for", ['forcontrol', 'instrlist'], [], None, 2, process_for)
     m['foreach'] = make_primitive("foreach", ['data', 'template'], ['args'], None, 2, process_foreach)
+    m['forward'] = make_primitive("forward", ['dist'], [], None, 1, process_forward)
+    m['fd'] = m['forward']
     m['fput'] = make_primitive("fput", ['thing', 'list'], [], None, 2, process_fput)
     m['greaterequalp'] = make_primitive("greaterequalp", ['num1', 'num2'], [], None, 2, process_greaterequalp)
     m['greaterequal?'] = m['greaterequalp']
@@ -116,6 +120,8 @@ def create_primitives_map():
     m['iseq'] = make_primitive("iseq", ['from', 'to'], [], None, 2, process_iseq)
     m['item'] = make_primitive("item", ['index', 'thing'], [], None, 2, process_item)
     m['last'] = make_primitive("last", ['thing'], [], None, 1, process_last)
+    m['left'] = make_primitive("left", ['angle'], [], None, 1, process_left)
+    m['lt'] = m['left']
     m['lessequalp'] = make_primitive("lessequalp", ['num1', 'num2'], [], None, 2, process_lessequalp)
     m['lessequal?'] = m['lessequalp']
     m['lessp'] = make_primitive("lessp", ['num1', 'num2'], [], None, 2, process_lessp)
@@ -166,6 +172,8 @@ def create_primitives_map():
     m['remdup'] = make_primitive("remdup", ['list'], [], None, 1, process_remdup)
     m['repcount'] = make_primitive("repcount", [], [], None, 0, process_repcount)
     m['repeat'] = make_primitive("repeat", ['num', 'instructionlist'], [], None, 2, process_repeat)
+    m['right'] = make_primitive("right", ['angle'], [], None, 1, process_right)
+    m['rt'] = m['right']
     m['reverse'] = make_primitive("reverse", ['list'], [], None, 1, process_reverse)
     m['round'] = make_primitive("round", ['num'], [], None, 1, process_round)
     m['rseq'] = make_primitive("rseq", ['from', 'to', 'count'], [], None, 3, process_rseq)
@@ -256,6 +264,12 @@ def process_arctan(logo, *args):
                 return 90
             else:
                 raise ZeroDivisionError()
+
+def process_back(logo, dist):
+    """
+    The turtle graphics BACK command.
+    """
+    logo.turtle.backward(dist)
 
 def process_beforep(logo, word1, word2):
     """
@@ -719,6 +733,12 @@ def process_for(logo, forcontrol, instrlist):
         for_scope[counter_name] += step 
     logo.scope_stack.pop()
 
+def process_forward(logo, dist):
+    """
+    The turtle graphics FORWARD command.
+    """
+    logo.turtle.forward(dist)
+
 def process_fput(logo, thing, lst):
     """
     The FPUT command.
@@ -851,6 +871,12 @@ def process_last(logo, thing):
             return thing[-1] 
     except TypeError:
         raise errors.LogoError("LAST doesn't like `{}` as input.".format(thing)) 
+
+def process_left(logo, angle):
+    """
+    The turtle graphics LEFT command.
+    """
+    logo.turtle.left(angle)
 
 def process_lessequalp(logo, num1, num2):
     """
@@ -1367,6 +1393,12 @@ def process_reverse(logo, lst):
     r = list(lst)
     r.reverse()
     return r
+
+def process_right(logo, angle):
+    """
+    The turtle graphics RIGHT command.
+    """
+    logo.turtle.right(angle)
 
 def process_round(logo, num):
     """

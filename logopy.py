@@ -23,6 +23,8 @@ class LogoInterpreter:
     repcount_stack = attr.ib(default=attr.Factory(list))
     placeholder_stack = attr.ib(default=attr.Factory(list))
     grammar = attr.ib(default=None)
+    _screen = attr.ib(default=None)
+    _turtle = attr.ib(default=None)
     debug_procs = attr.ib(default=False)
     debug_primitives = attr.ib(default=False)
     debug_tokens = attr.ib(default=False)
@@ -33,6 +35,18 @@ class LogoInterpreter:
         interpreter.scope_stack.append({})
         interpreter.primitives.update(procedure.create_primitives_map())
         return interpreter
+
+    @property
+    def turtle(self):
+        """
+        Initialize Turtle Graphics system if required.
+        Returns the turte instance.
+        """
+        if self._screen is None:
+            import turtle
+            self._screen = turtle.Screen()
+            self._turtle = turtle.Turtle()
+        return self._turtle
 
     def evaluate_readlist(self, data):
         """
@@ -575,6 +589,9 @@ def main(args):
         raise ex
     if result is not None:
         raise errors.LogoError("You don't say what to do with `{}`.".format(result))
+    screen = interpreter._screen
+    if screen is not None:
+        screen.mainloop()
     if args.debug_interpreter:
         print("")
         print(interpreter)
