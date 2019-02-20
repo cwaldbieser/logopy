@@ -152,6 +152,7 @@ def create_primitives_map():
     m['op'] = m['output']
     m['pick'] = make_primitive("pick", ['list'], [], None, 1, process_pick)
     m['pop'] = make_primitive("pop", ['stackname'], [], None, 1, process_pop)
+    m['pos'] = make_primitive("pos", [], [], None, 0, process_pos)
     m['power'] = make_primitive("power", ['num1', 'num2'], [], None, 2, process_power)
     m['print'] = make_primitive("print", ['thing'], [], 'others', 1, process_print)
     m['pr'] = m['print']
@@ -181,6 +182,7 @@ def create_primitives_map():
     m['runresult'] = make_primitive("runresult", ['instructionlist'], [], None, 1, process_runresult)
     m['sentence'] = make_primitive("sentence", ['thing'], [], 'others', 2, process_sentence)
     m['se'] = m["sentence"]
+    m['setpos'] = make_primitive("setpos", ['pos'], [], None, 1, process_setpos)
     m['show'] = make_primitive("show", ['thing'], [], 'others', 1, process_show)
     m['sin'] = make_primitive("sin", ['degrees'], [], None, 1, process_sin)
     m['sqrt'] = make_primitive("sqrt", ['num'], [], None, 1, process_sqrt)
@@ -1156,6 +1158,12 @@ def process_pop(logo, stackname):
     except IndexError:
         raise errors.LogoError("Tried to POP from empty stack, `{}`.".format(stackname))
 
+def process_pos(logo):
+    """
+    The turtle graphics logo command.
+    """
+    return list(logo.turtle.pos())
+
 def process_power(logo, num1, num2):
     """
     The POWER command.
@@ -1578,6 +1586,16 @@ def process_wordp(logo, thing):
     if dtype == 'word':
         return 'true'
     return 'false'
+
+def process_setpos(logo, pos):
+    """
+    The turtle graphics SETPOS command.
+    """
+    if not _is_list(pos):
+        raise errors.LogoError("SETPOS expected a list but received `{}` instead.".format(pos))
+    if len(pos) != 2:
+        raise errors.LogoError("SETPOS expected a list with 2 members but received `{}` instead.".format(pos))
+    logo.turtle.setpos(*pos)
 
 def process_show(logo, *args):
     """
