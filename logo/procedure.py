@@ -159,6 +159,9 @@ def create_primitives_map():
     m['or'] = make_primitive("or", ['tf1', 'tf2'], [], 'tfs', 2, process_or)
     m['output'] = make_primitive("output", ['value'], [], None, 1, process_output)
     m['op'] = m['output']
+    m['pencolor'] = make_primitive("pencolor", [], [], None, 0, process_pencolor)
+    m['pc'] = m['pencolor']
+    m['pensize'] = make_primitive("pensize", [], [], None, 0, process_pensize)
     m['pick'] = make_primitive("pick", ['list'], [], None, 1, process_pick)
     m['pop'] = make_primitive("pop", ['stackname'], [], None, 1, process_pop)
     m['pos'] = make_primitive("pos", [], [], None, 0, process_pos)
@@ -195,6 +198,7 @@ def create_primitives_map():
     m['seth'] = m['setheading']
     m['setpencolor'] = make_primitive("setpencolor", ['color'], [], None, 1, process_setpencolor)
     m['setpc'] = m['setpencolor']
+    m['setpensize'] = make_primitive("setpensize", ['width'], [], None, 1, process_setpensize)
     m['setpos'] = make_primitive("setpos", ['pos'], [], None, 1, process_setpos)
     m['show'] = make_primitive("show", ['thing'], [], 'others', 1, process_show)
     m['showturtle'] = make_primitive("showturtle", [], [], None, 0, process_showturtle)
@@ -1215,6 +1219,21 @@ def process_output(logo, value):
     """
     raise errors.OutputSignal(value)
 
+def process_pencolor(logo):
+    """
+    The PENCOLOR command.
+    """
+    color = logo.turtle.pencolor()
+    if isinstance(color, tuple):
+        color = list(color)
+    return color
+
+def process_pensize(logo):
+    """
+    The PENSIZE command.
+    """
+    return logo.turtle.pensize()
+
 def process_pick(logo, lst):
     """
     The PICK command.
@@ -1705,6 +1724,12 @@ def process_setpencolor(logo, color):
         logo.turtle.pencolor(*color)
     else:
         logo.turtle.pencolor(color)
+
+def process_setpensize(logo, width):
+    """
+    The SETPENSIZE command.
+    """
+    logo.turtle.pensize(width)
 
 def process_setpos(logo, pos):
     """
