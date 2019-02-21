@@ -6,6 +6,7 @@ import math
 import numbers
 import operator
 import random
+import time
 from logo import errors
 
 
@@ -86,6 +87,9 @@ def create_primitives_map():
     m['bl'] = m['butlast']
     m['case'] = make_primitive("case", ['value', 'clauses'], [], None, 2, process_case)
     m['char'] = make_primitive("char", ['int'], [], None, 1, process_char)
+    m['clean'] = make_primitive("clean", [], [], None, 0, process_clean)
+    m['clearscreen'] = make_primitive("clearscreen", [], [], None, 0, process_clearscreen)
+    m['cs'] = m['clearscreen']
     m['combine'] = make_primitive("combine", ['thing1', 'thing2'], [], None, 2, process_combine)
     m['cond'] = make_primitive("cond", ['clauses'], [], None, 1, process_cond)
     m['count'] = make_primitive("count", ['thing'], [], None, 1, process_count)
@@ -205,6 +209,7 @@ def create_primitives_map():
     m['unicode'] = make_primitive("unicode", ['char'], [], None, 1, process_unicode)
     m['until'] = make_primitive("until", ['tfexpr', 'instrlist'], [], None, 2, process_until)
     m['uppercase'] = make_primitive("uppercase", ['word'], [], None, 1, process_uppercase)
+    m['wait'] = make_primitive("wait", ['time'], [], None, 1, process_wait)
     m['while'] = make_primitive("while", ['tfexpr', 'instrlist'], [], None, 2, process_while)
     m['word'] = make_primitive("word", ['word1', 'word2'], [], 'words', 2, process_word)
     m['wordp'] = make_primitive("wordp", ['thing'], [], None, 1, process_wordp)
@@ -372,6 +377,24 @@ def process_char(logo, codepoint):
         return chr(codepoint)
     except TypeError:   
         raise errors.LogoError("CHAR expects an integer, but got `{}` instead.".format(codepoint))
+
+def process_clean(logo):
+    """
+    The turtle graphics CLEAR command.
+    """
+    logo.turtle.clear()
+
+def process_clearscreen(logo):
+    """
+    The turtle graphics CLEARSCREEN command.
+    """
+    turtle = logo.turtle
+    isdown = turtle.isdown()
+    turtle.clear()
+    turtle.penup()
+    turtle.home()
+    if isdown:
+        turtle.pendown()
 
 def process_combine(logo, thing1, thing2):
     """
@@ -1622,6 +1645,12 @@ def process_uppercase(logo, word):
         return word.upper()
     except AttributeError:
         raise errors.LogoError("UPPERCASE expected a word but got a {} instead.".format(_datatypename(word)))
+
+def process_wait(logo, t):
+    """
+    The WAIT command.
+    """
+    time.sleep(t/60.0)
 
 def process_while(logo, tfexpr, instrlist):
     """
