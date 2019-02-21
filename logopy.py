@@ -36,6 +36,9 @@ class LogoInterpreter:
         interpreter.primitives.update(procedure.create_primitives_map())
         return interpreter
 
+    def is_turtle_active(self):
+        return self._screen is not None
+
     def _init_turtle_graphics(self):
         """
         Initialize turtle graphics.
@@ -602,8 +605,8 @@ def main(args):
         raise ex
     if result is not None:
         raise errors.LogoError("You don't say what to do with `{}`.".format(result))
-    screen = interpreter.screen
-    if not screen is None:
+    if interpreter.is_turtle_active():
+        screen = interpreter.screen
         screen.mainloop()
     if args.debug_interpreter:
         print("")
