@@ -77,6 +77,8 @@ def create_primitives_map():
     m['arctan'] = make_primitive("arctan", ['x'], ['y'], None, 1, process_arctan)
     m['back'] = make_primitive("back", ['dist'], [], None, 1, process_back)
     m['bk'] = m['back']
+    m['background'] = make_primitive("background", ['color'], [], None, 0, process_background)
+    m['bg'] = m['background']
     m['beforep'] = make_primitive("beforep", ['word1', 'word2'], [], None, 2, process_beforep)
     m['before?'] = m['beforep']
     m['butfirst'] = make_primitive("butfirst", ['wordlist'], [], None, 1, process_butfirst)
@@ -194,6 +196,8 @@ def create_primitives_map():
     m['runresult'] = make_primitive("runresult", ['instructionlist'], [], None, 1, process_runresult)
     m['sentence'] = make_primitive("sentence", ['thing'], [], 'others', 2, process_sentence)
     m['se'] = m["sentence"]
+    m['setbackground'] = make_primitive("setbackground", ['color'], [], None, 1, process_setbackground)
+    m['setbg'] = m['setbackground']
     m['setheading'] = make_primitive("setheading", ['angle'], [], None, 1, process_setheading)
     m['seth'] = m['setheading']
     m['setpencolor'] = make_primitive("setpencolor", ['color'], [], None, 1, process_setpencolor)
@@ -317,6 +321,16 @@ def process_back(logo, dist):
     The turtle graphics BACK command.
     """
     logo.turtle.backward(dist)
+
+def process_background(logo):
+    """
+    The BACKGROUND command.
+    """
+    color = logo.screen.bgcolor()
+    if isinstance(color, tuple):
+        return list(color)
+    else:
+        return color
 
 def process_beforep(logo, word1, word2):
     """
@@ -1709,6 +1723,15 @@ def process_wordp(logo, thing):
     if dtype == 'word':
         return 'true'
     return 'false'
+
+def process_setbackground(logo, color):
+    """
+    The SETBACKGROUND command.
+    """
+    if _is_list(color):
+        logo.screen.bgcolor(*color)
+    else:
+        logo.screen.bgcolor(color)
 
 def process_setheading(logo, angle):
     """
