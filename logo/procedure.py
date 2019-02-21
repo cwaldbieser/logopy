@@ -196,6 +196,7 @@ def create_primitives_map():
     m['substring?'] = m['substringp']
     m['sum'] = make_primitive("sum", ['num1', 'num2'], [], 'nums', 2, process_sum)
     m['thing'] = make_primitive("thing", ['thing'], [], None, 1, process_thing)
+    m['towards'] = make_primitive("towards", ['pos'], [], None, 1, process_towards)
     m['type'] = make_primitive("type", ['thing'], [], 'others', 1, process_type)
     m['unicode'] = make_primitive("unicode", ['char'], [], None, 1, process_unicode)
     m['until'] = make_primitive("until", ['tfexpr', 'instrlist'], [], None, 2, process_until)
@@ -1562,6 +1563,12 @@ def process_thing(logo, varname):
     The THING command.
     """
     return logo.get_variable_value(varname) 
+
+def process_towards(logo, pos):
+    """
+    The turtle graphics TOWARDS command.
+    """
+    return logo.turtle.towards(*pos)
 
 def process_type(logo, *args):
     """
