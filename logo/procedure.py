@@ -114,6 +114,7 @@ def create_primitives_map():
     m['greaterp'] = make_primitive("greaterp", ['num1', 'num2'], [], None, 2, process_greaterp)
     m['greater?'] = m['greaterp']
     m['heading'] = make_primitive("heading", [], [], None, 0, process_heading)
+    m['home'] = make_primitive("home", [], [], None, 0, process_home)
     m['if'] = make_primitive("if", ['tf', 'instructionlist'], ['instructionlist2'], None, 2, process_if)
     m['ifelse'] = make_primitive("ifelse", ['tf', 'instrlist1', 'instrlist2'], [], None, 3, process_ifelse)
     m['ignore'] = make_primitive("ignore", ['value'], [], None, 1, process_ignore)
@@ -781,6 +782,12 @@ def process_heading(logo):
     The turtle graphics HEADING command.
     """
     return logo.turtle.heading()
+
+def process_home(logo):
+    """
+    The turtle graphics HOME command.
+    """
+    logo.turtle.home()
 
 def process_if(logo, tf, instrlist, instrlist2=None):
     """
