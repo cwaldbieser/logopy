@@ -72,6 +72,7 @@ def create_primitives_map():
     m['?'] = make_primitive("?", [], ['pos'], None, 0, process_qmark)
     m['.eq'] = make_primitive(".eq", ['thing1', 'thing2'], [], None, 2, process_dot_eq)
     m['and'] = make_primitive("and", ['tf1', 'tf2'], [], 'tfs', 2, process_and)
+    m['arc'] = make_primitive("arc", ['angle', 'radius'], [], None, 2, process_arc)
     m['arctan'] = make_primitive("arctan", ['x'], ['y'], None, 1, process_arctan)
     m['back'] = make_primitive("back", ['dist'], [], None, 1, process_back)
     m['bk'] = m['back']
@@ -244,6 +245,12 @@ def process_and(logo, *args):
         if not truth_map[arg.lower()]:
             return 'false'
     return 'true'
+
+def process_arc(logo, angle, radius):
+    """
+    The turtle graphics ARC command.
+    """
+    logo.turtle.circle(radius, angle)
 
 def process_arctan(logo, *args):
     """
