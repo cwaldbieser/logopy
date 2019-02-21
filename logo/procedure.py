@@ -250,7 +250,23 @@ def process_arc(logo, angle, radius):
     """
     The turtle graphics ARC command.
     """
-    logo.turtle.circle(radius, angle)
+    screen = logo.screen
+    t0 = logo.turtle
+    isdown = t0.isdown()
+    pos = t0.pos()
+    heading = t0.heading()
+    t0.penup()
+    t0.right(90)
+    t0.forward(radius)
+    t0.left(90)
+    if isdown:
+        t0.pendown()
+    t0.circle(radius, angle)
+    t0.penup()
+    t0.setpos(*pos)
+    t0.setheading(heading)
+    if isdown:
+        t0.pendown()
 
 def process_arctan(logo, *args):
     """
