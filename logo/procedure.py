@@ -197,6 +197,8 @@ def create_primitives_map():
     m['show'] = make_primitive("show", ['thing'], [], 'others', 1, process_show)
     m['showturtle'] = make_primitive("showturtle", [], [], None, 0, process_showturtle)
     m['st'] = m['showturtle']
+    m['shownp'] = make_primitive("shownp", [], [], None, 0, process_shownp)
+    m['shown?'] = m['shownp']
     m['sin'] = make_primitive("sin", ['degrees'], [], None, 1, process_sin)
     m['sqrt'] = make_primitive("sqrt", ['num'], [], None, 1, process_sqrt)
     m['stop'] = make_primitive("stop", [], [], None, 0, process_stop)
@@ -1548,6 +1550,15 @@ def process_showturtle(logo):
     The turtle graphics SHOWTURTLE command.
     """
     logo.turtle.showturtle()
+
+def process_shownp(logo):
+    """
+    The SHOWNP command.
+    """
+    if logo.turtle.isvisible():
+        return 'true'
+    else:
+        return 'false'
 
 def process_sin(logo, degrees):
     """
