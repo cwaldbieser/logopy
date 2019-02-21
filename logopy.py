@@ -46,6 +46,7 @@ class LogoInterpreter:
         if self._screen is None:
             global turtle
             import turtle
+            turtle.mode("logo")
             self._screen = turtle.Screen()
 
     @property
