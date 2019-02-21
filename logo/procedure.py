@@ -113,6 +113,7 @@ def create_primitives_map():
     m['greaterequal?'] = m['greaterequalp']
     m['greaterp'] = make_primitive("greaterp", ['num1', 'num2'], [], None, 2, process_greaterp)
     m['greater?'] = m['greaterp']
+    m['heading'] = make_primitive("heading", [], [], None, 0, process_heading)
     m['if'] = make_primitive("if", ['tf', 'instructionlist'], ['instructionlist2'], None, 2, process_if)
     m['ifelse'] = make_primitive("ifelse", ['tf', 'instrlist1', 'instrlist2'], [], None, 3, process_ifelse)
     m['ignore'] = make_primitive("ignore", ['value'], [], None, 1, process_ignore)
@@ -182,6 +183,8 @@ def create_primitives_map():
     m['runresult'] = make_primitive("runresult", ['instructionlist'], [], None, 1, process_runresult)
     m['sentence'] = make_primitive("sentence", ['thing'], [], 'others', 2, process_sentence)
     m['se'] = m["sentence"]
+    m['setheading'] = make_primitive("setheading", ['angle'], [], None, 1, process_setheading)
+    m['seth'] = m['setheading']
     m['setpos'] = make_primitive("setpos", ['pos'], [], None, 1, process_setpos)
     m['show'] = make_primitive("show", ['thing'], [], 'others', 1, process_show)
     m['sin'] = make_primitive("sin", ['degrees'], [], None, 1, process_sin)
@@ -772,6 +775,12 @@ def process_greaterp(logo, num1, num2):
         return 'true'
     else:
         return 'false'
+
+def process_heading(logo):
+    """
+    The turtle graphics HEADING command.
+    """
+    return logo.turtle.heading()
 
 def process_if(logo, tf, instrlist, instrlist2=None):
     """
@@ -1586,6 +1595,12 @@ def process_wordp(logo, thing):
     if dtype == 'word':
         return 'true'
     return 'false'
+
+def process_setheading(logo, angle):
+    """
+    The turtle graphics SETHEADING command.
+    """
+    logo.turtle.setheading(angle)
 
 def process_setpos(logo, pos):
     """
