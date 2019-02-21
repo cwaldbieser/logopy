@@ -36,17 +36,30 @@ class LogoInterpreter:
         interpreter.primitives.update(procedure.create_primitives_map())
         return interpreter
 
+    def _init_turtle_graphics(self):
+        """
+        Initialize turtle graphics.
+        """
+        if self._screen is None:
+            global turtle
+            import turtle
+            self._screen = turtle.Screen()
+
     @property
     def turtle(self):
         """
         Initialize Turtle Graphics system if required.
         Returns the turte instance.
         """
-        if self._screen is None:
-            import turtle
-            self._screen = turtle.Screen()
+        self._init_turtle_graphics()
+        if self._turtle is None:
             self._turtle = turtle.Turtle()
         return self._turtle
+
+    @property
+    def screen(self):
+        self._init_turtle_graphics()
+        return self._screen
 
     def evaluate_readlist(self, data):
         """
@@ -589,8 +602,8 @@ def main(args):
         raise ex
     if result is not None:
         raise errors.LogoError("You don't say what to do with `{}`.".format(result))
-    screen = interpreter._screen
-    if screen is not None:
+    screen = interpreter.screen
+    if not screen is None:
         screen.mainloop()
     if args.debug_interpreter:
         print("")
