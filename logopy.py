@@ -48,6 +48,7 @@ class LogoInterpreter:
             import turtle
             turtle.mode("logo")
             self._screen = turtle.Screen()
+            self._screen.bgcolor("black")
 
     @property
     def turtle(self):
@@ -58,6 +59,7 @@ class LogoInterpreter:
         self._init_turtle_graphics()
         if self._turtle is None:
             self._turtle = turtle.Turtle()
+            self._turtle.pencolor("white")
         return self._turtle
 
     @property

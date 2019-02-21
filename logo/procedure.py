@@ -115,6 +115,8 @@ def create_primitives_map():
     m['greaterp'] = make_primitive("greaterp", ['num1', 'num2'], [], None, 2, process_greaterp)
     m['greater?'] = m['greaterp']
     m['heading'] = make_primitive("heading", [], [], None, 0, process_heading)
+    m['hideturtle'] = make_primitive("hideturtle", [], [], None, 0, process_hideturtle)
+    m['ht'] = m['hideturtle']
     m['home'] = make_primitive("home", [], [], None, 0, process_home)
     m['if'] = make_primitive("if", ['tf', 'instructionlist'], ['instructionlist2'], None, 2, process_if)
     m['ifelse'] = make_primitive("ifelse", ['tf', 'instrlist1', 'instrlist2'], [], None, 3, process_ifelse)
@@ -189,6 +191,8 @@ def create_primitives_map():
     m['seth'] = m['setheading']
     m['setpos'] = make_primitive("setpos", ['pos'], [], None, 1, process_setpos)
     m['show'] = make_primitive("show", ['thing'], [], 'others', 1, process_show)
+    m['showturtle'] = make_primitive("showturtle", [], [], None, 0, process_showturtle)
+    m['st'] = m['showturtle']
     m['sin'] = make_primitive("sin", ['degrees'], [], None, 1, process_sin)
     m['sqrt'] = make_primitive("sqrt", ['num'], [], None, 1, process_sqrt)
     m['stop'] = make_primitive("stop", [], [], None, 0, process_stop)
@@ -806,6 +810,12 @@ def process_heading(logo):
     The turtle graphics HEADING command.
     """
     return logo.turtle.heading()
+
+def process_hideturtle(logo):
+    """
+    The turtle graphics HIDETURTLE command.
+    """
+    logo.turtle.hideturtle()
 
 def process_home(logo):
     """
@@ -1509,6 +1519,12 @@ def process_sentence(logo, *args):
         else:
             raise errors.LogoError("SENTENCE cannot be used on a {}.".format(dtype))
     return sentence
+
+def process_showturtle(logo):
+    """
+    The turtle graphics SHOWTURTLE command.
+    """
+    logo.turtle.showturtle()
 
 def process_sin(logo, degrees):
     """
