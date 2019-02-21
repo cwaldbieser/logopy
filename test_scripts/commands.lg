@@ -1,12 +1,12 @@
 
-to heading :title
+to title :title
 print []
 print (sentence "= :title "=)
 end
 
 make "space "\ ; a quoted space
 
-heading [Printing and expressions]
+title [Printing and expressions]
 print "hello
 print 0.25
 print (1.5 * 10.0)
@@ -18,11 +18,11 @@ print [hello world]
 (print [hello world] "something [else] [and now for [the larch] something completely different ...])
 show [hello world]
 
-heading "MAKE
+title "MAKE
 make "name "Carl
 (print "Hello :name)
 
-heading [Dynamic Scopes]
+title [Dynamic Scopes]
 to greeting :name
 (print [Oh, why hello there,] :name)
 end
@@ -47,30 +47,30 @@ print []
 print word "ABC "def
 print (word "ABC "def "GHI "jkl "MNO "pqr "STU "vwx "YZ)
 
-heading "SENTENCE
+title "SENTENCE
 show (sentence "The "quick [ brown fox [ jumps over ] the ] [lazy] "dog.)
 show list "A [B]
 show (list [1 2 3] "two [III])
 
-heading "FPUT
+title "FPUT
 show fput "elephant [dog cat]
 show lput "cyan [red blue green]
 
-heading "COMBINE
+title "COMBINE
 show combine "a [b c]
 show combine "key "board
 show combine [1 2] [3]
 ; Error condition - Expected word, got a list.
 ; show combine [1 2] "three
 
-heading "REVERSE
+title "REVERSE
 show reverse [one two three]
 
-heading "FIRST
+title "FIRST
 show first "Cookie
 show first [ green blue cyan]
 
-heading "FIRSTS
+title "FIRSTS
 make "planets [mercury venus earth mars jupiter saturn uranus neptune]
 show firsts :planets
 make "number.reps [[1 one i] [2 two ii] [3 three iii]]
@@ -78,44 +78,44 @@ show firsts :number.reps
 ; Next is an error.
 ; show firsts [[2 2] [] [1] [3 3 3]]
 
-heading "LAST
+title "LAST
 print (sentence [>>> show last "Hello]) show last "Hello
 print (sentence [>>> show last :planets]) show last :planets
 print (sentence [>>> show last :number.reps]) show last :number.reps
 
-heading "BUTFIRST
+title "BUTFIRST
 print (sentence [>>> show bf "Cookie]) show bf "Cookie
 print (sentence [>>> show bf :planets]) show bf :planets
 
-heading "BUTFIRSTS
+title "BUTFIRSTS
 print (sentence [>>> show bfs :planets]) show bfs :planets
 print (sentence [>>> show bfs :number.reps]) show bfs :number.reps
 
-heading "BUTLAST
+title "BUTLAST
 print (sentence [>>> show bf "Cookie]) show bf "Cookie
 print (sentence [>>> show bl :planets]) show bl :planets
 
-heading "ITEM
+title "ITEM
 print (sentence [>>> show item 4 "Cookie]) show item 4 "Cookie
 print (sentence [>>> show item 3 :planets]) show item 3 :planets
 
-heading "PICK
+title "PICK
 print (sentence [>>> show pick "abcdefghijklmnopqrstuvwxyz]) show pick "abcdefghijklmnopqrstuvwxyz
 print (sentence [>>> show pick :planets]) show pick :planets
 
-heading "REMOVE
+title "REMOVE
 print (sentence [>>> show remove "o "Cookie]) show remove "o "Cookie
 print (sentence [>>> show remove "uranus :planets]) show remove "uranus :planets
 
-heading "REMDUP
+title "REMDUP
 print (sentence [>>> show remdup "ebeleeue]) show remdup "ebeleeue
 print (sentence [>>> show remdup [one 3 two two 3]]) show remdup [one 3 two two 3]
 
-heading "QUOTED
+title "QUOTED
 print (sentence [>>> show quoted :name]) show quoted :name
 print (sentence [>>> show quoted :planets]) show quoted :planets
 
-heading [PUSH and POP]
+title [PUSH and POP]
 print (sentence [>>> make "stack []]) make "stack []
 print (sentence [>>> push "stack "bottom]) push "stack "bottom
 print (sentence [>>> push "stack "middle]) push "stack "middle
@@ -126,7 +126,7 @@ print (sentence [>>> show pop "stack]) show pop "stack
 print (sentence [>>> show pop "stack]) show pop "stack
 print (sentence [>>> show :stack]) show :stack
 
-heading [QUEUE and DEQUEUE]
+title [QUEUE and DEQUEUE]
 print (sentence [>>> make "queue []]) make "queue []
 print (sentence [>>> queue "queue "first]) queue "queue "first
 print (sentence [>>> queue "queue "second]) queue "queue "second
@@ -137,7 +137,7 @@ print (sentence [>>> show dequeue "queue]) show dequeue "queue
 print (sentence [>>> show dequeue "queue]) show dequeue "queue
 print (sentence [>>> show :queue]) show :queue
 
-heading [Predicates]
+title [Predicates]
 print (sentence [>>> wordp :name]) print wordp :name
 print (sentence [>>> wordp 14]) print wordp 14
 print (sentence [>>> wordp 14.7]) print wordp 14.7
@@ -175,34 +175,34 @@ print (sentence [>>> numberp 17]) print numberp 17
 print (sentence [>>> numberp 0.17]) print numberp 0.17
 print (sentence [>>> numberp 001]) print numberp 001
 
-heading "COUNT
+title "COUNT
 print (sentence [>>> count :name]) print count :name
 print (sentence [>>> count :planets]) print count :planets
 print (sentence [>>> count 100]) print count 100
 
-heading [UNICODE and CHAR]
+title [UNICODE and CHAR]
 print (sentence [>>> unicode "A]) print unicode "A
 print (sentence [>>> char 65]) print char 65
 ; Error
 ; print (sentence [>>> unicode "AB]) print unicode "AB
 
-heading "MEMBER
+title "MEMBER
 print (sentence [>>> member "mars :planets]) print member "mars :planets
 print (sentence [>>> member "k "donkey]) print member "k "donkey
 
-heading [UPPERCASE and LOWERCASE]
+title [UPPERCASE and LOWERCASE]
 print (sentence [>>> lowercase "MERCURY]) print lowercase "MERCURY
 print (sentence [>>> uppercase "jupiter]) print uppercase "jupiter
 
-heading "TYPE
+title "TYPE
 print (sentence [>>> type "book print "keeper])
 type "book print "keeper
 
 ;Uncomment for READLIST test.
-;heading "READLIST
+;title "READLIST
 ;print (sentence [>>> show (sentence readlist)]) show (sentence readlist)
 
-heading [Arithmatic: SUM, DIFFERENCE, PRODUCT, QUOTIENT, +-*/]
+title [Arithmatic: SUM, DIFFERENCE, PRODUCT, QUOTIENT, +-*/]
 print [>>> make "n 5] make "n 5
 print (sentence [>>> sum 3 4]) print sum 3 4
 print (sentence [>>> sum :n 2]) print sum :n 2
@@ -217,14 +217,14 @@ print (sentence [>>> quotient 360 15]) print quotient 360 15
 print (sentence [>>> 360 / :n]) print 360 / :n
 print (sentence [>>> 2 * ((sum 3 -1) / -2) - 7]) print 2 * ((sum 3 -1) / -2) - 7
 
-heading [MODULO and REMAINDER]
+title [MODULO and REMAINDER]
 print (sentence [>>> remainder 5 2]) print remainder 5 2
 print (sentence [>>> remainder -5 2]) print remainder -5 2
 print (sentence [>>> remainder 5 -2]) print remainder 5 -2
 print (sentence [>>> modulo -5 2]) print modulo -5 2
 print (sentence [>>> modulo 5 -2]) print modulo 5 -2
 
-heading [INT and ROUND]
+title [INT and ROUND]
 print (sentence [>>> int -25.1]) print int -25.1
 print (sentence [>>> int -25.7]) print int -25.7
 print (sentence [>>> round -25.1]) print round -25.1
@@ -233,7 +233,7 @@ print (sentence [>>> round -25.7]) print round -25.7
 ;print (sentence [>>> int "bar]) print int "bar
 ;print (sentence [>>> round [1 3]]) print round [1 3]
 
-heading [SQRT and POWER]
+title [SQRT and POWER]
 print (sentence [>>> sqrt 25]) print sqrt 25
 ; Errors
 ;print (sentence [>>> sqrt -25]) print sqrt -25
@@ -243,19 +243,19 @@ print (sentence [>>> power 5 2]) print power 5 2
 print (sentence [>>> power -1.5 3]) print power -1.5 3
 print (sentence [>>> power 16 0.25]) print power 16 0.25
 
-heading [EXP, LN, and LOG10]
+title [EXP, LN, and LOG10]
 print (sentence [>>> exp 1]) print exp 1
 print (sentence [>>> ln exp 5]) print ln exp 5
 print (sentence [>>> log10 1000]) print log10 1000
 
-heading [Trig functions- COS, SIN, RADCOS, RADSIN, ARCTAN, RADARCTAN]
+title [Trig functions- COS, SIN, RADCOS, RADSIN, ARCTAN, RADARCTAN]
 print (sentence [>>> cos 180]) print cos 180
 print (sentence [>>> radcos 3.147]) print  radcos 3.147
 print (sentence [>>> sin 90]) print  sin 90
 print (sentence [>>> radsin 3.147 / 2]) print  radsin 3.147 / 2
 print (sentence [>>> 2 * (radarctan 0 1)]) print  2 * (radarctan 0 1)
 
-heading [Sequence Generation- ISEQ, RSEQ]
+title [Sequence Generation- ISEQ, RSEQ]
 print (sentence [>>> iseq 3 7]) print iseq 3 7
 print (sentence [>>> iseq 7 -3]) print iseq 7 -3
 print (sentence [>>> rseq 1 16 4]) print rseq 1 16 4
@@ -263,7 +263,7 @@ print (sentence [>>> rseq 16 1 4]) print rseq 16 1 4
 ; Errors
 ;print (sentence [rseq "a 1 4]) print rseq "a 1 4
 
-heading [Relational Operators- LESSP, LESSEQUALP, GREATERP GREATEREQUALP, < > <= >=]
+title [Relational Operators- LESSP, LESSEQUALP, GREATERP GREATEREQUALP, < > <= >=]
 print (sentence [>>> lessp 5 7]) print lessp 5  7
 print (sentence [>>> 5 < 7]) print 5 < 7
 print (sentence [>>> lessp 5 5]) print lessp 5  5
@@ -281,13 +281,13 @@ print (sentence [>>> greaterequalp 5 7]) print greaterequalp 5 7
 ; Errors
 ;print (sentence [>>> 5 >= "a]) print 5 >= "a
 
-heading "RANDOM
+title "RANDOM
 print (sentence [>>> random 10]) 
 print random 10
 print (sentence [>>> (random 70 79)]) 
 print (random 70 79)
 
-heading [Logical Operators-- AND, OR, NOT]
+title [Logical Operators-- AND, OR, NOT]
 print (sentence [>>> and 5 <= 7 7 < 3]) 
 print and 5 <= 7 7 < 3 
 print (sentence [>>> and "true "true]) 
@@ -311,13 +311,13 @@ print not "true
 print (sentence [>>> not "false])
 print not "false 
 
-heading "THING
+title "THING
 print (sentence [make "planets [mercury venus earth mars jupiter saturn uranus neptune]])
 make "planets [mercury venus earth mars jupiter saturn uranus neptune]
 print (sentence [>>> show thing "planets])
 show thing "planets
 
-heading [RUN and RUNRESULT]
+title [RUN and RUNRESULT]
 print [>>> make "result run [sum 5 2]] 
 make "result run [sum 5 2]
 print (sentence [>>> print :result])
@@ -328,13 +328,13 @@ show runresult [sum 7 7]
 print (sentence [>>> show runresult [make "greeting "Hello] \;No output.])
 show runresult [make "greeting "Hello]
 
-heading [REPEAT and REPCOUNT]
+title [REPEAT and REPCOUNT]
 print (sentence [>>> repeat 3 [print repcount]])
 repeat 3 [print repcount]
 print (sentence [>>> repeat 3 [make "j # repeat 3 [show (list # "* j "= # * j)]]])
 repeat 3 [make "j # repeat 3 [print (list # "* :j "= # * :j)]]
 
-heading [IF, IFELSE]
+title [IF, IFELSE]
 print (sentence [>>> make "name "Carl])
 make "name "Carl
 print (sentence [>>> if equalp :name "Carl [(print "Hello, :name)]])
@@ -344,7 +344,7 @@ print (sentence [>>> (if :name = "Fred [print [This won't print]] [ print [But t
 print (sentence [>>> ifelse :name = "Fred [print [This won't print]] [ print [But this will.] ]]) 
 ifelse :name = "Fred [print [This won't print]] [ print [But this will.] ]
 
-heading [Loops- FOR, DO.WHILE, WHILE, UNTIL]
+title [Loops- FOR, DO.WHILE, WHILE, UNTIL]
 print (sentence [>>> make "n 5])
 make "n 5
 print (sentence [>>> for [ x 1 7 2 ] [ print :x ] :])
@@ -378,7 +378,7 @@ until [:n < -2] [
     make "n (:n - 1)
 ]
 
-heading [CASE and COND]
+title [CASE and COND]
 print (sentence [>>> make "color "green print case :color [ [[red orange yellow] warm] [[blue green purple] cool] [else [I'm not sure about that color.]] ]])
 make "color "green
 print case :color [
@@ -410,7 +410,7 @@ while [not emptyp :wordq] [
     ]
 ]
 
-heading "FOREACH
+title "FOREACH
 print (sentence [>>> foreach [a b c] [ type # type "\\\   print ? ]])
 foreach [a b c] [ type # type "\  print ? ]
 print (sentence [>>> (foreach [a b c] [3 5 7] [ type # type "\\\   print list ?2 ?1  ])])
@@ -434,23 +434,23 @@ print (sentence [... \])])
     [print []]
 ])
 
-heading [MAP and MAP.SE]
+title [MAP and MAP.SE]
 print (sentence [>>> show map [product ? ?] [1 2 3]])
 show map [product ? ?] [1 2 3]
 print (sentence [>>> show map.se [butfirst ?] [[a b c] [x y z] rgb]])
 show map.se [butfirst ?] [[a b c] [x y z] rgb]
 
-heading "FILTER
+title "FILTER
 print (sentence [>>> show filter [memberp first ? "aeiou] [mercury venus earth mars jupiter saturn uranus neptune]])
 show filter [memberp first ? "aeiou] [mercury venus earth mars jupiter saturn uranus neptune] 
 
-heading "FIND
+title "FIND
 print (sentence [>>> show find [memberp first ? "aeiou] [mercury venus earth mars jupiter saturn uranus neptune]])
 show find [memberp first ? "aeiou] [mercury venus earth mars jupiter saturn uranus neptune] 
 print (sentence [>>> show find [(count ?) < 5 ] [mercury venus earth mars jupiter saturn uranus neptune]])
 show find [(count ?) < 5 ] [mercury venus earth mars jupiter saturn uranus neptune] 
 
-heading "REDUCE
+title "REDUCE
 print (sentence [>>> show reduce [sum ?1 ?2] [1 2 3 4 5 6]])
 show reduce [sum ?1 ?2] [1 2 3 4 5 6]
 print (sentence [>>> show last reduce [[x y] list "label sum last :x last :y] [[a 1] [b 2] [c 3]]])
