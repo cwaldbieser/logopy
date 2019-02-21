@@ -47,6 +47,7 @@ class LogoInterpreter:
             global turtle
             import turtle
             turtle.mode("logo")
+            turtle.colormode(255)
             self._screen = turtle.Screen()
             self._screen.bgcolor("black")
 

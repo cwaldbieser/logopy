@@ -193,6 +193,8 @@ def create_primitives_map():
     m['se'] = m["sentence"]
     m['setheading'] = make_primitive("setheading", ['angle'], [], None, 1, process_setheading)
     m['seth'] = m['setheading']
+    m['setpencolor'] = make_primitive("setpencolor", ['color'], [], None, 1, process_setpencolor)
+    m['setpc'] = m['setpencolor']
     m['setpos'] = make_primitive("setpos", ['pos'], [], None, 1, process_setpos)
     m['show'] = make_primitive("show", ['thing'], [], 'others', 1, process_show)
     m['showturtle'] = make_primitive("showturtle", [], [], None, 0, process_showturtle)
@@ -1694,6 +1696,15 @@ def process_setheading(logo, angle):
     The turtle graphics SETHEADING command.
     """
     logo.turtle.setheading(angle)
+
+def process_setpencolor(logo, color):
+    """
+    The SETPENCOLOR command.
+    """
+    if _is_list(color):
+        logo.turtle.pencolor(*color)
+    else:
+        logo.turtle.pencolor(color)
 
 def process_setpos(logo, pos):
     """
