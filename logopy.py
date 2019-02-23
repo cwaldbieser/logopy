@@ -370,7 +370,7 @@ class TokenStream:
     Token stream.
     """
     tokens = attr.ib(default=None)
-    processed = attr.ib(default=attr.Factory(list))
+    processed = attr.ib(default=attr.Factory(lambda : collections.deque(list(), 10)))
 
     @classmethod
     def make_stream(cls, lst):
@@ -521,28 +521,6 @@ def parse_tokens(grammar, script, debug=False):
         print("PARSED TOKENS:", tokens)
     return tokens
 
-def run_tests(grammar):
-    """
-    Run the tests.
-    """
-    print("Tests ...")
-    tests = [
-        'print hello world',
-        'print [hello world]',
-        'print [hello [nested] world]',
-        'line1\nline2',
-        'to circle :radius\narc 360 :radius\nend',
-        'print "hello',
-        'print "hello;this is a comment\nshow [a list]',
-        'print (2 + 3) * 5',
-        'to equalateral :side [:colors []]',
-        'localmake "colors (list :color :color :color)',
-        'make "theta heading * -1 + 90'
-    ]
-    for prog in tests:
-        print(parse_tokens(grammar, prog))
-    print("Tests completed.")
-
 def transform_qmark(command):
     """
     If command is a `?` followed by a number, transform it to the
@@ -591,8 +569,6 @@ def main(args):
     Parse Logo
     """
     grammar = make_token_grammar()
-    if args.tests:
-        run_tests(grammar)
     script = args.file.read()
     tokens = parse_tokens(grammar, script, debug=args.debug_tokens)
     if args.tokenize_only:
@@ -614,7 +590,8 @@ def main(args):
         screen.mainloop()
     if args.debug_interpreter:
         print("")
-        print(interpreter)
+        import pprint
+        pprint.pprint(interpreter)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Logo programming language interpreter")
@@ -622,11 +599,6 @@ if __name__ == "__main__":
         "file",
         type=argparse.FileType("r"),
         help="Logo script file to interpret.")
-    parser.add_argument(
-        "-t",
-        "--tests",
-        action="store_true",
-        help="Run preliminary tests.")
     parser.add_argument(
         "--debug-procs",
         action="store_true",
