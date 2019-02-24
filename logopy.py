@@ -23,6 +23,7 @@ class LogoInterpreter:
     repcount_stack = attr.ib(default=attr.Factory(list))
     placeholder_stack = attr.ib(default=attr.Factory(list))
     grammar = attr.ib(default=None)
+    turtle_gui = attr.ib(default=None)
     _screen = attr.ib(default=None)
     _turtle = attr.ib(default=None)
     debug_procs = attr.ib(default=False)
@@ -39,17 +40,25 @@ class LogoInterpreter:
     def is_turtle_active(self):
         return self._screen is not None
 
+    def process_events(self):
+        if self.is_turtle_active():
+            #self.turtle_gui.root.update_idletasks()
+            self.turtle_gui.root.update()
+
     def _init_turtle_graphics(self):
         """
         Initialize turtle graphics.
         """
         if self._screen is None:
-            global turtle
-            import turtle
-            turtle.mode("logo")
-            turtle.colormode(255)
-            self._screen = turtle.Screen()
+            global gui
+            from logo import gui
+            self.turtle_gui = gui.TurtleGui.make_gui()
+            self._screen = self.turtle_gui.screen
             self._screen.bgcolor("black")
+            self._screen.mode("logo")
+            self._screen.colormode(255)
+            #gui.turtle.mode("logo")
+            #gui.turtle.colormode(255)
 
     @property
     def turtle(self):
@@ -59,7 +68,7 @@ class LogoInterpreter:
         """
         self._init_turtle_graphics()
         if self._turtle is None:
-            self._turtle = turtle.Turtle()
+            self._turtle = gui.turtle.RawTurtle(self._screen)
             self._turtle.pencolor("white")
         return self._turtle
 
@@ -89,6 +98,7 @@ class LogoInterpreter:
     def process_commands(self, tokens):
         while len(tokens) > 0:
             result = self.process_command(tokens)
+            self.process_events()
         return result
 
     def process_command(self, tokens):
@@ -586,8 +596,8 @@ def main(args):
     if result is not None:
         raise errors.LogoError("You don't say what to do with `{}`.".format(result))
     if interpreter.is_turtle_active():
-        screen = interpreter.screen
-        screen.mainloop()
+        gui = interpreter.turtle_gui
+        gui.root.mainloop()
     if args.debug_interpreter:
         print("")
         import pprint

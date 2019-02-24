@@ -1,6 +1,7 @@
 
 import attr
 import collections
+import datetime
 import functools
 import math
 import numbers
@@ -1696,7 +1697,24 @@ def process_wait(logo, t):
     """
     The WAIT command.
     """
-    time.sleep(t/60.0)
+    if not logo.is_turtle_active:
+        time.sleep(t/60.0)
+    else:
+        refresh_secs = 0.1
+        t0 = datetime.datetime.now()
+        td = datetime.timedelta(seconds=t/60.0)
+        t1 = t0 + td
+        while True:
+            logo.process_events()
+            t = datetime.datetime.now()
+            if t >= t1:
+                break
+            td = t1 - t
+            seconds = td.total_seconds()
+            if seconds >= refresh_secs:
+                time.sleep(refresh_secs)
+            else:
+                time.sleep(seconds) 
 
 def process_while(logo, tfexpr, instrlist):
     """
