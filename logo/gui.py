@@ -29,20 +29,19 @@ class TurtleGui:
         gui.canvas = canvas
         screen = turtle.TurtleScreen(canvas)
         gui.screen = screen
-        output = ScrolledText(f, height=10, state='disabled')
-        output.pack(side='top', expand=0, fill='x')
-        gui.output = output
-        text_input = Frame(f) 
-        prompt = Label(text_input, text="?")
-        prompt.pack(side='left', expand=0)
-        input_var = StringVar()
-        gui.input_var = input_var
-        entry = Entry(text_input, textvariable=input_var)
-        entry.bind('<Return>', gui.handle_input)
-        entry.pack(side='left', expand=1, fill='x')
-        text_input.pack(side='top', expand=0, fill='x')
-        button = Button(f, text="FROTZ")
-        button.pack(side='bottom')
+        if interactive:
+            output = ScrolledText(f, height=10, state='disabled')
+            output.pack(side='top', expand=0, fill='x')
+            gui.output = output
+            text_input = Frame(f) 
+            prompt = Label(text_input, text="?")
+            prompt.pack(side='left', expand=0)
+            input_var = StringVar()
+            gui.input_var = input_var
+            entry = Entry(text_input, textvariable=input_var)
+            entry.bind('<Return>', gui.handle_input)
+            entry.pack(side='left', expand=1, fill='x')
+            text_input.pack(side='top', expand=0, fill='x')
         return gui
 
     def configure_canvas(self, event):
@@ -78,6 +77,7 @@ class TurtleGui:
         output.insert(END, data)
         output.insert(END, "\n")
         output.configure(state='disabled')
+        output.see(END)
         handler = self._input_handler
         if handler is None:
             return

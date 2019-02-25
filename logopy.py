@@ -59,6 +59,8 @@ class LogoInterpreter:
             self._screen.bgcolor("black")
             self._screen.mode("logo")
             self._screen.colormode(255)
+            if interactive:
+                self.turtle_gui.set_input_handler(self.receive_input)
             #gui.turtle.mode("logo")
             #gui.turtle.colormode(255)
 
@@ -374,6 +376,20 @@ class LogoInterpreter:
         if self.debug_procs and command in procedures:
             print("PROCEDURE:", command, "ARGS:", args)
         return self.execute_procedure(proc, args)
+
+    def receive_input(self, data):
+        """
+        Handles input received from GUI.
+        """
+        grammar = self.grammar
+        tokens = parse_tokens(grammar, data, debug=self.debug_tokens)
+        try:
+            result = self.process_commands(tokens)
+        except Exception as ex:
+            print("Error tokenizing input:", ex)
+            return
+        if result is not None:
+            raise errors.LogoError("You don't say what to do with `{}`.".format(result))
 
 
 @attr.s
