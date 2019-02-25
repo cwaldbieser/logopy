@@ -11,6 +11,9 @@ class TurtleGui:
     frame = attr.ib(default=None)
     canvas = attr.ib(default=None)
     screen = attr.ib(default=None)
+    output = attr.ib(default=None)
+    input_var = attr.ib(default=None)
+    _input_handler = attr.ib(default=None)
     
     @classmethod
     def make_gui(cls, interactive=False):
@@ -26,8 +29,18 @@ class TurtleGui:
         gui.canvas = canvas
         screen = turtle.TurtleScreen(canvas)
         gui.screen = screen
-        text = ScrolledText(f, height=10)
-        text.pack(side='top', expand=0, fill='x')
+        output = ScrolledText(f, height=10, state='disabled')
+        output.pack(side='top', expand=0, fill='x')
+        gui.output = output
+        text_input = Frame(f) 
+        prompt = Label(text_input, text="?")
+        prompt.pack(side='left', expand=0)
+        input_var = StringVar()
+        gui.input_var = input_var
+        entry = Entry(text_input, textvariable=input_var)
+        entry.bind('<Return>', gui.handle_input)
+        entry.pack(side='left', expand=1, fill='x')
+        text_input.pack(side='top', expand=0, fill='x')
         button = Button(f, text="FROTZ")
         button.pack(side='bottom')
         return gui
@@ -45,4 +58,28 @@ class TurtleGui:
         east = hw
         west = -hw
         canvas.configure(scrollregion=(west, north, east, south))
+
+    def set_input_handler(self, handler):
+        """
+        Set the input handler.
+        """
+        self._input_handler = handler
+
+    def handle_input(self, event):
+        """
+        Handle data delivered from the input widget.
+        """
+        input_var = self.input_var
+        data = input_var.get()
+        input_var.set("")    
+        output = self.output
+        output.configure(state='normal')
+        output.insert(END, "? ")
+        output.insert(END, data)
+        output.insert(END, "\n")
+        output.configure(state='disabled')
+        handler = self._input_handler
+        if handler is None:
+            return
+        return handler(data)
         
