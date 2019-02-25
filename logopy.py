@@ -31,10 +31,12 @@ class LogoInterpreter:
     debug_tokens = attr.ib(default=False)
 
     @classmethod
-    def create_interpreter(cls):
+    def create_interpreter(cls, interactive=False):
         interpreter = cls()
         interpreter.scope_stack.append({})
         interpreter.primitives.update(procedure.create_primitives_map())
+        if interactive:
+            interpreter.init_turtle_graphics(interactive=True)
         return interpreter
 
     def is_turtle_active(self):
@@ -45,14 +47,14 @@ class LogoInterpreter:
             #self.turtle_gui.root.update_idletasks()
             self.turtle_gui.root.update()
 
-    def _init_turtle_graphics(self):
+    def init_turtle_graphics(self, interactive=False):
         """
         Initialize turtle graphics.
         """
         if self._screen is None:
             global gui
             from logo import gui
-            self.turtle_gui = gui.TurtleGui.make_gui()
+            self.turtle_gui = gui.TurtleGui.make_gui(interactive=interactive)
             self._screen = self.turtle_gui.screen
             self._screen.bgcolor("black")
             self._screen.mode("logo")
@@ -66,7 +68,7 @@ class LogoInterpreter:
         Initialize Turtle Graphics system if required.
         Returns the turte instance.
         """
-        self._init_turtle_graphics()
+        self.init_turtle_graphics()
         if self._turtle is None:
             self._turtle = gui.turtle.RawTurtle(self._screen)
             self._turtle.pencolor("white")
@@ -74,7 +76,7 @@ class LogoInterpreter:
 
     @property
     def screen(self):
-        self._init_turtle_graphics()
+        self.init_turtle_graphics()
         return self._screen
 
     def evaluate_readlist(self, data):
@@ -579,22 +581,23 @@ def main(args):
     Parse Logo
     """
     grammar = make_token_grammar()
-    script = args.file.read()
-    tokens = parse_tokens(grammar, script, debug=args.debug_tokens)
-    if args.tokenize_only:
-        return
-    interpreter = LogoInterpreter.create_interpreter()
+    interpreter = LogoInterpreter.create_interpreter(interactive=args.interactive)
     interpreter.debug_tokens = args.debug_tokens
     interpreter.grammar = grammar
     interpreter.debug_primitives = args.debug_primitives
     interpreter.debug_procs = args.debug_procs
-    try:
-        result = interpreter.process_commands(tokens)
-    except Exception as ex:
-        print("Processed tokens: {}".format(tokens.processed), file=sys.stderr)
-        raise ex
-    if result is not None:
-        raise errors.LogoError("You don't say what to do with `{}`.".format(result))
+    if args.file is not None:
+        script = args.file.read()
+        tokens = parse_tokens(grammar, script, debug=args.debug_tokens)
+        if args.tokenize_only:
+            return
+        try:
+            result = interpreter.process_commands(tokens)
+        except Exception as ex:
+            print("Processed tokens: {}".format(tokens.processed), file=sys.stderr)
+            raise ex
+        if result is not None:
+            raise errors.LogoError("You don't say what to do with `{}`.".format(result))
     if interpreter.is_turtle_active():
         gui = interpreter.turtle_gui
         gui.root.mainloop()
@@ -606,7 +609,13 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Logo programming language interpreter")
     parser.add_argument(
-        "file",
+    "-i",
+    "--interactive",
+    action="store_true",
+    help="Enter interactive mode.  If a Logo script is loaded, it will be run first.")
+    parser.add_argument(
+        "-f",
+        "--file",
         type=argparse.FileType("r"),
         help="Logo script file to interpret.")
     parser.add_argument(

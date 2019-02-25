@@ -1,5 +1,6 @@
 
 from tkinter import *
+from tkinter.scrolledtext import ScrolledText
 import turtle
 import attr
 
@@ -12,7 +13,7 @@ class TurtleGui:
     screen = attr.ib(default=None)
     
     @classmethod
-    def make_gui(cls):
+    def make_gui(cls, interactive=False):
         gui = cls()
         root = Tk()
         gui.root = root
@@ -25,6 +26,8 @@ class TurtleGui:
         gui.canvas = canvas
         screen = turtle.TurtleScreen(canvas)
         gui.screen = screen
+        text = ScrolledText(f, height=10)
+        text.pack(side='top', expand=0, fill='x')
         button = Button(f, text="FROTZ")
         button.pack(side='bottom')
         return gui
