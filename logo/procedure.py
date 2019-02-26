@@ -164,7 +164,11 @@ def create_primitives_map():
     m['op'] = m['output']
     m['pencolor'] = make_primitive("pencolor", [], [], None, 0, process_pencolor)
     m['pc'] = m['pencolor']
+    m['pendown'] = make_primitive("pendown", [], [], None, 0, process_pendown)
+    m['pd'] = m['pendown']
     m['pensize'] = make_primitive("pensize", [], [], None, 0, process_pensize)
+    m['penup'] = make_primitive("penup", [], [], None, 0, process_penup)
+    m['pu'] = m['penup']
     m['pick'] = make_primitive("pick", ['list'], [], None, 1, process_pick)
     m['pop'] = make_primitive("pop", ['stackname'], [], None, 1, process_pop)
     m['pos'] = make_primitive("pos", [], [], None, 0, process_pos)
@@ -1243,11 +1247,23 @@ def process_pencolor(logo):
         color = list(color)
     return color
 
+def process_pendown(logo):
+    """
+    The PENDOWN command.
+    """
+    logo.turtle.pendown()
+
 def process_pensize(logo):
     """
     The PENSIZE command.
     """
     return logo.turtle.pensize()
+
+def process_penup(logo):
+    """
+    The PENUP command.
+    """
+    logo.turtle.penup()
 
 def process_pick(logo, lst):
     """
