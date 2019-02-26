@@ -14,8 +14,10 @@ class TurtleGui:
     screen = attr.ib(default=None)
     output = attr.ib(default=None)
     input_var = attr.ib(default=None)
+    _prompt_label = attr.ib(default=None)
     _input_handler = attr.ib(default=None)
     _buffer = attr.ib(default=attr.Factory(list))
+    _prompt = attr.ib(default="?")
     
     @classmethod
     def make_gui(cls, interactive=False):
@@ -38,6 +40,7 @@ class TurtleGui:
             text_input = Frame(f) 
             prompt = Label(text_input, text="?")
             prompt.pack(side='left', expand=0)
+            gui._prompt_label = prompt
             input_var = StringVar()
             gui.input_var = input_var
             entry = Entry(text_input, textvariable=input_var)
@@ -72,28 +75,37 @@ class TurtleGui:
         """
         buf = self._buffer
         input_var = self.input_var
-        data = input_var.get()
+        input_data = input_var.get()
         input_var.set("")    
-        output = self.output
-        output.configure(state='normal')
-        output.insert(END, "? ")
-        output.insert(END, data)
-        output.insert(END, "\n")
-        output.configure(state='disabled')
-        output.see(END)
         handler = self._input_handler
         if len(buf) > 0:
-            buf.append(data)
+            buf.append(input_data)
             data = ' '.join(buf)
             buf[:] = []
+        else:
+            data = input_data
         if handler is None:
             return
+        prompt = self._prompt
+        result = None
         try:
-            return handler(data)
+            result = handler(data)
         except (parsley.ParseError, parsley.EOFError) as ex:
             msg = str(ex)
             if msg.find("expected EOF") != -1:
                 buf.append(data)
+                self._prompt_label.configure(text=">")
+                self._prompt = ">"
             else:
                 raise
-        
+        else:
+            self._prompt_label.configure(text="?")
+            self._prompt = "?"
+        output = self.output
+        output.configure(state='normal')
+        output.insert(END, "{} ".format(prompt))
+        output.insert(END, input_data)
+        output.insert(END, "\n")
+        output.configure(state='disabled')
+        output.see(END)
+        return result
