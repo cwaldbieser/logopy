@@ -3,6 +3,7 @@ from tkinter import *
 from tkinter.scrolledtext import ScrolledText
 import turtle
 import attr
+import parsley
 
 
 @attr.s
@@ -14,6 +15,7 @@ class TurtleGui:
     output = attr.ib(default=None)
     input_var = attr.ib(default=None)
     _input_handler = attr.ib(default=None)
+    _buffer = attr.ib(default=attr.Factory(list))
     
     @classmethod
     def make_gui(cls, interactive=False):
@@ -68,6 +70,7 @@ class TurtleGui:
         """
         Handle data delivered from the input widget.
         """
+        buf = self._buffer
         input_var = self.input_var
         data = input_var.get()
         input_var.set("")    
@@ -79,7 +82,18 @@ class TurtleGui:
         output.configure(state='disabled')
         output.see(END)
         handler = self._input_handler
+        if len(buf) > 0:
+            buf.append(data)
+            data = ' '.join(buf)
+            buf[:] = []
         if handler is None:
             return
-        return handler(data)
+        try:
+            return handler(data)
+        except (parsley.ParseError, parsley.EOFError) as ex:
+            msg = str(ex)
+            if msg.find("expected EOF") != -1:
+                buf.append(data)
+            else:
+                raise
         
