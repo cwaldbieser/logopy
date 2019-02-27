@@ -6,6 +6,10 @@ class LogoError(Exception):
     pass
 
 
+class ExpectedEndError(LogoError):
+    pass
+
+
 class StopSignal(Exception):
     pass
 

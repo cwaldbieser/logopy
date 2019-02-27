@@ -395,11 +395,7 @@ class LogoInterpreter:
         """
         grammar = self.grammar
         tokens = parse_tokens(grammar, data, debug=self.debug_tokens)
-        try:
-            result = self.process_commands(tokens)
-        except Exception as ex:
-            print("Error tokenizing input:", ex, file=self.stderr)
-            return
+        result = self.process_commands(tokens)
         if result is not None:
             raise errors.LogoError("You don't say what to do with `{}`.".format(result))
 

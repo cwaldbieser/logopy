@@ -3,6 +3,7 @@ import io
 from tkinter import *
 from tkinter.scrolledtext import ScrolledText
 import turtle
+from logo import errors
 import attr
 import parsley
 
@@ -119,6 +120,10 @@ class TurtleGui:
         result = None
         try:
             result = handler(data)
+        except errors.ExpectedEndError as ex:
+            buf.append(data)
+            self._prompt_label.configure(text=">")
+            self._prompt = ">"
         except (parsley.ParseError, parsley.EOFError) as ex:
             msg = str(ex)
             if msg.find("expected EOF") != -1:
@@ -127,6 +132,9 @@ class TurtleGui:
                 self._prompt = ">"
             else:
                 raise
+        except errors.LogoError as ex:
+            self._prompt_label.configure(text="?")
+            self._prompt = "?"
         else:
             self._prompt_label.configure(text="?")
             self._prompt = "?"

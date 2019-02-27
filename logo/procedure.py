@@ -1855,14 +1855,14 @@ def process_to(logo, tokens):
     try:
         token = tokens.popleft()
     except IndexError:
-        raise errors.LogoError("Expected END to complete procedure `{}`.".format(procedure_name))
+        raise errors.ExpectedEndError("Expected END to complete procedure `{}`.".format(procedure_name))
     _test = (lambda x: hasattr(x, 'lower') and x.lower() == 'end')
     while not _test(token):
         procedure_tokens.append(token)
         try:
             token = tokens.popleft()
         except IndexError:
-            raise errors.LogoError("Expected END to complete procedure `{}`.".format(procedure_name))
+            raise errors.ExpectedEndError("Expected END to complete procedure `{}`.".format(procedure_name))
     procedure = LogoProcedure.make_procedure(
         name=procedure_name,
         required_inputs=required_inputs,
