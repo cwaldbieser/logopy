@@ -1,4 +1,5 @@
 
+import io
 from tkinter import *
 from tkinter.scrolledtext import ScrolledText
 import turtle
@@ -18,6 +19,7 @@ class TurtleGui:
     _input_handler = attr.ib(default=None)
     _buffer = attr.ib(default=attr.Factory(list))
     _prompt = attr.ib(default="?")
+    _io_outbuf = attr.ib(default=attr.Factory(io.StringIO))
     
     @classmethod
     def make_gui(cls, interactive=False):
@@ -35,6 +37,7 @@ class TurtleGui:
         gui.screen = screen
         if interactive:
             output = ScrolledText(f, height=10, state='disabled')
+            output.bind("<1>", lambda event: output.focus_set())
             output.pack(side='top', expand=0, fill='x')
             gui.output = output
             text_input = Frame(f) 
@@ -48,6 +51,32 @@ class TurtleGui:
             entry.pack(side='left', expand=1, fill='x')
             text_input.pack(side='top', expand=0, fill='x')
         return gui
+
+    def write(self, data):
+        """
+        Write to temporary output buffer.
+        """
+        buf = self._io_outbuf
+        buf.write(data)
+
+    def _write(self, data):
+        """
+        Write to output widget.
+        """
+        output = self.output
+        output.configure(state='normal')
+        output.insert(END, data)
+        output.configure(state='disabled')
+        output.see(END)
+
+    def _flush_to_output(self):
+        """
+        Flush temporary buffer to output widget.
+        """
+        buf = self._io_outbuf
+        self._write(buf.getvalue())
+        buf.seek(0)
+        buf.truncate()
 
     def configure_canvas(self, event):
         """
@@ -101,11 +130,7 @@ class TurtleGui:
         else:
             self._prompt_label.configure(text="?")
             self._prompt = "?"
-        output = self.output
-        output.configure(state='normal')
-        output.insert(END, "{} ".format(prompt))
-        output.insert(END, input_data)
-        output.insert(END, "\n")
-        output.configure(state='disabled')
-        output.see(END)
+        self._write("{} {}\n".format(prompt, input_data))
+        self._flush_to_output()
         return result
+

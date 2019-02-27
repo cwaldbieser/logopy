@@ -1310,7 +1310,7 @@ def process_print(logo, *args):
             reps.append(_list_contents_repr(arg, include_braces=False, escape_delimiters=False))
         elif _datatypename(arg) == 'word':
             reps.append(str(arg))
-    print(' '.join(reps))
+    print(' '.join(reps), file=logo.stdout)
 
 def process_product(logo, *args):
     """
@@ -1682,7 +1682,7 @@ def process_type(logo, *args):
             reps.append(_list_contents_repr(arg, include_braces=False))
         elif _datatypename(arg) == 'word':
             reps.append(str(arg))
-    print(' '.join(reps), end="")
+    print(' '.join(reps), end="", file=logo.stdout)
 
 def process_unicode(logo, char):
     """
@@ -1811,7 +1811,7 @@ def process_show(logo, *args):
             reps.append(str(arg))
         else:
             raise errors.LogoError("SHOW doesn't know how to show type {}.".format(dtype))
-    print(' '.join(reps))
+    print(' '.join(reps), file=logo.stdout)
 
 def process_to(logo, tokens):
     """

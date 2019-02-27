@@ -39,6 +39,18 @@ class LogoInterpreter:
             interpreter.init_turtle_graphics(interactive=True)
         return interpreter
 
+    @property
+    def stdout(self):
+        if self.is_turtle_active():
+            return self.turtle_gui
+        return sys.stdout
+
+    @property
+    def stderr(self):
+        if self.is_turtle_active():
+            return self.turtle_gui
+        return sys.stderr
+
     def is_turtle_active(self):
         return self._screen is not None
 
@@ -386,7 +398,7 @@ class LogoInterpreter:
         try:
             result = self.process_commands(tokens)
         except Exception as ex:
-            print("Error tokenizing input:", ex)
+            print("Error tokenizing input:", ex, file=self.stderr)
             return
         if result is not None:
             raise errors.LogoError("You don't say what to do with `{}`.".format(result))
