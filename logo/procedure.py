@@ -107,6 +107,7 @@ def create_primitives_map():
     m['bfs'] = m['butfirsts']
     m['butlast'] = make_primitive("butlast", ['wordlist'], [], None, 1, process_butlast)
     m['bl'] = m['butlast']
+    m['cascade'] = make_primitive("cacade", ['endtest', 'template', 'startvalue'], [], 'args', 3, process_cascade)
     m['case'] = make_primitive("case", ['value', 'clauses'], [], None, 2, process_case)
     m['char'] = make_primitive("char", ['int'], [], None, 1, process_char)
     m['clean'] = make_primitive("clean", [], [], None, 0, process_clean)
@@ -402,6 +403,61 @@ def process_butlast(logo, wordlist):
     if len(wordlist) == 0:
         raise errors.LogoError("BUTLAST doesn't like `{}` as input.".format(wordlist)) 
     return wordlist[:-1]
+
+def process_cascade(logo, endtest, *args):
+    """
+    The CASCADE command.
+    """
+    final_template = None
+    argscount = len(args)
+    if argscount % 2 != 0:
+        final_template = args[-1]
+        args = args[:-1]
+    templates = args[::2]
+    startvalues = args[1::2]
+    dtype = _datatypename(endtest)
+    repcount = 0
+    test_end_func = None
+    endtest_script = None
+    if dtype == 'word':
+        try:
+            repetitions = int(endtest)
+        except (ValueError, TypeError) as ex:
+            raise errors.LogoError("CASCADE expected an integer for its end test, but received `{}` instead.".format(endtest))
+        test_end_func = lambda count, script: count > repetitions
+    elif dtype == 'list':
+        endtest_script = _list_contents_repr(endtest, include_braces=False)
+        test_end_func = lambda count, script: _is_true(logo.process_instructionlist(script))
+    else:
+        raise errors.LogoError("CASCADE expected an integer or template for `endtest`, but received `{}` instead.".format(endtest))
+    results = list(startvalues)
+    logo.create_repcount_scope()
+    try:
+        while True:
+            repcount += 1
+            logo.set_repcount(repcount)
+            if test_end_func(repcount, endtest_script):
+                break
+            last_results = list(results)
+            logo.push_placeholders(last_results)
+            try:
+                for n, template in enumerate(templates):
+                    script = _list_contents_repr(template, include_braces=False)
+                    results[n] = logo.process_instructionlist(script)
+            finally:
+                logo.pop_placeholders()
+        if final_template is None:
+            return results[0]
+        else:
+            logo.push_placeholders(results)
+            try:
+                script = _list_contents_repr(final_template, include_braces=False)
+                result = logo.process_instructionlist(script)
+                return result
+            finally:
+                logo.pop_placeholders()
+    finally:
+        logo.destroy_repcount_scope()
 
 def process_case(logo, value, clauses):
     """
@@ -1543,15 +1599,17 @@ def process_repeat(logo, num, instructionlist):
     if dtype != 'list':
         raise errors.LogoError("REPEAT expects a number and an instructionlist, but received `{}` instead.".format(instructionlist))
     logo.create_repcount_scope()
-    if int(num) == num:
-        num = int(num)
-    else:
-        raise errors.LogoError("REPEAT expects an integer, but recieved `{}` instead.".format(num))
-    for i in range(num):
-        logo.set_repcount(i + 1)
-        script = _list_contents_repr(instructionlist, include_braces=False)
-        logo.process_instructionlist(script) 
-    logo.destroy_repcount_scope()
+    try:
+        if int(num) == num:
+            num = int(num)
+        else:
+            raise errors.LogoError("REPEAT expects an integer, but recieved `{}` instead.".format(num))
+        for i in range(num):
+            logo.set_repcount(i + 1)
+            script = _list_contents_repr(instructionlist, include_braces=False)
+            logo.process_instructionlist(script) 
+    finally:
+        logo.destroy_repcount_scope()
 
 def process_remdup(logo, lst):
     """
@@ -1846,6 +1904,14 @@ def process_setpencolor(logo, color):
     The SETPENCOLOR command.
     """
     if _is_list(color):
+        temp = []
+        for c in color:
+            cint = int(c)
+            if cint != c:
+                raise errors.LogoError("SETPENCOLOR expects a list of integers, but received `{}` instead.".format(color))
+            temp.append(cint)
+        color = temp
+        del temp
         logo.turtle.pencolor(*color)
     else:
         color = COLOR_MAP.get(color, color)
