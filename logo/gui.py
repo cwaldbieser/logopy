@@ -1,4 +1,5 @@
 
+import collections
 import io
 from tkinter import *
 from tkinter.scrolledtext import ScrolledText
@@ -14,6 +15,7 @@ class TurtleGui:
     frame = attr.ib(default=None)
     canvas = attr.ib(default=None)
     screen = attr.ib(default=None)
+    entry = attr.ib(default=None)
     output = attr.ib(default=None)
     input_var = attr.ib(default=None)
     _prompt_label = attr.ib(default=None)
@@ -21,6 +23,8 @@ class TurtleGui:
     _buffer = attr.ib(default=attr.Factory(list))
     _prompt = attr.ib(default="?")
     _io_outbuf = attr.ib(default=attr.Factory(io.StringIO))
+    _command_history = attr.ib(default=attr.Factory(lambda : collections.deque([], 100)))
+    _command_hist_idx = attr.ib(default=None)
     
     @classmethod
     def make_gui(cls, interactive=False):
@@ -49,6 +53,8 @@ class TurtleGui:
             gui.input_var = input_var
             entry = Entry(text_input, textvariable=input_var)
             entry.bind('<Return>', gui.handle_input)
+            entry.bind('<Up>', gui.back_history)
+            entry.bind('<Down>', gui.forward_history)
             entry.pack(side='left', expand=1, fill='x')
             text_input.pack(side='top', expand=0, fill='x')
         return gui
@@ -78,6 +84,36 @@ class TurtleGui:
         self._write(buf.getvalue())
         buf.seek(0)
         buf.truncate()
+
+    def _hist(self, direction=1):
+        """
+        Scroll back through line history.
+        """
+        idx = self._command_hist_idx
+        if idx is None:
+            idx = 0
+        else:
+            idx += direction
+        history = self._command_history
+        if idx < len(history) and idx >= 0:
+            line = history[idx]
+            self._command_hist_idx = idx
+            self.input_var.set(line)
+        elif idx == -1:
+            self.input_var.set("")
+            self._command_hist_idx = idx
+
+    def back_history(self, event):
+        """
+        Scroll backward through line history.
+        """
+        self._hist(1)
+    
+    def forward_history(self, event):
+        """
+        Scroll forward through line history.
+        """
+        self._hist(-1)
 
     def configure_canvas(self, event):
         """
@@ -141,5 +177,7 @@ class TurtleGui:
             self._prompt = "?"
         self._write("{} {}\n".format(prompt, input_data))
         self._flush_to_output()
+        self._command_history.appendleft(input_data)
+        self._command_hist_idx = None
         return result
 
