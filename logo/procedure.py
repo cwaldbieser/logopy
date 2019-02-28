@@ -141,6 +141,7 @@ def create_primitives_map():
     m['list'] = make_primitive("list", ['thing1', 'thing2'], [], 'others', 2, process_list)
     m['listp'] = make_primitive("listp", ['thing'], [], None, 1, process_listp)
     m['list?'] = m['listp']
+    m['load'] = make_primitive("local", ['filename'], [], None, 1, process_load)
     m['local'] = make_primitive("local", ['varname'], [], 'varnames', 1, process_local)
     m['localmake'] = make_primitive("localmake", ['varname', 'value'], [], None, 2, process_localmake)
     m['lput'] = make_primitive("lput", ['thing', 'list'], [], None, 2, process_lput)
@@ -166,6 +167,8 @@ def create_primitives_map():
     m['pc'] = m['pencolor']
     m['pendown'] = make_primitive("pendown", [], [], None, 0, process_pendown)
     m['pd'] = m['pendown']
+    m['pendownp'] = make_primitive("pendownp", [], [], None, 0, process_pendownp)
+    m['pendown?'] = m['pendownp']
     m['pensize'] = make_primitive("pensize", [], [], None, 0, process_pensize)
     m['penup'] = make_primitive("penup", [], [], None, 0, process_penup)
     m['pu'] = m['penup']
@@ -877,6 +880,9 @@ def process_if(logo, tf, instrlist, instrlist2=None):
     """
     The IF command.
     """
+    dtype = _datatypename(tf)
+    if dtype == 'list':
+        tf = _process_run_like("IF", logo, tf)
     try:
         tf = tf.lower()
     except AttributeError:
@@ -901,6 +907,9 @@ def process_ifelse(logo, tf, instrlist1, instrlist2):
     """
     The IFELSE command.
     """
+    dtype = _datatypename(tf)
+    if dtype == 'list':
+        tf = _process_run_like("IF", logo, tf)
     try:
         tf = tf.lower()
     except AttributeError:
@@ -955,7 +964,7 @@ def process_item(logo, index, thing):
     The ITEM command.
     """
     py_index = index - 1
-    if py_index <= 0:
+    if py_index < 0:
         raise errors.LogoError("ITEM index {} out of range.".format(index))
     try:
         return thing[py_index]
@@ -1017,6 +1026,12 @@ def process_listp(logo, thing):
     if _datatypename(thing) == 'list':
         return 'true'
     return 'false'
+
+def process_load(logo, filename):
+    """
+    The LOAD command.
+    """
+    logo.load_script(filename)
 
 def process_local(logo, *args):
     """
@@ -1246,6 +1261,15 @@ def process_pencolor(logo):
     if isinstance(color, tuple):
         color = list(color)
     return color
+
+def process_pendownp(logo):
+    """
+    The PENDOWNP command.
+    """
+    if logo.turtle.isdown():
+        return 'true'
+    else:
+        return 'false'
 
 def process_pendown(logo):
     """
@@ -1497,6 +1521,10 @@ def process_repeat(logo, num, instructionlist):
     if dtype != 'list':
         raise errors.LogoError("REPEAT expects a number and an instructionlist, but received `{}` instead.".format(instructionlist))
     logo.create_repcount_scope()
+    if int(num) == num:
+        num = int(num)
+    else:
+        raise errors.LogoError("REPEAT expects an integer, but recieved `{}` instead.".format(num))
     for i in range(num):
         logo.set_repcount(i + 1)
         script = _list_contents_repr(instructionlist, include_braces=False)
@@ -1836,7 +1864,7 @@ def process_to(logo, tokens):
             if _datatypename(peek) == 'list' and len(peek) > 1:
                 opt_name = peek[0]
                 if _is_dots_name(opt_name):
-                    optional_inputs.append((opt_name[1:], tokens.popleft()[1:]))
+                    optional_inputs.append((opt_name[1:], tokens.popleft()[1]))
                     continue
         break
     rest_input = None

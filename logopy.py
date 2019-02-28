@@ -4,6 +4,7 @@ import argparse
 import collections
 import itertools
 import numbers
+import os
 import string
 import sys
 import attr
@@ -23,6 +24,7 @@ class LogoInterpreter:
     repcount_stack = attr.ib(default=attr.Factory(list))
     placeholder_stack = attr.ib(default=attr.Factory(list))
     grammar = attr.ib(default=None)
+    script_folders = attr.ib(default=attr.Factory(list))
     turtle_gui = attr.ib(default=None)
     _screen = attr.ib(default=None)
     _turtle = attr.ib(default=None)
@@ -92,6 +94,20 @@ class LogoInterpreter:
     def screen(self):
         self.init_turtle_graphics()
         return self._screen
+
+    def load_script(self, filename):
+        """
+        Attempt to load a Logo script and insert its 
+        contents into the curent token stream.
+        """
+        script_folders = self.script_folders
+        for folder in script_folders:
+            pth = os.path.join(folder, filename)
+            if os.path.exists(pth):
+                with open(pth, "r") as f:
+                    data = f.read()
+                return self.process_instructionlist(data)
+        raise errors.LogoError("Could not locate script `{}`.".format(filename))
 
     def evaluate_readlist(self, data):
         """
@@ -338,15 +354,20 @@ class LogoInterpreter:
         scope = {}
         scope_stack = self.scope_stack
         scope_stack.append(scope) 
-        formal_params = itertools.chain(proc.required_inputs, proc.optional_inputs)
+        formal_params = list(itertools.chain(
+            [(name, None) for name in proc.required_inputs], 
+            proc.optional_inputs))
         rest_args = []
         rest_input = proc.rest_input
-        for varname, value in itertools.zip_longest(formal_params, args):
-            if args is None:
-                break
-            if varname is None:
+        for vardef, value in itertools.zip_longest(formal_params, args):
+            if vardef is None:
                 rest_args.append(value)
             else:
+                varname, default_value = vardef
+                if value is None:
+                    value = default_value
+                if value is None:
+                    raise errors.LogoError("Must have a value for formal parameter `{}` in procedure `{}`.".format(varname, proc.name))
                 scope[varname] = value
         if rest_input:
             scope[rest_input] = rest_args
@@ -489,7 +510,8 @@ def make_token_grammar():
           ws item:first (ws item)*:rest ws -> [first] + rest
         | ws item:only ws -> [only]
     item =
-          expr:e (ws comment)* -> e
+          infix_rel_operator
+        | expr:e (ws comment)* -> e
         | word:w (ws comment)* -> w
         | itemlist
         | '[' ws quoted_itemlist:q ws ']' -> list(q)
@@ -500,12 +522,14 @@ def make_token_grammar():
           ws quoted_item:first (ws quoted_item)*:rest ws -> [first] + rest
         | ws quoted_item:only ws -> [only]
     quoted_item =
-          number:n (ws comment)* -> n
+          infix_rel_operator
+        | number:n (ws comment)* -> n
         | word:w (ws comment)* -> w
         | <(~' ' ~'[' ~']' anything)+>:w (ws comment)* -> w
         | (ws comment)
         | '[' ws quoted_itemlist:q ws ']' -> list(q)
         | '[' ws ']' -> []
+    infix_rel_operator = '=' | '<>' | '>=' | '<='
     word = (word_char+):l -> ''.join(l)
     word_char = (escaped_char:e -> e) | (~';' unescaped_char:u -> u)
     unescaped_char = (letterOrDigit:c -> c) | (~';' punctuation:p -> p)
@@ -610,6 +634,10 @@ def main(args):
     interpreter.grammar = grammar
     interpreter.debug_primitives = args.debug_primitives
     interpreter.debug_procs = args.debug_procs
+    script_folders = args.script_folder
+    if script_folders is None:
+        script_folders = []
+    interpreter.script_folders = script_folders
     if args.file is not None:
         script = args.file.read()
         tokens = parse_tokens(grammar, script, debug=args.debug_tokens)
@@ -642,6 +670,11 @@ if __name__ == "__main__":
         "--file",
         type=argparse.FileType("r"),
         help="Logo script file to interpret.")
+    parser.add_argument(
+        "-s",
+        "--script-folder",
+        action="append",
+        help="Specify a folder from which the LOAD command will load Logo scripts.")
     parser.add_argument(
         "--debug-procs",
         action="store_true",
