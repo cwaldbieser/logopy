@@ -10,6 +10,25 @@ import random
 import time
 from logo import errors
 
+COLOR_MAP = {
+    0: 'black',
+    1: 'blue',
+    2: 'green',
+    3: 'cyan',
+    4: 'red',
+    5: 'magenta',
+    6: 'yellow',
+    7: 'white',
+    8: 'brown',
+    9: 'tan',
+    10: 'forest',
+    11: 'aqua',
+    12: 'salmon',
+    13: 'purple',
+    14: 'orange',
+    15: 'grey',
+}
+
 
 @attr.s
 class LogoProcedure:
@@ -1822,6 +1841,7 @@ def process_setpencolor(logo, color):
     if _is_list(color):
         logo.turtle.pencolor(*color)
     else:
+        color = COLOR_MAP.get(color, color)
         logo.turtle.pencolor(color)
 
 def process_setpensize(logo, width):
