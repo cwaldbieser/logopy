@@ -231,6 +231,7 @@ def create_primitives_map():
     m['setpc'] = m['setpencolor']
     m['setpensize'] = make_primitive("setpensize", ['width'], [], None, 1, process_setpensize)
     m['setpos'] = make_primitive("setpos", ['pos'], [], None, 1, process_setpos)
+    m['setspeed'] = make_primitive("setspeed", [], ['num'], None, 1, process_setspeed)
     m['show'] = make_primitive("show", ['thing'], [], 'others', 1, process_show)
     m['showturtle'] = make_primitive("showturtle", [], [], None, 0, process_showturtle)
     m['st'] = m['showturtle']
@@ -1645,6 +1646,12 @@ def process_sentence(logo, *args):
         else:
             raise errors.LogoError("SENTENCE cannot be used on a {}.".format(dtype))
     return sentence
+
+def process_setspeed(logo, num):
+    """
+    The SETSPEED command.
+    """
+    logo.turtle.speed(num)
 
 def process_showturtle(logo):
     """
