@@ -398,7 +398,7 @@ class LogoInterpreter:
         second_token = None
         if len(tokens) > 0:
             second_token = tokens.peek()
-        if isinstance(second_token, str) and second_token in "-+*/":
+        if isinstance(second_token, str) and second_token in ('-', '+', '*', '/', '=', '<>', '>=', '<='):
             tokens.appendleft(command_token)
             return self.evaluate(tokens)
         if command in primitives:
