@@ -318,6 +318,11 @@ class LogoInterpreter:
                 return tokens.popleft()[1:]
             if token.startswith(':'):
                 return self.get_variable_value(tokens.popleft()[1:])
+            if token.startswith("-"):
+                temp_token = tokens.popleft()
+                temp_token = temp_token[1:]
+                tokens.appendleft(temp_token)
+                return -1 * self.evaluate(tokens)
             if token == '#':
                 tokens.popleft()
                 return self.get_repcount()
@@ -446,6 +451,9 @@ class TokenStream:
     def append(self, item):
         self.tokens.append(item)
 
+    def appendleft(self, item):
+        self.tokens.appendleft(item)
+
     def __len__(self):
         return len(self.tokens)
 
@@ -557,8 +565,8 @@ def transform_tokens(tokens):
     for item in tokens:
         if isinstance(item, DelayedValue):
             tmp.append(item.op)
-            tmp.append(item.left)
-            tmp.append(item.right)
+            tmp.extend(transform_tokens([item.left]))
+            tmp.extend(transform_tokens([item.right]))
         elif isinstance(item, Comment):
             continue
         elif is_list(item):

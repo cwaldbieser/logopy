@@ -135,7 +135,7 @@ class TurtleGui:
         except errors.LogoError as ex:
             self._prompt_label.configure(text="?")
             self._prompt = "?"
-            self.write(str(ex))
+            self.write("{}\n".format(str(ex)))
         else:
             self._prompt_label.configure(text="?")
             self._prompt = "?"

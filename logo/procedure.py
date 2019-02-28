@@ -234,6 +234,8 @@ def create_primitives_map():
     m['word'] = make_primitive("word", ['word1', 'word2'], [], 'words', 2, process_word)
     m['wordp'] = make_primitive("wordp", ['thing'], [], None, 1, process_wordp)
     m['word?'] = m['wordp']
+    m['xcor'] = make_primitive("xcor", [], [], None, 0, process_xcor)
+    m['ycor'] = make_primitive("ycor", [], [], None, 0, process_ycor)
     return m
     
 def _is_dots_name(token):
@@ -1785,6 +1787,18 @@ def process_wordp(logo, thing):
     if dtype == 'word':
         return 'true'
     return 'false'
+
+def process_xcor(logo):
+    """
+    The XCOR command.
+    """
+    return logo.turtle.xcor()
+
+def process_ycor(logo):
+    """
+    The YCOR command.
+    """
+    return logo.turtle.ycor()
 
 def process_setbackground(logo, color):
     """
