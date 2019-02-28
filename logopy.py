@@ -148,7 +148,7 @@ class LogoInterpreter:
                 raise errors.LogoError("Expected a command.  Instead, got `{}`.".format(token))
             if is_spcl_frm:
                 stream = TokenStream.make_stream(token)
-                return self.process_special_form(stream)
+                return self.process_special_form_or_expression(stream)
             else:
                 command = token.lower()
                 if command == 'to': 
@@ -306,7 +306,7 @@ class LogoInterpreter:
             return self.evaluate_list(lst_tokens)
         if is_special_form(token):
             spcl_frm_tokens = TokenStream.make_stream(tokens.popleft())
-            return self.process_special_form(spcl_frm_tokens)
+            return self.process_special_form_or_expression(spcl_frm_tokens)
         if is_paren_expr(token):
             expr_tokens = TokenStream.make_stream(tokens.popleft())
             return self.evaluate(expr_tokens)
@@ -318,14 +318,14 @@ class LogoInterpreter:
                 return tokens.popleft()[1:]
             if token.startswith(':'):
                 return self.get_variable_value(tokens.popleft()[1:])
-            if token.startswith("-"):
+            if token.startswith("-") and token != '-':
                 temp_token = tokens.popleft()
                 temp_token = temp_token[1:]
                 tokens.appendleft(temp_token)
                 return -1 * self.evaluate(tokens)
-            if token == '#':
-                tokens.popleft()
-                return self.get_repcount()
+            #if token == '#':
+            #    tokens.popleft()
+            #    return self.get_repcount()
             return self.process_command(tokens)
         else:
             return tokens.popleft()
@@ -386,21 +386,29 @@ class LogoInterpreter:
         scope_stack.pop()
         return result
 
-    def process_special_form(self, tokens):
+    def process_special_form_or_expression(self, tokens):
         """
-        Process command special form.
+        Process command special form OR a parenthesized expression.
         Command token and all args will be in the token stream.
         """
         primitives = self.primitives
         procedures = self.procedures
         command_token = tokens.popleft()
         command = command_token.lower()
+        second_token = None
+        if len(tokens) > 0:
+            second_token = tokens.peek()
+        if isinstance(second_token, str) and second_token in "-+*/":
+            tokens.appendleft(command_token)
+            return self.evaluate(tokens)
         if command in primitives:
             proc = primitives[command]
         elif command in procedures:
             proc = procedures[command]
         else:
-            raise errors.LogoError("I don't know how to `{}`.".format(command_token)) 
+            #raise errors.LogoError("I don't know how to `{}`.".format(command_token)) 
+            tokens.appendleft(command_token)
+            return self.evaluate(tokens)
         args = []
         while len(tokens) > 0:
             args.append(self.evaluate(tokens))

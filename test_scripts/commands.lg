@@ -456,3 +456,7 @@ show reduce [sum ?1 ?2] [1 2 3 4 5 6]
 print (sentence [>>> show last reduce [[x y] list "label sum last :x last :y] [[a 1] [b 2] [c 3]]])
 show last reduce [[x y] list "label sum last :x last :y] [[a 1] [b 2] [c 3]]
 
+title "CASCADE
+print (sentence [>>> show (cascade 3 [ sum ?1 2 ] 1 [ product ?2 2 ] 1 [(list ?1 ?2)])])
+show (cascade 3 [ sum ?1 2 ] 1 [ product ?2 2 ] 1 [(list ?1 ?2)])
+

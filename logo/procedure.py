@@ -214,6 +214,7 @@ def create_primitives_map():
     m['remove'] = make_primitive("remove", ['thing', 'list'], [], None, 2, process_remove)
     m['remdup'] = make_primitive("remdup", ['list'], [], None, 1, process_remdup)
     m['repcount'] = make_primitive("repcount", [], [], None, 0, process_repcount)
+    m['#'] = m['repcount']
     m['repeat'] = make_primitive("repeat", ['num', 'instructionlist'], [], None, 2, process_repeat)
     m['right'] = make_primitive("right", ['angle'], [], None, 1, process_right)
     m['rt'] = m['right']
