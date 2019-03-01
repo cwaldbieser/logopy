@@ -43,6 +43,7 @@ class LogoProcedure:
     default_arity = attr.ib(default=None)
     tokens = attr.ib(default=None)
     primitive_func = attr.ib(default=None)
+    _max_arity = attr.ib(default=None)
    
     @classmethod 
     def make_procedure(cls, name, required_inputs, optional_inputs, rest_input, default_arity, tokens):
@@ -56,7 +57,7 @@ class LogoProcedure:
         return p
 
     @classmethod
-    def make_primitive(cls, name, required_inputs, optional_inputs, rest_input, default_arity, func):
+    def make_primitive(cls, name, required_inputs, optional_inputs, rest_input, default_arity, func, max_arity=None):
         p = cls()
         p.name = name
         p.default_arity = default_arity
@@ -65,6 +66,7 @@ class LogoProcedure:
         p.rest_input = rest_input
         p.default_arity = default_arity
         p.primitive_func = func
+        p._max_arity = max_arity
         return p
 
     def __str__(self):
@@ -92,6 +94,8 @@ class LogoProcedure:
         Return the maximum arity for the proc.
         Return -1 for unlimited arity.
         """
+        if self._max_arity is not None:
+            return self._max_arity
         if self.rest_input:
             return -1
         return len(self.required_inputs) + len(self.optional_inputs)
@@ -114,7 +118,7 @@ def create_primitives_map():
     m['.eq'] = make_primitive(".eq", ['thing1', 'thing2'], [], None, 2, process_dot_eq)
     m['and'] = make_primitive("and", ['tf1', 'tf2'], [], 'tfs', 2, process_and)
     m['arc'] = make_primitive("arc", ['angle', 'radius'], [], None, 2, process_arc)
-    m['arctan'] = make_primitive("arctan", ['x'], ['y'], None, 1, process_arctan)
+    m['arctan'] = make_primitive("arctan", ['x'], [], 'y', 1, process_arctan, max_arity=2)
     m['back'] = make_primitive("back", ['dist'], [], None, 1, process_back)
     m['bk'] = m['back']
     m['background'] = make_primitive("background", ['color'], [], None, 0, process_background)
@@ -153,7 +157,7 @@ def create_primitives_map():
     m['firsts'] = make_primitive("firsts", ['list'], [], None, 1, process_firsts)
     m['float'] = make_primitive("float", ['num'], [], None, 1, process_float)
     m['for'] = make_primitive("for", ['forcontrol', 'instrlist'], [], None, 2, process_for)
-    m['foreach'] = make_primitive("foreach", ['data', 'template'], ['args'], None, 2, process_foreach)
+    m['foreach'] = make_primitive("foreach", ['data', 'template'], [], 'args', 2, process_foreach)
     m['forward'] = make_primitive("forward", ['dist'], [], None, 1, process_forward)
     m['fd'] = m['forward']
     m['fput'] = make_primitive("fput", ['thing', 'list'], [], None, 2, process_fput)
@@ -165,7 +169,7 @@ def create_primitives_map():
     m['hideturtle'] = make_primitive("hideturtle", [], [], None, 0, process_hideturtle)
     m['ht'] = m['hideturtle']
     m['home'] = make_primitive("home", [], [], None, 0, process_home)
-    m['if'] = make_primitive("if", ['tf', 'instructionlist'], ['instructionlist2'], None, 2, process_if)
+    m['if'] = make_primitive("if", ['tf', 'instructionlist'], [], 'instructionlist2', 2, process_if, max_arity=3)
     m['ifelse'] = make_primitive("ifelse", ['tf', 'instrlist1', 'instrlist2'], [], None, 3, process_ifelse)
     m['ignore'] = make_primitive("ignore", ['value'], [], None, 1, process_ignore)
     m['int'] = make_primitive("int", ['num'], [], None, 1, process_int)
@@ -213,6 +217,7 @@ def create_primitives_map():
     m['penup'] = make_primitive("penup", [], [], None, 0, process_penup)
     m['printout'] = make_primitive("printout", ["contentslist"], [], None, 1, process_printout)
     m['po'] = m['printout']
+    m['pots'] = make_primitive("pots", [], [], None, 0, process_pots)
     m['pu'] = m['penup']
     m['pick'] = make_primitive("pick", ['list'], [], None, 1, process_pick)
     m['pop'] = make_primitive("pop", ['stackname'], [], None, 1, process_pop)
@@ -225,10 +230,10 @@ def create_primitives_map():
     m['queue'] = make_primitive("queue", ['queuename', 'thing'], [], None, 2, process_queue)
     m['quoted'] = make_primitive("quoted", ['thing'], [], None, 1, process_quoted)
     m['quotient'] = make_primitive("quotient", ['num1', 'num2'], [], None, 2, process_quotient)
-    m['radarctan'] = make_primitive("radarctan", ['x'], ['y'], None, 1, process_radarctan)
+    m['radarctan'] = make_primitive("radarctan", ['x'], [], 'y', 1, process_radarctan, max_arity=2)
     m['radcos'] = make_primitive("radcos", ['radians'], [], None, 1, process_radcos)
     m['radsin'] = make_primitive("radsin", ['radians'], [], None, 1, process_radsin)
-    m['random'] = make_primitive("random", ['start'], ['end'], None, 1, process_random)
+    m['random'] = make_primitive("random", ['start'], [], 'end', 1, process_random, max_arity=2)
     m['readlist'] = make_primitive("readlist", [], [], None, 0, process_readlist)
     m['remainder'] = make_primitive("remainder", ['num1', 'num2'], [], None, 2, process_remainder)
     m['rl'] = m['readlist']
@@ -255,7 +260,7 @@ def create_primitives_map():
     m['setpc'] = m['setpencolor']
     m['setpensize'] = make_primitive("setpensize", ['width'], [], None, 1, process_setpensize)
     m['setpos'] = make_primitive("setpos", ['pos'], [], None, 1, process_setpos)
-    m['setspeed'] = make_primitive("setspeed", [], ['num'], None, 1, process_setspeed)
+    m['setspeed'] = make_primitive("setspeed", ['num'], [], None, 1, process_setspeed)
     m['show'] = make_primitive("show", ['thing'], [], 'others', 1, process_show)
     m['showturtle'] = make_primitive("showturtle", [], [], None, 0, process_showturtle)
     m['st'] = m['showturtle']
@@ -1414,6 +1419,15 @@ def process_printout(logo, contentslist):
             print("{} is a primitive.".format(proc.name), file=logo.stdout)
             print("",  file=logo.stdout)
             continue
+
+def process_pots(logo):
+    """
+    The POTS command.
+    """
+    items = list(logo.procedures.items())
+    items.sort()
+    for item, proc in items:
+        print(proc, file=logo.stdout)
 
 def process_pick(logo, lst):
     """
