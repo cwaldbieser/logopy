@@ -1,0 +1,17 @@
+
+to pointy.star 
+    stellation
+end
+
+to stellation [:size 200] [:angle 170]
+    localmake "start.heading heading
+    localmake "start.pos pos 
+    localmake "count 1 
+    do.until [
+        fd :size 
+        left :angle
+        localmake "count sum :count 1
+    ] [ equalp modulo (:angle * :count ) 360 0 ] 
+    setpos :start.pos 
+    setheading :start.heading
+end
