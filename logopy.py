@@ -53,13 +53,24 @@ class LogoInterpreter:
             return self.turtle_gui
         return sys.stderr
 
+    @property
+    def halt(self):
+        if self.is_turtle_active():
+            return self.turtle_gui.halt
+        return False
+
+    @halt.setter
+    def halt(self, value):
+        if self.is_turtle_active():
+            self.turtle_gui.halt = value
+
     def is_turtle_active(self):
         return self._screen is not None
 
     def process_events(self):
         if self.is_turtle_active():
-            #self.turtle_gui.root.update_idletasks()
-            self.turtle_gui.root.update()
+            self.turtle_gui.root.update_idletasks()
+            #self.turtle_gui.root.update()
 
     def init_turtle_graphics(self, interactive=False):
         """
@@ -135,6 +146,8 @@ class LogoInterpreter:
         """
         Process a command.
         """
+        if self.halt:
+            raise errors.HaltSignal("Received HALT")
         primitives = self.primitives
         procedures = self.procedures
         while len(tokens) > 0:
@@ -421,11 +434,14 @@ class LogoInterpreter:
         """
         Handles input received from GUI.
         """
-        grammar = self.grammar
-        tokens = parse_tokens(grammar, data, debug=self.debug_tokens)
-        result = self.process_commands(tokens)
-        if result is not None:
-            raise errors.LogoError("You don't say what to do with `{}`.".format(result))
+        try:
+            grammar = self.grammar
+            tokens = parse_tokens(grammar, data, debug=self.debug_tokens)
+            result = self.process_commands(tokens)
+            if result is not None:
+                raise errors.LogoError("You don't say what to do with `{}`.".format(result))
+        except errors.HaltSignal:
+            self.halt = False
 
 
 @attr.s

@@ -19,3 +19,7 @@ class OutputSignal(Exception):
     value = attr.ib()
 
 
+class HaltSignal(Exception):
+    pass
+
+

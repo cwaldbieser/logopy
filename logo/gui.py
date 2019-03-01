@@ -18,6 +18,7 @@ class TurtleGui:
     entry = attr.ib(default=None)
     output = attr.ib(default=None)
     input_var = attr.ib(default=None)
+    halt = attr.ib(default=False)
     _prompt_label = attr.ib(default=None)
     _input_handler = attr.ib(default=None)
     _buffer = attr.ib(default=attr.Factory(list))
@@ -153,6 +154,9 @@ class TurtleGui:
         if handler is None:
             return
         prompt = self._prompt
+        if data.strip().lower() == 'halt':
+            self.halt = True
+            return
         result = None
         try:
             result = handler(data)
