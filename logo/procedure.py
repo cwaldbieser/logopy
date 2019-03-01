@@ -250,6 +250,7 @@ def create_primitives_map():
     m['rseq'] = make_primitive("rseq", ['from', 'to', 'count'], [], None, 3, process_rseq)
     m['run'] = make_primitive("run", ['instructionlist'], [], None, 1, process_run)
     m['runresult'] = make_primitive("runresult", ['instructionlist'], [], None, 1, process_runresult)
+    m['save'] = make_primitive("save", ['filename'], [], None, 1, process_save)
     m['sentence'] = make_primitive("sentence", ['thing'], [], 'others', 2, process_sentence)
     m['se'] = m["sentence"]
     m['setbackground'] = make_primitive("setbackground", ['color'], [], None, 1, process_setbackground)
@@ -1751,6 +1752,28 @@ def _process_run_like(cmd, logo, instructionlist):
     else:
         raise errors.LogoError("{} expects a word or list, but received `{}` instead.".format(cmd, instructionlist))
 
+def process_save(logo, filename):
+    """
+    The SAVE command.
+    """
+    with open(filename, "w") as f:
+        print("; PROCEDURES", file=f)
+        procedures = list(logo.procedures.items())
+        procedures.sort()
+        for name, proc in procedures:
+            print(proc, file=f)
+            body = _get_logo_repr(proc.tokens)
+            print(body,  file=f)
+            print("end",  file=f)
+            print("",  file=f)
+        print("; VARIABLES", file=f)
+        global_scope = logo.scope_stack[0]
+        variables = list(global_scope.items())
+        variables.sort()
+        for name, value in variables:
+            valuestr = _list_contents_repr([value], include_braces=False)
+            print("""make "{} {}""".format(name, valuestr), file=f)
+
 def process_sentence(logo, *args):
     """
     The SENTENCE command.
@@ -2117,6 +2140,9 @@ def _list_contents_repr(o, include_braces=True, escape_delimiters=True):
             return _escape_word_chars(str(o))
         else:
             return str(o)
+    elif _is_expr_or_special_form(o):
+        rep = "({})".format(_list_contents_repr(list(o), include_braces=False))
+        return rep
     else:
         raise errors.LogoError("Unknown data type for `{}`.".format(o))
 
