@@ -75,8 +75,6 @@ class LogoInterpreter:
             self._screen.colormode(255)
             if interactive:
                 self.turtle_gui.set_input_handler(self.receive_input)
-            #gui.turtle.mode("logo")
-            #gui.turtle.colormode(255)
 
     @property
     def turtle(self):
@@ -323,9 +321,6 @@ class LogoInterpreter:
                 temp_token = temp_token[1:]
                 tokens.appendleft(temp_token)
                 return -1 * self.evaluate(tokens)
-            #if token == '#':
-            #    tokens.popleft()
-            #    return self.get_repcount()
             return self.process_command(tokens)
         else:
             return tokens.popleft()
@@ -406,7 +401,6 @@ class LogoInterpreter:
         elif command in procedures:
             proc = procedures[command]
         else:
-            #raise errors.LogoError("I don't know how to `{}`.".format(command_token)) 
             tokens.appendleft(command_token)
             return self.evaluate(tokens)
         args = []
