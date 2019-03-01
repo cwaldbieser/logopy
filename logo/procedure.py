@@ -7,6 +7,7 @@ import math
 import numbers
 import operator
 import random
+import textwrap
 import time
 from logo import errors
 
@@ -65,6 +66,25 @@ class LogoProcedure:
         p.default_arity = default_arity
         p.primitive_func = func
         return p
+
+    def __str__(self):
+        """
+        Return Logo TO line.
+        """
+        arglist = []
+        for item in self.required_inputs:
+            arglist.append(":{}".format(item))
+        for name, value in self.optional_inputs:
+            if _is_list(value):
+                valuestr = _list_contents_repr(value, include_braces=True, escape_delimiters=True)
+            else:
+                valuestr = str(value)
+            arglist.append("[:{} {}]".format(name, valuestr))
+        if self.rest_input is not None:
+            arglist.append("[:{}]".format(self.rest_input))
+        argstr = ' '.join(arglist)
+        to_line = "to {} {}".format(self.name, argstr)
+        return to_line
 
     @property
     def max_arity(self):
@@ -191,6 +211,8 @@ def create_primitives_map():
     m['pendown?'] = m['pendownp']
     m['pensize'] = make_primitive("pensize", [], [], None, 0, process_pensize)
     m['penup'] = make_primitive("penup", [], [], None, 0, process_penup)
+    m['printout'] = make_primitive("printout", ["contentslist"], [], None, 1, process_printout)
+    m['po'] = m['printout']
     m['pu'] = m['penup']
     m['pick'] = make_primitive("pick", ['list'], [], None, 1, process_pick)
     m['pop'] = make_primitive("pop", ['stackname'], [], None, 1, process_pop)
@@ -1368,6 +1390,31 @@ def process_penup(logo):
     """
     logo.turtle.penup()
 
+def process_printout(logo, contentslist):
+    """
+    The PRINTOUT command.
+    """
+    if not _is_list(contentslist):
+        raise errors.LogoError("PRINTOUT expected a list of words, but received `{}` instead.".format(item)) 
+    for item in contentslist:
+        if not _is_word(item):
+            raise errors.LogoError("PRINTOUT expected a list of words, but received `{}` instead.".format(item)) 
+        normalized = item.lower()
+        proc = logo.procedures.get(normalized)
+        if proc:
+            print(proc, file=logo.stdout)
+            body = _get_logo_repr(proc.tokens)
+            print(body,  file=logo.stdout)
+            print("end",  file=logo.stdout)
+            print("",  file=logo.stdout)
+            continue
+        proc = logo.primitives.get(normalized)
+        if proc:
+            print(proc, file=logo.stdout)
+            print("{} is a primitive.".format(proc.name), file=logo.stdout)
+            print("",  file=logo.stdout)
+            continue
+
 def process_pick(logo, lst):
     """
     The PICK command.
@@ -1706,11 +1753,75 @@ def process_sentence(logo, *args):
             raise errors.LogoError("SENTENCE cannot be used on a {}.".format(dtype))
     return sentence
 
+def process_setbackground(logo, color):
+    """
+    The SETBACKGROUND command.
+    """
+    if _is_list(color):
+        logo.screen.bgcolor(*color)
+    else:
+        logo.screen.bgcolor(color)
+
+def process_setheading(logo, angle):
+    """
+    The turtle graphics SETHEADING command.
+    """
+    logo.turtle.setheading(angle)
+
+def process_setpencolor(logo, color):
+    """
+    The SETPENCOLOR command.
+    """
+    if _is_list(color):
+        temp = []
+        for c in color:
+            cint = int(c)
+            if cint != c:
+                raise errors.LogoError("SETPENCOLOR expects a list of integers, but received `{}` instead.".format(color))
+            temp.append(cint)
+        color = temp
+        del temp
+        logo.turtle.pencolor(*color)
+    else:
+        color = COLOR_MAP.get(color, color)
+        logo.turtle.pencolor(color)
+
+def process_setpensize(logo, width):
+    """
+    The SETPENSIZE command.
+    """
+    logo.turtle.pensize(width)
+
+def process_setpos(logo, pos):
+    """
+    The turtle graphics SETPOS command.
+    """
+    if not _is_list(pos):
+        raise errors.LogoError("SETPOS expected a list but received `{}` instead.".format(pos))
+    if len(pos) != 2:
+        raise errors.LogoError("SETPOS expected a list with 2 members but received `{}` instead.".format(pos))
+    logo.turtle.setpos(*pos)
+
 def process_setspeed(logo, num):
     """
     The SETSPEED command.
     """
     logo.turtle.speed(num)
+
+def process_show(logo, *args):
+    """
+    The SHOW command.
+    """
+    reps = []
+    for arg in args:
+        dtype = _datatypename(arg)
+        if dtype == 'list':
+            reps.append(_list_contents_repr(arg, escape_delimiters=False))
+        elif dtype == 'word':
+            reps.append(str(arg))
+        else:
+            raise errors.LogoError("SHOW doesn't know how to show type {}.".format(dtype))
+    print(' '.join(reps), file=logo.stdout)
 
 def process_showturtle(logo):
     """
@@ -1780,6 +1891,65 @@ def process_thing(logo, varname):
     The THING command.
     """
     return logo.get_variable_value(varname) 
+
+def process_to(logo, tokens):
+    """
+    Process the TO command.
+    """
+    try:
+        procedure_name = tokens.popleft()
+    except IndexError:
+        raise errors.LogoError("TO command requires a procedure name.")
+    required_inputs = []
+    while True:
+        if len(tokens) > 0:
+            peek = tokens[0]
+            if _is_dots_name(peek):
+                required_inputs.append(tokens.popleft()[1:])
+                continue
+        break
+    optional_inputs = []
+    while True:
+        if len(tokens) > 0:
+            peek = tokens[0]
+            if _datatypename(peek) == 'list' and len(peek) > 1:
+                opt_name = peek[0]
+                if _is_dots_name(opt_name):
+                    optional_inputs.append((opt_name[1:], tokens.popleft()[1]))
+                    continue
+        break
+    rest_input = None
+    if len(tokens) > 0:
+        peek = tokens[0]
+        if _datatypename(peek) == 'list' and len(peek) == 1:
+            rest_name = peek[0]
+            if _is_dots_name(rest_name):
+                rest_input = tokens.popleft()[0][1:]
+    default_arity = len(required_inputs)
+    if len(tokens) > 0:
+        peek = tokens[0]
+        if isinstance(peek, int):
+            default_arity = tokens.popleft()
+    procedure_tokens = collections.deque([])
+    try:
+        token = tokens.popleft()
+    except IndexError:
+        raise errors.ExpectedEndError("Expected END to complete procedure `{}`.".format(procedure_name))
+    _test = (lambda x: hasattr(x, 'lower') and x.lower() == 'end')
+    while not _test(token):
+        procedure_tokens.append(token)
+        try:
+            token = tokens.popleft()
+        except IndexError:
+            raise errors.ExpectedEndError("Expected END to complete procedure `{}`.".format(procedure_name))
+    procedure = LogoProcedure.make_procedure(
+        name=procedure_name,
+        required_inputs=required_inputs,
+        optional_inputs=optional_inputs,
+        rest_input=rest_input,
+        default_arity=default_arity,
+        tokens=procedure_tokens)
+    logo.procedures[procedure_name.lower()] = procedure 
 
 def process_towards(logo, pos):
     """
@@ -1885,129 +2055,6 @@ def process_ycor(logo):
     """
     return logo.turtle.ycor()
 
-def process_setbackground(logo, color):
-    """
-    The SETBACKGROUND command.
-    """
-    if _is_list(color):
-        logo.screen.bgcolor(*color)
-    else:
-        logo.screen.bgcolor(color)
-
-def process_setheading(logo, angle):
-    """
-    The turtle graphics SETHEADING command.
-    """
-    logo.turtle.setheading(angle)
-
-def process_setpencolor(logo, color):
-    """
-    The SETPENCOLOR command.
-    """
-    if _is_list(color):
-        temp = []
-        for c in color:
-            cint = int(c)
-            if cint != c:
-                raise errors.LogoError("SETPENCOLOR expects a list of integers, but received `{}` instead.".format(color))
-            temp.append(cint)
-        color = temp
-        del temp
-        logo.turtle.pencolor(*color)
-    else:
-        color = COLOR_MAP.get(color, color)
-        logo.turtle.pencolor(color)
-
-def process_setpensize(logo, width):
-    """
-    The SETPENSIZE command.
-    """
-    logo.turtle.pensize(width)
-
-def process_setpos(logo, pos):
-    """
-    The turtle graphics SETPOS command.
-    """
-    if not _is_list(pos):
-        raise errors.LogoError("SETPOS expected a list but received `{}` instead.".format(pos))
-    if len(pos) != 2:
-        raise errors.LogoError("SETPOS expected a list with 2 members but received `{}` instead.".format(pos))
-    logo.turtle.setpos(*pos)
-
-def process_show(logo, *args):
-    """
-    The SHOW command.
-    """
-    reps = []
-    for arg in args:
-        dtype = _datatypename(arg)
-        if dtype == 'list':
-            reps.append(_list_contents_repr(arg, escape_delimiters=False))
-        elif dtype == 'word':
-            reps.append(str(arg))
-        else:
-            raise errors.LogoError("SHOW doesn't know how to show type {}.".format(dtype))
-    print(' '.join(reps), file=logo.stdout)
-
-def process_to(logo, tokens):
-    """
-    Process the TO command.
-    """
-    try:
-        procedure_name = tokens.popleft()
-    except IndexError:
-        raise errors.LogoError("TO command requires a procedure name.")
-    required_inputs = []
-    while True:
-        if len(tokens) > 0:
-            peek = tokens[0]
-            if _is_dots_name(peek):
-                required_inputs.append(tokens.popleft()[1:])
-                continue
-        break
-    optional_inputs = []
-    while True:
-        if len(tokens) > 0:
-            peek = tokens[0]
-            if _datatypename(peek) == 'list' and len(peek) > 1:
-                opt_name = peek[0]
-                if _is_dots_name(opt_name):
-                    optional_inputs.append((opt_name[1:], tokens.popleft()[1]))
-                    continue
-        break
-    rest_input = None
-    if len(tokens) > 0:
-        peek = tokens[0]
-        if _datatypename(peek) == 'list' and len(peek) == 1:
-            rest_name = peek[0]
-            if _is_dots_name(rest_name):
-                rest_input = tokens.popleft()[1:]
-    default_arity = len(required_inputs)
-    if len(tokens) > 0:
-        peek = tokens[0]
-        if isinstance(peek, int):
-            default_arity = tokens.popleft()
-    procedure_tokens = collections.deque([])
-    try:
-        token = tokens.popleft()
-    except IndexError:
-        raise errors.ExpectedEndError("Expected END to complete procedure `{}`.".format(procedure_name))
-    _test = (lambda x: hasattr(x, 'lower') and x.lower() == 'end')
-    while not _test(token):
-        procedure_tokens.append(token)
-        try:
-            token = tokens.popleft()
-        except IndexError:
-            raise errors.ExpectedEndError("Expected END to complete procedure `{}`.".format(procedure_name))
-    procedure = LogoProcedure.make_procedure(
-        name=procedure_name,
-        required_inputs=required_inputs,
-        optional_inputs=optional_inputs,
-        rest_input=rest_input,
-        default_arity=default_arity,
-        tokens=procedure_tokens)
-    logo.procedures[procedure_name.lower()] = procedure 
-
 def _datatypename(o):
     """
     Returns a sting corresponding to the Logo data type name.
@@ -2035,6 +2082,14 @@ def _is_number(o):
     Returns True if `o` is a Logo number.
     """
     return isinstance(o, numbers.Number)
+
+def _is_expr_or_special_form(o):
+    """
+    Return True if `o` is a parenthesized expression or a command special form.
+    """
+    if isinstance(o, tuple):
+        return True
+    return False
 
 def _list_contents_repr(o, include_braces=True, escape_delimiters=True):
     dtype = _datatypename(o)
@@ -2070,4 +2125,23 @@ def _try_to_numify(w):
         return float(w)
     except ValueError:
         return w
+
+def _get_logo_repr(tokens, line_break=70):
+    """
+    Create a Logo representation of the tokens.
+    """
+    parts = []
+    tokens = collections.deque(tokens)
+    while len(tokens) > 0:
+        token = tokens.popleft()
+        if _is_list(token):
+            parts.append(_list_contents_repr(token))
+        elif _is_expr_or_special_form(token):
+            parts.append("({})".format(_list_contents_repr(list(token), include_braces=False)))
+        else:
+            parts.append(str(token))
+    result = " ".join(parts) 
+    if line_break is not None:
+        result = textwrap.fill(result, line_break)
+    return result
 
