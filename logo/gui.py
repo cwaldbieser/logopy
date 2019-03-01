@@ -66,6 +66,7 @@ class TurtleGui:
         """
         buf = self._io_outbuf
         buf.write(data)
+        self._flush_to_output()
 
     def _write(self, data):
         """
@@ -83,6 +84,14 @@ class TurtleGui:
         """
         buf = self._io_outbuf
         self._write(buf.getvalue())
+        buf.seek(0)
+        buf.truncate()
+
+    def _flush_to_null(self):
+        """
+        Flush temporary buffer without displaying the output.
+        """
+        buf = self._io_outbuf
         buf.seek(0)
         buf.truncate()
 
@@ -157,6 +166,7 @@ class TurtleGui:
         if data.strip().lower() == 'halt':
             self.halt = True
             return
+        self._write("{} {}\n".format(prompt, input_data))
         result = None
         try:
             result = handler(data)
@@ -179,8 +189,6 @@ class TurtleGui:
         else:
             self._prompt_label.configure(text="?")
             self._prompt = "?"
-        self._write("{} {}\n".format(prompt, input_data))
-        self._flush_to_output()
         self._command_history.appendleft(input_data)
         self._command_hist_idx = None
         return result
