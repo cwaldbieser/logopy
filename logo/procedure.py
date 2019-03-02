@@ -264,6 +264,7 @@ def create_primitives_map():
     m['setpensize'] = make_primitive("setpensize", ['width'], [], None, 1, process_setpensize)
     m['setpos'] = make_primitive("setpos", ['pos'], [], None, 1, process_setpos)
     m['setspeed'] = make_primitive("setspeed", ['num'], [], None, 1, process_setspeed)
+    m['setundobuffer'] = make_primitive("setundobuffer", ['num'], [], None, 1, process_setundobuffer)
     m['show'] = make_primitive("show", ['thing'], [], 'others', 1, process_show)
     m['showturtle'] = make_primitive("showturtle", [], [], None, 0, process_showturtle)
     m['st'] = m['showturtle']
@@ -279,6 +280,8 @@ def create_primitives_map():
     m['towards'] = make_primitive("towards", ['pos'], [], None, 1, process_towards)
     m['type'] = make_primitive("type", ['thing'], [], 'others', 1, process_type)
     m['unicode'] = make_primitive("unicode", ['char'], [], None, 1, process_unicode)
+    m['undo'] = make_primitive("undo", [], [], None, 0, process_undo)
+    m['undobufferentries'] = make_primitive("undobufferentries", [], [], None, 0, process_undobufferentries)
     m['until'] = make_primitive("until", ['tfexpr', 'instrlist'], [], None, 2, process_until)
     m['uppercase'] = make_primitive("uppercase", ['word'], [], None, 1, process_uppercase)
     m['wait'] = make_primitive("wait", ['time'], [], None, 1, process_wait)
@@ -1878,6 +1881,12 @@ def process_setspeed(logo, num):
     """
     logo.turtle.speed(num)
 
+def process_setundobuffer(logo, num):
+    """
+    The SETUNDOBUFFER command.
+    """
+    logo.turtle.setundobuffer(num)
+
 def process_show(logo, *args):
     """
     The SHOW command.
@@ -2047,6 +2056,18 @@ def process_unicode(logo, char):
         return ord(char)
     except TypeError:
         raise errors.LogoError("UNICODE expects a single character, but got `{}`.".format(char))
+
+def process_undo(logo):
+    """
+    The UNDO command.
+    """
+    logo.turtle.undo()
+
+def process_undobufferentries(logo):
+    """
+    The UNDOBUFFERENTRIES command.
+    """
+    return logo.turtle.undobufferentries()
 
 def process_until(logo, tfexpr, instrlist):
     """
