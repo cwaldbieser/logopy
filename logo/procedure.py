@@ -217,6 +217,7 @@ def create_primitives_map():
     m['penup'] = make_primitive("penup", [], [], None, 0, process_penup)
     m['printout'] = make_primitive("printout", ["contentslist"], [], None, 1, process_printout)
     m['po'] = m['printout']
+    m['pot'] = make_primitive("pot", ["contentslists"], [], None, 1, process_pot)
     m['pots'] = make_primitive("pots", [], [], None, 0, process_pots)
     m['pu'] = m['penup']
     m['pick'] = make_primitive("pick", ['list'], [], None, 1, process_pick)
@@ -1419,6 +1420,25 @@ def process_printout(logo, contentslist):
             print(proc, file=logo.stdout)
             print("{} is a primitive.".format(proc.name), file=logo.stdout)
             print("",  file=logo.stdout)
+            continue
+
+def process_pot(logo, contentslist):
+    """
+    The POT command.
+    """
+    if not _is_list(contentslist):
+        raise errors.LogoError("PRINTOUT expected a list of words, but received `{}` instead.".format(item)) 
+    for item in contentslist:
+        if not _is_word(item):
+            raise errors.LogoError("PRINTOUT expected a list of words, but received `{}` instead.".format(item)) 
+        normalized = item.lower()
+        proc = logo.procedures.get(normalized)
+        if proc:
+            print(proc, file=logo.stdout)
+            continue
+        proc = logo.primitives.get(normalized)
+        if proc:
+            print(proc, file=logo.stdout)
             continue
 
 def process_pots(logo):
