@@ -152,6 +152,7 @@ def create_primitives_map():
     m['equal?'] = m['equalp'] 
     m['exp'] = make_primitive("exp", ['num'], [], None, 1, process_exp)
     m['filter'] = make_primitive("filter", ['tftemplate', 'data'], [], 'args', 2, process_filter)
+    m['filled'] = make_primitive("filled", ['color', 'instructions'], [], 'args', 2, process_filled)
     m['find'] = make_primitive("find", ['tftemplate', 'data'], [], 'args', 2, process_find)
     m['first'] = make_primitive("first", ['thing'], [], None, 1, process_first)
     m['firsts'] = make_primitive("firsts", ['list'], [], None, 1, process_firsts)
@@ -688,6 +689,18 @@ def process_filter(logo, tftemplate, data):
         elif not _is_false(result):
             raise errors.LogoError("FILTER template must return either true or false.")
     return results
+
+def process_filled(logo, color, instructions):
+    """
+    The FILLED command.
+    """
+    trtl = logo.turtle
+    trtl.fillcolor(color)
+    trtl.begin_fill()
+    try:
+        return _process_run_like("FILLED", logo, instructions)
+    finally:
+        trtl.end_fill()
 
 def process_find(logo, tftemplate, data):
     """
