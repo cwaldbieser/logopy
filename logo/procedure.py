@@ -1994,7 +1994,10 @@ def process_to(logo, tokens):
             if _datatypename(peek) == 'list' and len(peek) > 1:
                 opt_name = peek[0]
                 if _is_dots_name(opt_name):
-                    optional_inputs.append((opt_name[1:], tokens.popleft()[1]))
+                    lst = tokens.popleft()
+                    value = lst[1:]
+                    value = logo.evaluate_token_list(value)
+                    optional_inputs.append((opt_name[1:], value))
                     continue
         break
     rest_input = None

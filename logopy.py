@@ -118,6 +118,13 @@ class LogoInterpreter:
                 return self.process_instructionlist(data)
         raise errors.LogoError("Could not locate script `{}`.".format(filename))
 
+    def evaluate_token_list(self, lst):
+        """
+        Wrap token list in TokenStream and `evaluate()`.
+        """
+        stream = TokenStream.make_stream(lst)
+        return self.evaluate(stream)
+
     def evaluate_readlist(self, data):
         """
         Evaluate input as READLIST.
