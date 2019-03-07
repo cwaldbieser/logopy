@@ -81,9 +81,9 @@ to ellipse2 :major :minor [:angle 360] [:clockwise "true] [:steps 15]
     localmake "coords map [
         rotate.coords 0 0  (product :half.major cos ?) (product :half.minor sin ?) :theta
     ] :angles
-    localmake "i (difference :i (:half.minor * (sin :theta)))
-    localmake "j (sum :j (:half.minor * (cos :theta)))
-    if [ :clockwise ] [ localmake "i 0 - :i localmake "j 0 - :j ]
+    ifelse [ not :clockwise ] [ localmake "xsign -1 localmake "ysign 1 ] [ localmake "xsign 1 localmake "ysign -1 ]
+    localmake "i (sum :i (:half.minor * (sin :theta) * :xsign))
+    localmake "j (sum :j (:half.minor * (cos :theta) * :ysign))
     (print [i,j:] :i :j)
     localmake "coords map [(list sum :i first ? sum :j last ?)] :coords
     pu
