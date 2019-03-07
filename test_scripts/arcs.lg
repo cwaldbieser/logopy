@@ -1,0 +1,66 @@
+
+to abs.value :x
+op ifelse [ :x < 0 ] [ -1 * :x ] [ :x ]
+end
+
+to max :a :b
+ifelse [ :a >= :b ] [ op :a ] [ op :b ]
+end
+
+to min :a :b
+ifelse [ :a <= :b ] [ op :a ] [ op :b ]
+end
+
+to logo2cartesian.angle :theta
+localmake "alpha (sum (product :theta -1) 90)
+if [ :alpha < 0.0 ] [ localmake "alpha sum 360 :alpha ]
+op :alpha
+end
+
+to rotate.coords :cx :cy :x :y :theta
+    localmake "c cos :theta
+    localmake "s sin :theta
+    ; translate point back to origin.
+    localmake "x0 :x - :cx
+    localmake "y0 :y - :cy
+    ; rotate point
+    localmake "xnew difference (:x0 * :c) (:y0 * :s)
+    localmake "ynew sum (:x0 * :s) (:y0 * :c)
+    ; translate back
+    localmake :xnew :xnew + :cx
+    localmake :ynew :ynew + :cy 
+    output (list :xnew :ynew)
+end
+
+to ellipse :major :minor [:angle 360] [:clockwise "true] [:steps 15]
+    (print [major axis:] :major [minor axis:] :minor [angle:] :angle [clockwise?] :clockwise [steps:] :steps)
+    localmake "theta logo2cartesian.angle heading 
+    localmake "orig.pos pos
+    localmake "i first :orig.pos
+    localmake "j last :orig.pos
+    ; angle / steps angles between theta and theta - angle (clockwise)
+    ; angle / steps angles between theta and theta + angle (anti-clockwise)
+    localmake "angle.count int quotient :angle :steps
+    ifelse [ :clockwise ] [
+        localmake "angles rseq 0 (1 - :angle) :angle.count
+    ] [
+        localmake "angles rseq 0 (:angle - 1) :angle.count
+    ]
+    (print [first angle:] first :angles [last angle:] last :angles)
+    localmake "half.major :major / 2
+    localmake "half.minor :minor / 2
+    localmake "coords map [
+        rotate.coords 0 0  (product :half.major cos ?) (product :half.minor sin ?) :theta
+    ] :angles
+    localmake "coords map [(list sum :i first ? sum :j last ?)] :coords
+    pu
+    setpos first :coords
+    pd
+    foreach butfirst :coords [
+        setpos ?
+    ]
+end
+
+
+(ellipse 400 160 360)
+
