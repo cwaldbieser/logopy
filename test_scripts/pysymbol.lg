@@ -1,0 +1,47 @@
+
+load "arcs.lg
+
+to snake
+pu lt 90 fd 25 pd fd 175
+pu back 80 rt 90 fd 65 
+pd arc 360 25 pu
+back 65 lt 90 fd 80 pd
+rt 90 pd fd 75
+(ellipse2 140 350 180 )
+rt 180
+fd 180
+(ellipse2 200 200 90)
+rt 90
+fd 180
+(ellipse2 200 200 90 "false)
+lt 90
+fd 120
+rt 90
+fd 70 
+(ellipse2 150 380 180)
+rt 180
+fd 275
+lt 90
+fd 42
+end
+
+to arrange :angle
+pu home
+rt :angle
+fd 220 
+rt 90 
+fd 30 
+lt 90 
+pd
+end 
+
+setspeed 0
+setpensize 1
+cs
+setpencolor "blue
+arrange 0
+filled "blue [ snake ]
+arrange 180
+setpencolor "yellow
+filled "yellow [ snake ]
+
