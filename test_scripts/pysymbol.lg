@@ -25,8 +25,10 @@ lt 90
 fd 42
 end
 
-to arrange :angle
-pu home
+to arrange :angle [:pos [0 0]]
+pu 
+setpos :pos
+setheading 0
 rt :angle
 fd 220 
 rt 90 
@@ -35,13 +37,21 @@ lt 90
 pd
 end 
 
-setspeed 0
+setspeed 5
 setpensize 1
 cs
+make "dark.blue [ 0 0 128 ]
+make "dark.yellow [ 128 128 0 ]
+setpencolor :dark.blue
+(arrange 0 [ 20 -20])
+filled :dark.blue [ snake ]
 setpencolor "blue
 arrange 0
 filled "blue [ snake ]
-arrange 180
+(arrange 180 [ 20 -20 ])
+setpencolor :dark.yellow
+filled :dark.yellow [ snake ]
+(arrange 180)
 setpencolor "yellow
 filled "yellow [ snake ]
 
