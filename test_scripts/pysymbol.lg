@@ -40,18 +40,20 @@ end
 setspeed 5
 setpensize 1
 cs
+make "blue [ 0 0 255 ]
 make "dark.blue [ 0 0 128 ]
+make "yellow [ 255 255 0]
 make "dark.yellow [ 128 128 0 ]
 setpencolor :dark.blue
 (arrange 0 [ 20 -20])
 filled :dark.blue [ snake ]
-setpencolor "blue
+setpencolor :blue
 arrange 0
-filled "blue [ snake ]
+filled :blue [ snake ]
 (arrange 180 [ 20 -20 ])
 setpencolor :dark.yellow
 filled :dark.yellow [ snake ]
 (arrange 180)
-setpencolor "yellow
-filled "yellow [ snake ]
+setpencolor :yellow
+filled :yellow [ snake ]
 
