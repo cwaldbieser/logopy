@@ -14,4 +14,5 @@ To run using `pipenv`:
 .. code:: bash
 
     $ pipenv run ./logopy.py --interactive -s ./test_scripts/ -f ./test_scripts/pysymbol.lg 
-    
+
+Full docs at `Read the Docs <https://logopy.readthedocs.io/>`_ .    
