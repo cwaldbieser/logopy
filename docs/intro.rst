@@ -6,7 +6,12 @@ logopy is an interpreter for the Logo programming language written in Python3.
 Logo is often associated with Turtle Graphics, and logopy integrates with
 Python's own `turtle` module.
 
-I developed logopy after my son (age 11) got a book from our local library about
+.. raw:: html
+
+    <video controls src="_static/logopy.mp4" width="768"></video>
+
+
+I developed logopy after my son (then age 11) got a book from our local library about
 computer game programming.  The first few chapters were all about Logo, while the
 later half of the book focused on Python.
 
@@ -35,8 +40,8 @@ that, I'll just forget this Logo business ..."  I kept telling myself that durin
 countless snatches of free time I found myself working on this project.
 
 Ultimately, I think the reason I kept working on it is because of something
-Seymore Papert, one of the inventers of Logo had written about.  He seemed to
-think that people learn things by doing, and by making connections.  For me,
+Seymour Papert, one of the inventers of Logo had written.  He argues that
+people learn things by doing, and by making connections [#f1]_  .  For me,
 programming is a process where I make all sorts of connections about what is
 going on in a system.  The errors and mistakes actually make me slow down
 and think about what is going on.  Why did the tokens parse this way?  Why
@@ -49,4 +54,11 @@ Eventually, I've gotten the project to a state where is not so frustrating to
 use, and it can actually be fun to see my logo programs move the turtle around.
 I hope that anyone else who also enjoys Logo programming thinks so, too.
 
+.. rubric:: Footnotes
 
+.. [#f1] In *The Children's Machine Rethinking School in the Age of the Computer*, 
+         Papert devotes an entire chapter to suggest that the deliberate part of 
+         learning is mostly about making connections between mental artifacts that
+         already exist in our minds.
+
+    
