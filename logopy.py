@@ -11,6 +11,77 @@ import attr
 import parsley
 from logo import errors
 from logo import procedure
+from logo import svgturtle
+
+
+@attr.s
+class DeferredTKTurtleEnv:
+
+    initialized = attr.ib(default=False)
+    turtle_gui = attr.ib(default=None)
+    screen = attr.ib(default=None)
+    turtle = attr.ib(default=None)
+
+    @classmethod
+    def create_turtle_env(cls):
+        """
+        Create the Deferred TK turtle environment.
+        """
+        return cls()
+
+    def initialize(self, input_handler=None):
+        """
+        Initialize the turtle environment.
+        """
+        global gui
+        from logo import gui
+        self.turtle_gui = gui.TurtleGui.make_gui(interactive=(input_handler is not None))
+        self.screen = self.turtle_gui.screen
+        self.screen.bgcolor("black")
+        self.screen.mode("logo")
+        self.screen.colormode(255)
+        if input_handler is not None:
+            self.turtle_gui.set_input_handler(input_handler)
+        self.initialized = True
+
+    def create_turtle(self):
+        """
+        Create a turtle.
+        """
+        turtle = gui.turtle.RawTurtle(self.screen)
+        turtle.pencolor("white")
+        return turtle 
+
+    def wait_complete(self):
+        """
+        The main program will wait until this turtle backend
+        method returns.
+        For a GUI backend, this could mean the user has exited the GUI.
+        """
+        gui = self.turtle_gui
+        gui.root.mainloop()
+
+    @property
+    def stdout(self):
+        return self.turtle_gui
+
+    @property
+    def stderr(self):
+        return self.turtle_gui
+
+    @property
+    def halt(self):
+        return self.turtle_gui.halt
+
+    @halt.setter
+    def halt(self, value):
+        self.turtle_gui.halt = value
+
+    def process_events(self):
+        """
+        Process any events for the turtle backend.
+        """
+        self.turtle_gui.root.update_idletasks()
 
 
 @attr.s
@@ -25,7 +96,7 @@ class LogoInterpreter:
     placeholder_stack = attr.ib(default=attr.Factory(list))
     grammar = attr.ib(default=None)
     script_folders = attr.ib(default=attr.Factory(list))
-    turtle_gui = attr.ib(default=None)
+    turtle_backend = attr.ib(default=attr.Factory(DeferredTKTurtleEnv.create_turtle_env))
     _screen = attr.ib(default=None)
     _turtle = attr.ib(default=None)
     debug_procs = attr.ib(default=False)
@@ -44,48 +115,43 @@ class LogoInterpreter:
     @property
     def stdout(self):
         if self.is_turtle_active():
-            return self.turtle_gui
+            return self.turtle_backend.stdout
         return sys.stdout
 
     @property
     def stderr(self):
         if self.is_turtle_active():
-            return self.turtle_gui
+            return self.turtle_backend.stderr
         return sys.stderr
 
     @property
     def halt(self):
         if self.is_turtle_active():
-            return self.turtle_gui.halt
+            return self.turtle_backend.halt
         return False
 
     @halt.setter
     def halt(self, value):
         if self.is_turtle_active():
-            self.turtle_gui.halt = value
+            self.turtle_backend.halt = value
 
     def is_turtle_active(self):
-        return self._screen is not None
+        return self.turtle_backend.initialized
 
     def process_events(self):
         if self.is_turtle_active():
-            self.turtle_gui.root.update_idletasks()
-            #self.turtle_gui.root.update()
+            self.turtle_backend.process_events()
 
     def init_turtle_graphics(self, interactive=False):
         """
         Initialize turtle graphics.
         """
-        if self._screen is None:
-            global gui
-            from logo import gui
-            self.turtle_gui = gui.TurtleGui.make_gui(interactive=interactive)
-            self._screen = self.turtle_gui.screen
-            self._screen.bgcolor("black")
-            self._screen.mode("logo")
-            self._screen.colormode(255)
+        if not self.turtle_backend.initialized:
             if interactive:
-                self.turtle_gui.set_input_handler(self.receive_input)
+                handler = self.receive_input
+            else:
+                handler = None
+            self.turtle_backend.initialize(input_handler=handler)
 
     @property
     def turtle(self):
@@ -95,8 +161,7 @@ class LogoInterpreter:
         """
         self.init_turtle_graphics()
         if self._turtle is None:
-            self._turtle = gui.turtle.RawTurtle(self._screen)
-            self._turtle.pencolor("white")
+            self._turtle = self.turtle_backend.create_turtle()
         return self._turtle
 
     @property
@@ -671,6 +736,8 @@ def main(args):
     if script_folders is None:
         script_folders = []
     interpreter.script_folders = script_folders
+    if args.svg is not None:
+        interpreter.turtle_backend = svgturtle.Backend.make_backend()
     if args.file is not None:
         script = args.file.read()
         tokens = parse_tokens(grammar, script, debug=args.debug_tokens)
@@ -684,8 +751,7 @@ def main(args):
         if result is not None:
             raise errors.LogoError("You don't say what to do with `{}`.".format(result))
     if interpreter.is_turtle_active():
-        gui = interpreter.turtle_gui
-        gui.root.mainloop()
+        interpreter.turtle_backend.wait_complete()
     if args.debug_interpreter:
         print("")
         import pprint
@@ -703,6 +769,11 @@ if __name__ == "__main__":
         "--file",
         type=argparse.FileType("r"),
         help="Logo script file to interpret.")
+    parser.add_argument(
+        "--svg",
+        type=argparse.FileType("w"),
+        metavar="FILE",
+        help="Batch mode for writing turtle output to an SVG file, FILE.")
     parser.add_argument(
         "-s",
         "--script-folder",

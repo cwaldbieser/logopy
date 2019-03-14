@@ -1488,7 +1488,7 @@ def process_pop(logo, stackname):
 
 def process_pos(logo):
     """
-    The turtle graphics logo command.
+    The turtle graphics POS command.
     """
     return list(logo.turtle.pos())
 
