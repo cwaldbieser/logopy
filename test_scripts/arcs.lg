@@ -11,11 +11,11 @@ to min :a :b
 ifelse [ :a <= :b ] [ op :a ] [ op :b ]
 end
 
-to logo2cartesian.angle :theta
-localmake "alpha (sum (product :theta -1) 90)
-if [ :alpha < 0.0 ] [ localmake "alpha sum 360 :alpha ]
-op :alpha
-end
+;to logo2cartesian.angle :theta
+;localmake "alpha (sum (product :theta -1) 90)
+;if [ :alpha < 0.0 ] [ localmake "alpha sum 360 :alpha ]
+;op :alpha
+;end
 
 to rotate.coords :cx :cy :x :y :theta
     localmake "c cos :theta
@@ -34,7 +34,7 @@ end
 
 to ellipse :major :minor [:angle 360] [:clockwise "true] [:steps 15]
     (print [major axis:] :major [minor axis:] :minor [angle:] :angle [clockwise?] :clockwise [steps:] :steps)
-    localmake "theta logo2cartesian.angle heading 
+    localmake "theta cartesian.heading heading 
     localmake "orig.pos pos
     localmake "i first :orig.pos
     localmake "j last :orig.pos
@@ -63,7 +63,7 @@ end
 
 to ellipse2 :major :minor [:angle 360] [:clockwise "true] [:steps 15]
     (print [major axis:] :major [minor axis:] :minor [angle:] :angle [clockwise?] :clockwise [steps:] :steps)
-    localmake "theta logo2cartesian.angle heading 
+    localmake "theta cartesian.heading heading 
     localmake "orig.pos pos
     localmake "i first :orig.pos
     localmake "j last :orig.pos

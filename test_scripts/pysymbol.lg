@@ -28,7 +28,7 @@ end
 to arrange :angle [:pos [0 0]]
 pu 
 setpos :pos
-setheading 0
+setheading turtle.heading 90
 rt :angle
 fd 220 
 rt 90 

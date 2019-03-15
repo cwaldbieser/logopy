@@ -68,6 +68,18 @@ class SVGTurtleEnv:
         """
         pass
 
+    def cartesian_heading(self, theta):
+        """
+        Return the aubsolute Cartesian heading for the turtle in degrees.
+        """
+        return theta 
+
+    def turtle_heading_from_cartesian_heading(self, theta):
+        """
+        Return an absolute turtle heading from a Cartesian heading.
+        """
+        return theta
+
 @attr.s
 class SVGScreen:
     """
@@ -150,24 +162,15 @@ class SVGTurtle:
         xmin, xmax, ymin, ymax = self._bounds
         w = xmax - xmin
         h = ymax - ymin
-        #vb = "{} {} {} {}".format(xmin, ymin, w, h)
-        #drawing['width'] = h
-        #drawing['height'] = w
-        vb = "-500 -500 1000 1000"
-        drawing['width'] = 1000
-        drawing['height'] = 1000
+        vb = "{} {} {} {}".format(xmin, ymin, w, h)
+        drawing['width'] = h
+        drawing['height'] = w
         drawing['viewBox'] = vb
-        #transform='translate(0,{}) scale(1,-1)'.format(h)
         components = self._components 
         for component in components:
-            #component['transform'] = transform
             drawing.add(component)
         drawing.write(fout)
 
-    def _diagnostic(self):
-        #print("POS:", self._pos, "HEADING:", self._heading)
-        pass
- 
     def isdown(self):
         return self._pendown
 
@@ -192,12 +195,10 @@ class SVGTurtle:
         return (x, y)
 
     def setpos(self, x, y=None):
-        self._diagnostic()
         pos = self._get_xy(x, y)
         self._line_to(x, y)
-        self._diagnostic()
 
-    def _line_to(self, x1, y1, transform=False):
+    def _line_to(self, x1, y1):
         """
         Set the new pos.
         If the pen is down, add a new line.
@@ -205,19 +206,15 @@ class SVGTurtle:
         x0, y0 = self._pos
         self._pos = (x1, y1)
         if self._pendown:
-            drawing = self.screen.drawing
-            if transform:
-                x0, y0 = y0, x0
-                x1, y1 = y1, x1
-                kwargs = dict(transform="rotate(-90)")
-            else:
-                kwargs = {}
-            line = drawing.line((x0, y0), (x1, y1), stroke=self._pencolor, stroke_width=self._pensize, **kwargs)
-            self._components.append(line)
             self._adjust_bounds(x0 + self._pensize * 0.5, -y0 + self._pensize * 0.5)
             self._adjust_bounds(x0 - self._pensize * 0.5, -y0 - self._pensize * 0.5)
             self._adjust_bounds(x1 + self._pensize * 0.5, -y1 + self._pensize * 0.5)
             self._adjust_bounds(x1 - self._pensize * 0.5, -y1 - self._pensize * 0.5)
+            drawing = self.screen.drawing
+            x0, y0 = y0, x0
+            x1, y1 = y1, x1
+            line = drawing.line((x0, y0), (x1, y1), stroke=self._pencolor, stroke_width=self._pensize, transform="rotate(-90)")
+            self._components.append(line)
 
     def _adjust_bounds(self, x, y):
         """
@@ -255,32 +252,26 @@ class SVGTurtle:
             self._pendown = True 
 
     def right(self, angle):
-        self._diagnostic()
         heading = self._heading - angle
         self._heading = heading % 360
-        self._diagnostic()
 
     def left(self, angle):
-        self._diagnostic()
         heading = self._heading + angle
         self._heading = heading % 360
-        self._diagnostic()
 
     def forward(self, dist):
-        self._diagnostic()
         dx, dy = calc_distance(self._heading, dist)
         x, y = self._pos
         x += dx
         y += dy
-        self._line_to(x, y, transform=True)
-        self._diagnostic()
+        self._line_to(x, y)
 
     def backward(self, dist):
         dx, dy = calc_distance(self._heading, -dist)
         x, y = self._pos
         x += dx
         y += dy
-        self._line_to(x, y, transform=True) 
+        self._line_to(x, y) 
 
     def clear(self):
         self.components = []
@@ -300,8 +291,10 @@ class SVGTurtle:
             if isinstance(arg, tuple):
                 arg = rgb2hex(*arg, mode=self.screen.colormode())
             self._pencolor = arg
+            print("SET PENCOLOR TO:", arg)
         elif arg_count == 3:
             self._pencolor = rgb2hex(*args, mode=self.screen.colormode())
+            print("SET PENCOLOR TO:", self._pencolor, "from:", args)
         else:
             raise Exception("Invalid color specification `{}`.".format(tuple(*args)))
 
@@ -379,11 +372,11 @@ def hexpair(x):
     """
     Return 2 hex digits for integers 0-255.
     """
-    return ("0{}".format(hex(x)[2:])[-2:])
+    return ("0{}".format(hex(x)[2:]))[-2:]
 
 def rgb2hex(r, g, b, mode=255):
     """
     Return a hex color suitble for SVG given RGB components.
     """
-    return "#{}{}{}".format(hexpair(r), hexpair(g), hexpair(g)) 
+    return "#{}{}{}".format(hexpair(r), hexpair(g), hexpair(b)) 
 

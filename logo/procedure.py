@@ -131,6 +131,7 @@ def create_primitives_map():
     m['bfs'] = m['butfirsts']
     m['butlast'] = make_primitive("butlast", ['wordlist'], [], None, 1, process_butlast)
     m['bl'] = m['butlast']
+    m['cartesian.heading'] = make_primitive("cartesian.heading", ['heading'], [], None, 1, process_cartesian_heading)
     m['cascade'] = make_primitive("cacade", ['endtest', 'template', 'startvalue'], [], 'args', 3, process_cascade)
     m['case'] = make_primitive("case", ['value', 'clauses'], [], None, 2, process_case)
     m['char'] = make_primitive("char", ['int'], [], None, 1, process_char)
@@ -278,6 +279,7 @@ def create_primitives_map():
     m['sum'] = make_primitive("sum", ['num1', 'num2'], [], 'nums', 2, process_sum)
     m['thing'] = make_primitive("thing", ['thing'], [], None, 1, process_thing)
     m['towards'] = make_primitive("towards", ['pos'], [], None, 1, process_towards)
+    m['turtle.heading'] = make_primitive("turtle.heading", ['cartesian.heading'], [], None, 1, process_turtle_heading)
     m['type'] = make_primitive("type", ['thing'], [], 'others', 1, process_type)
     m['unicode'] = make_primitive("unicode", ['char'], [], None, 1, process_unicode)
     m['undo'] = make_primitive("undo", [], [], None, 0, process_undo)
@@ -437,6 +439,12 @@ def process_butlast(logo, wordlist):
     if len(wordlist) == 0:
         raise errors.LogoError("BUTLAST doesn't like `{}` as input.".format(wordlist)) 
     return wordlist[:-1]
+
+def process_cartesian_heading(logo, heading):
+    """
+    The CARTESIAN.HEADING turtle command.
+    """
+    return logo.turtle_backend.cartesian_heading(heading)
 
 def process_cascade(logo, endtest, *args):
     """
@@ -2038,6 +2046,12 @@ def process_towards(logo, pos):
     The turtle graphics TOWARDS command.
     """
     return logo.turtle.towards(*pos)
+
+def process_turtle_heading(logo, heading):
+    """
+    The TURTLE.HEADING turtle command.
+    """
+    return logo.turtle_backend.turtle_heading_from_cartesian_heading(heading)
 
 def process_type(logo, *args):
     """

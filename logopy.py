@@ -83,6 +83,21 @@ class DeferredTKTurtleEnv:
         """
         self.turtle_gui.root.update_idletasks()
 
+    def cartesian_heading(self, theta):
+        """
+        Return the absolute Cartesian heading for the turtle in degrees.
+        """
+        alpha = 90 - theta        
+        alpha = alpha % 360
+        return alpha
+
+    def turtle_heading_from_cartesian_heading(self, theta):
+        """
+        Return an absolute turtle heading from a Cartesian heading.
+        """
+        alpha = theta - 90
+        alpha = alpha % 360
+        return alpha
 
 @attr.s
 class LogoInterpreter:
