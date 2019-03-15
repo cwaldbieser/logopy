@@ -131,6 +131,7 @@ class SVGTurtle:
     _visible = attr.ib(default=True)
     _speed = attr.ib(default=5)
     _components = attr.ib(default=attr.Factory(list))
+    _bounds = attr.ib(default=(0, 0, 0, 0))
 
     @classmethod
     def create_turtle(cls, screen):
@@ -143,6 +144,13 @@ class SVGTurtle:
         Write SVG output to file object `fout`.
         """
         drawing = self.screen.drawing
+        xmin, xmax, ymin, ymax = self._bounds
+        w = xmax - xmin
+        h = ymax - ymin
+        vb = "{} {} {} {}".format(xmin, ymin, w, h)
+        drawing['width'] = w
+        drawing['height'] = h
+        drawing['viewBox'] = vb
         components = self._components 
         for component in components:
             drawing.add(component)
@@ -186,6 +194,21 @@ class SVGTurtle:
             drawing = self.screen.drawing
             line = drawing.line((x0, y0), (x1, y1), stroke=self._pencolor, stroke_width=self._pensize)
             self._components.append(line)
+            self._adjust_bounds(x0 + self._pensize * 0.5, y0 + self._pensize * 0.5)
+            self._adjust_bounds(x0 - self._pensize * 0.5, y0 - self._pensize * 0.5)
+            self._adjust_bounds(x1 + self._pensize * 0.5, y1 + self._pensize * 0.5)
+            self._adjust_bounds(x1 - self._pensize * 0.5, y1 - self._pensize * 0.5)
+
+    def _adjust_bounds(self, x, y):
+        """
+        Adjust the bounds of the drawing.
+        """
+        xmin, xmax, ymin, ymax = self._bounds
+        xmin = min(x, xmin)
+        xmax = max(x, xmax)
+        ymin = min(y, ymin)
+        ymax = max(y, ymax)
+        self._bounds = (xmin, xmax, ymin, ymax)
 
     def heading(self):
         return self._heading 
@@ -212,11 +235,11 @@ class SVGTurtle:
             self._pendown = True 
 
     def right(self, angle):
-        heading = self._heading - angle
+        heading = self._heading + angle
         self._heading = heading % 360
 
     def left(self, angle):
-        heading = self._heading + angle
+        heading = self._heading - angle
         self._heading = heading % 360
 
     def forward(self, dist):

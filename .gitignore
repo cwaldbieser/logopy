@@ -2,4 +2,4 @@
 *.swp
 *.pyc
 *.lg
-
+svg/*
