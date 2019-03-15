@@ -4,6 +4,69 @@ import sys
 import attr
 import svgwrite
 
+@attr.s
+class SVGTurtleEnv:
+
+    initialized = attr.ib(default=False)
+    screen = attr.ib(default=None)
+    output_file = attr.ib(default=None)
+    turtle = attr.ib(default=None)
+
+    @classmethod
+    def create_turtle_env(cls):
+        """
+        Create the Deferred TK turtle environment.
+        """
+        return cls()
+
+    def initialize(self, **kwargs):
+        """
+        Initialize the turtle environment.
+        """
+        self.screen = SVGScreen.create_screen()
+        self.output_file = kwargs.get('output_file')
+        self.initialized = True
+
+    def create_turtle(self):
+        """
+        Create a turtle.
+        """
+        turtle = self.turtle
+        if turtle is None:
+            turtle = SVGTurtle.create_turtle(self.screen)
+            self.turtle = turtle 
+        return turtle 
+
+    def wait_complete(self):
+        """
+        The main program will wait until this turtle backend
+        method returns.
+        For a GUI backend, this could mean the user has exited the GUI.
+        """
+        output_file = self.output_file
+        self.turtle.write_svg(output_file)
+
+    @property
+    def stdout(self):
+        return sys.stdout
+
+    @property
+    def stderr(self):
+        return sys.stderr
+
+    @property
+    def halt(self):
+        return False
+
+    @halt.setter
+    def halt(self, value):
+        raise NotImplemented("HALT is not implemented for the SVG Turtle environment.")
+
+    def process_events(self):
+        """
+        Process any events for the turtle backend.
+        """
+        pass
 
 @attr.s
 class SVGScreen:
@@ -51,13 +114,15 @@ class SVGScreen:
         else:
             raise Exception("Invalid color specification `{}`.".format(tuple(*args)))
 
+
+
 @attr.s
 class SVGTurtle:
     """
     Turtle for drawing to an SVG image.
     """
     screen = attr.ib(default=None)
-    _pendown = attr.ib(default=False)
+    _pendown = attr.ib(default=True)
     _pencolor = attr.ib(default='white')
     _pensize = attr.ib(default=1)
     _fillcolor = attr.ib(default='white')
@@ -65,14 +130,24 @@ class SVGTurtle:
     _heading = attr.ib(default=90)
     _visible = attr.ib(default=True)
     _speed = attr.ib(default=5)
-    _paths = attr.ib(default=attr.Factory(list))
+    _components = attr.ib(default=attr.Factory(list))
 
     @classmethod
     def create_turtle(cls, screen):
         turtle = cls()
         turtle.screen = screen
         return turtle
-        
+
+    def write_svg(self, fout):
+        """
+        Write SVG output to file object `fout`.
+        """
+        drawing = self.screen.drawing
+        components = self._components 
+        for component in components:
+            drawing.add(component)
+        drawing.write(fout)
+ 
     def isdown(self):
         return self._pendown
 
@@ -98,17 +173,19 @@ class SVGTurtle:
 
     def setpos(self, x, y=None):
         pos = self._get_xy(x, y)
-        self._pos = pos
-        self._add_coord()
+        self._line_to(x, y)
 
-    def _add_coord(self):
+    def _line_to(self, x1, y1):
         """
-        If the pen is down, add a new coordinate to the current path.
+        Set the new pos.
+        If the pen is down, add a new line.
         """
+        x0, y0 = self._pos
+        self._pos = (x1, y1)
         if self._pendown:
-            pos = self._pos
-            coord_list = self._paths[-1]
-            coord_list.append(pos)
+            drawing = self.screen.drawing
+            line = drawing.line((x0, y0), (x1, y1), stroke=self._pencolor, stroke_width=self._pensize)
+            self._components.append(line)
 
     def heading(self):
         return self._heading 
@@ -128,20 +205,18 @@ class SVGTurtle:
         else:
             self._pendown = False
 
-    def pendown(seld):
+    def pendown(self):
         if self._pendown:
             return
         else:
-            coord_list = [self._pos]
-            self._paths.append(coord_list)
             self._pendown = True 
 
     def right(self, angle):
-        heading = _self.heading - angle
+        heading = self._heading - angle
         self._heading = heading % 360
 
     def left(self, angle):
-        heading = _self.heading + angle
+        heading = self._heading + angle
         self._heading = heading % 360
 
     def forward(self, dist):
@@ -149,26 +224,23 @@ class SVGTurtle:
         x, y = self._pos
         x += dx
         y += dy
-        self._pos = (x, y)
-        self._add_coord() 
+        self._line_to(x, y)
 
     def backward(self, dist):
         dx, dy = calc_distance(self._heading, -dist)
         x, y = self._pos
         x += dx
         y += dy
-        self._pos = (x, y)
-        self._add_coord() 
+        self._line_to(x, y) 
 
     def clear(self):
-        paths = self._paths
-        paths[:] = []
-        if self._pendown:
-            paths.append([self._pos])
+        self.components = []
+        self._pos = (0, 0)
+        self._heading = 90
 
     def home(self):
-        self.setpos(0, 0)
-        self.setheading(90)
+        self._pos = (0, 0)
+        self._heading = 90
 
     def pencolor(self, *args):
         arg_count = len(args)

@@ -20,7 +20,6 @@ class DeferredTKTurtleEnv:
     initialized = attr.ib(default=False)
     turtle_gui = attr.ib(default=None)
     screen = attr.ib(default=None)
-    turtle = attr.ib(default=None)
 
     @classmethod
     def create_turtle_env(cls):
@@ -29,12 +28,13 @@ class DeferredTKTurtleEnv:
         """
         return cls()
 
-    def initialize(self, input_handler=None):
+    def initialize(self, **kwargs):
         """
         Initialize the turtle environment.
         """
         global gui
         from logo import gui
+        input_handler = kwargs.get("input_handler")
         self.turtle_gui = gui.TurtleGui.make_gui(interactive=(input_handler is not None))
         self.screen = self.turtle_gui.screen
         self.screen.bgcolor("black")
@@ -97,6 +97,7 @@ class LogoInterpreter:
     grammar = attr.ib(default=None)
     script_folders = attr.ib(default=attr.Factory(list))
     turtle_backend = attr.ib(default=attr.Factory(DeferredTKTurtleEnv.create_turtle_env))
+    turtle_backend_args = attr.ib(default=attr.Factory(dict))
     _screen = attr.ib(default=None)
     _turtle = attr.ib(default=None)
     debug_procs = attr.ib(default=False)
@@ -104,12 +105,10 @@ class LogoInterpreter:
     debug_tokens = attr.ib(default=False)
 
     @classmethod
-    def create_interpreter(cls, interactive=False):
+    def create_interpreter(cls):
         interpreter = cls()
         interpreter.scope_stack.append({})
         interpreter.primitives.update(procedure.create_primitives_map())
-        if interactive:
-            interpreter.init_turtle_graphics(interactive=True)
         return interpreter
 
     @property
@@ -142,16 +141,12 @@ class LogoInterpreter:
         if self.is_turtle_active():
             self.turtle_backend.process_events()
 
-    def init_turtle_graphics(self, interactive=False):
+    def init_turtle_graphics(self):
         """
         Initialize turtle graphics.
         """
         if not self.turtle_backend.initialized:
-            if interactive:
-                handler = self.receive_input
-            else:
-                handler = None
-            self.turtle_backend.initialize(input_handler=handler)
+            self.turtle_backend.initialize(**(self.turtle_backend_args))
 
     @property
     def turtle(self):
@@ -727,7 +722,10 @@ def main(args):
     Parse Logo
     """
     grammar = make_token_grammar()
-    interpreter = LogoInterpreter.create_interpreter(interactive=args.interactive)
+    interpreter = LogoInterpreter.create_interpreter()
+    interpreter.turtle_backend_args = dict(input_handler=interpreter.receive_input)
+    if args.interactive:
+        interpreter.init_turtle_graphics()
     interpreter.debug_tokens = args.debug_tokens
     interpreter.grammar = grammar
     interpreter.debug_primitives = args.debug_primitives
@@ -737,7 +735,8 @@ def main(args):
         script_folders = []
     interpreter.script_folders = script_folders
     if args.svg is not None:
-        interpreter.turtle_backend = svgturtle.Backend.make_backend()
+        interpreter.turtle_backend = svgturtle.SVGTurtleEnv.create_turtle_env()
+        interpreter.turtle_backend_args = dict(output_file=args.svg)
     if args.file is not None:
         script = args.file.read()
         tokens = parse_tokens(grammar, script, debug=args.debug_tokens)
