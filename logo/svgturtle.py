@@ -147,6 +147,7 @@ class SVGTurtle:
     _speed = attr.ib(default=5)
     _components = attr.ib(default=attr.Factory(list))
     _bounds = attr.ib(default=(0, 0, 0, 0))
+    _fill_container = attr.ib(default=None)
 
     @classmethod
     def create_turtle(cls, screen):
@@ -205,11 +206,14 @@ class SVGTurtle:
         """
         x0, y0 = self._pos
         self._pos = (x1, y1)
+        fill_container = self._fill_container
         if self._pendown:
             self._adjust_bounds(x0 + self._pensize * 0.5, -y0 + self._pensize * 0.5)
             self._adjust_bounds(x0 - self._pensize * 0.5, -y0 - self._pensize * 0.5)
             self._adjust_bounds(x1 + self._pensize * 0.5, -y1 + self._pensize * 0.5)
             self._adjust_bounds(x1 - self._pensize * 0.5, -y1 - self._pensize * 0.5)
+            if fill_container is not None:
+                fill_container.points.append((y1, x1))
             drawing = self.screen.drawing
             x0, y0 = y0, x0
             x1, y1 = y1, x1
@@ -291,10 +295,8 @@ class SVGTurtle:
             if isinstance(arg, tuple):
                 arg = rgb2hex(*arg, mode=self.screen.colormode())
             self._pencolor = arg
-            print("SET PENCOLOR TO:", arg)
         elif arg_count == 3:
             self._pencolor = rgb2hex(*args, mode=self.screen.colormode())
-            print("SET PENCOLOR TO:", self._pencolor, "from:", args)
         else:
             raise Exception("Invalid color specification `{}`.".format(tuple(*args)))
 
@@ -319,10 +321,18 @@ class SVGTurtle:
             raise Exception("Invalid color specification `{}`.".format(tuple(*args)))
 
     def begin_fill(self):
-        pass
+        fill_container = self._fill_container
+        if fill_container is None:
+            fill_container = self.screen.drawing.polygon()
+            fill_container['fill'] = self._fillcolor
+            fill_container['fill-opacity'] = 1
+            fill_container['fill-rule'] = 'evenodd'
+            fill_container['transform'] = 'rotate(-90)'
+            self._components.append(fill_container)
+        self._fill_container = fill_container
 
     def end_fill(self):
-        pass
+        self._fill_container = None
   
     def hideturtle(self):
         self._visible = False
