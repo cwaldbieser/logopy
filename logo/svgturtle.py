@@ -350,7 +350,41 @@ class SVGTurtle:
             self._speed = num
 
     def circle(self, radius, angle):
-        pass
+        """
+        The center of the circle with be `radius` units to 90 degrees left of
+        the turtle's current heading.
+        The turtle will trace out an arc that sweeps out `angle` degrees.
+        """
+        rx = radius
+        ry = radius
+        xrot = 0
+        if abs(angle) > 180.0:
+            large_arc = 1
+        else:
+            large_arc = 0
+        if angle < 0:
+            sweep_flag = 1
+        else:
+            sweep_flag = 0
+        x, y = self._pos
+        theta = (self._heading + 90) % 360
+        xcenter = x + math.cos(deg2rad(theta)) * radius
+        ycenter = y + math.sin(deg2rad(theta)) * radius
+        theta = (theta - 180 + angle)
+        if theta == 360:
+            theta -= 0.5
+        xdest = xcenter + math.cos(deg2rad(theta)) * radius
+        ydest = ycenter + math.sin(deg2rad(theta)) * radius
+        path = self.screen.drawing.path()
+        path['transform'] = 'rotate(-90)'
+        path['stroke'] = self._pencolor
+        path['fill-opacity'] = 0
+        command = "M {} {}".format(y, x)
+        path.push(command)
+        command = "A {} {} {} {} {} {} {}".format(abs(radius), abs(radius), xrot, large_arc, sweep_flag, ydest, xdest)
+        #path.push_arc((ydest, xdest), xrot, abs(radius), large_arc=large_arc, angle_dir=sweep_flag, absolute=True)
+        path.push(command)
+        self._components.append(path)
 
     def setundobuffer(self, num):
         pass
@@ -367,6 +401,12 @@ def deg2rad(degrees):
     Convert degrees to radians.
     """
     return degrees * (math.pi / 180.0)
+
+def rad2deg(radians):
+    """
+    Convert radians to degrees.
+    """
+    return radians * (180.0 / math.pi)
 
 def calc_distance(theta, dist):
     """
