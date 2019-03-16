@@ -705,6 +705,7 @@ def process_filled(logo, color, instructions):
     """
     The FILLED command.
     """
+    color = _get_color("FILLED", color)
     trtl = logo.turtle
     trtl.fillcolor(color)
     trtl.begin_fill()
@@ -1838,10 +1839,7 @@ def process_setbackground(logo, color):
     """
     The SETBACKGROUND command.
     """
-    if _is_list(color):
-        logo.screen.bgcolor(*color)
-    else:
-        logo.screen.bgcolor(color)
+    logo.screen.bgcolor(_get_color("SETBACKGROUND", color))
 
 def process_setheading(logo, angle):
     """
@@ -1853,19 +1851,7 @@ def process_setpencolor(logo, color):
     """
     The SETPENCOLOR command.
     """
-    if _is_list(color):
-        temp = []
-        for c in color:
-            cint = int(c)
-            if cint != c:
-                raise errors.LogoError("SETPENCOLOR expects a list of integers, but received `{}` instead.".format(color))
-            temp.append(cint)
-        color = temp
-        del temp
-        logo.turtle.pencolor(*color)
-    else:
-        color = COLOR_MAP.get(color, color)
-        logo.turtle.pencolor(color)
+    logo.turtle.pencolor(_get_color("SETPENCOLOR", color))
 
 def process_setpensize(logo, width):
     """
@@ -2255,4 +2241,21 @@ def _get_logo_repr(tokens, line_break=70):
     if line_break is not None:
         result = textwrap.fill(result, line_break)
     return result
+
+def _get_color(cmdname, color):
+    """
+    Get a color to pass to the various color functions.
+    """
+    if _is_list(color):
+        temp = []
+        for c in color:
+            cint = int(c)
+            if cint != c:
+                raise errors.LogoError("{} expects a list of integers, but received `{}` instead.".format(cmdname, color))
+            temp.append(cint)
+        color = tuple(temp)
+        del temp
+    else:
+        color = COLOR_MAP.get(color, color)
+    return color
 
