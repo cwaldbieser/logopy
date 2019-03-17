@@ -1,6 +1,7 @@
 
 import math
 import sys
+import uuid
 import attr
 import svgwrite
 
@@ -148,6 +149,7 @@ class SVGTurtle:
     _components = attr.ib(default=attr.Factory(list))
     _bounds = attr.ib(default=(0, 0, 0, 0))
     _fill_container = attr.ib(default=None)
+    _fill_holes = attr.ib(default=None)
 
     @classmethod
     def create_turtle(cls, screen):
@@ -329,10 +331,42 @@ class SVGTurtle:
             fill_container['fill-rule'] = 'evenodd'
             fill_container['transform'] = 'rotate(-90)'
             self._components.append(fill_container)
+            self._fill_holes = []
         self._fill_container = fill_container
 
     def end_fill(self):
+        fill_container = self._fill_container
         self._fill_container = None
+        fill_holes = self._fill_holes
+        self._fill_holes = None
+        if len(fill_holes) > 0:
+            # Create an allow (white) mask in the shape of the filled polygon
+            # with deny (black) masks for the holes.
+            dwg = self.screen.drawing
+            mask_id = uuid.uuid4().hex
+            mask = dwg.defs.add(dwg.mask(id=mask_id))
+            allow_mask = mask.add(dwg.polygon())
+            allow_mask['fill'] = 'white'
+            allow_mask.points.extend(fill_container.points)
+            for component in fill_holes:
+                component = self._copy_component_to_mask(component)
+                if component is None:
+                    continue
+                mask.add(component)
+            fill_container['mask'] = "url(#{})".format(mask_id)
+
+    def _copy_component_to_mask(self, c):
+        """
+        Copy an SVG componenent to a mask.
+        """
+        dwg = self.screen.drawing
+        if c.elementname == 'circle':
+            new_c = dwg.circle((c['cx'], c['cy']), c['r'], fill="black")
+        elif c.elementname == 'path':
+            new_c = dwg.path(d=c.commands, fill="black")
+        else:
+            new_c = None
+        return new_c
   
     def hideturtle(self):
         self._visible = False
@@ -355,36 +389,44 @@ class SVGTurtle:
         the turtle's current heading.
         The turtle will trace out an arc that sweeps out `angle` degrees.
         """
-        rx = radius
-        ry = radius
-        xrot = 0
-        if abs(angle) > 180.0:
-            large_arc = 1
-        else:
-            large_arc = 0
-        if angle < 0:
-            sweep_flag = 1
-        else:
-            sweep_flag = 0
         x, y = self._pos
         theta = (self._heading + 90) % 360
         xcenter = x + math.cos(deg2rad(theta)) * radius
         ycenter = y + math.sin(deg2rad(theta)) * radius
-        theta = (theta - 180 + angle)
-        if theta == 360:
-            theta -= 0.5
-        xdest = xcenter + math.cos(deg2rad(theta)) * radius
-        ydest = ycenter + math.sin(deg2rad(theta)) * radius
-        path = self.screen.drawing.path()
-        path['transform'] = 'rotate(-90)'
-        path['stroke'] = self._pencolor
-        path['fill-opacity'] = 0
-        command = "M {} {}".format(y, x)
-        path.push(command)
-        command = "A {} {} {} {} {} {} {}".format(abs(radius), abs(radius), xrot, large_arc, sweep_flag, ydest, xdest)
-        #path.push_arc((ydest, xdest), xrot, abs(radius), large_arc=large_arc, angle_dir=sweep_flag, absolute=True)
-        path.push(command)
-        self._components.append(path)
+        if angle != 0 and (angle % 360 == 0):
+            component = self.screen.drawing.circle((ycenter, xcenter), radius)
+            component['transform'] = 'rotate(-90)'
+            component['stroke'] = self._pencolor
+            component['fill-opacity'] = 0
+        else:
+            rx = radius
+            ry = radius
+            xrot = 0
+            if abs(angle) > 180.0:
+                large_arc = 1
+            else:
+                large_arc = 0
+            if angle < 0:
+                sweep_flag = 1
+            else:
+                sweep_flag = 0
+            theta = (theta - 180 + angle)
+            xdest = xcenter + math.cos(deg2rad(theta)) * radius
+            ydest = ycenter + math.sin(deg2rad(theta)) * radius
+            path = self.screen.drawing.path()
+            path['transform'] = 'rotate(-90)'
+            path['stroke'] = self._pencolor
+            path['fill-opacity'] = 0
+            command = "M {} {}".format(y, x)
+            path.push(command)
+            command = "A {} {} {} {} {} {} {}".format(abs(radius), abs(radius), xrot, large_arc, sweep_flag, ydest, xdest)
+            path.push(command)
+            component = path
+        self._components.append(component)
+        fill_holes = self._fill_holes
+        if fill_holes is not None:
+            fill_holes.append(component)
+            component['class'] = 'hole'
 
     def setundobuffer(self, num):
         pass
