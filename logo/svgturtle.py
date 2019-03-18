@@ -171,6 +171,8 @@ class SVGTurtle:
         drawing['viewBox'] = vb
         components = self._components 
         for component in components:
+            if hasattr(component, 'points') and len(component.points) == 0:
+                continue
             drawing.add(component)
         drawing.write(fout)
 
@@ -340,20 +342,28 @@ class SVGTurtle:
         fill_holes = self._fill_holes
         self._fill_holes = None
         if len(fill_holes) > 0:
-            # Create an allow (white) mask in the shape of the filled polygon
-            # with deny (black) masks for the holes.
-            dwg = self.screen.drawing
-            mask_id = uuid.uuid4().hex
-            mask = dwg.defs.add(dwg.mask(id=mask_id))
-            allow_mask = mask.add(dwg.polygon())
-            allow_mask['fill'] = 'white'
-            allow_mask.points.extend(fill_container.points)
-            for component in fill_holes:
-                component = self._copy_component_to_mask(component)
-                if component is None:
-                    continue
-                mask.add(component)
-            fill_container['mask'] = "url(#{})".format(mask_id)
+            if len(fill_container.points) == 0:
+                # There was no primary polygon-- the "holes" should be filled.
+                fillcolor = self._fillcolor
+                for hole in fill_holes:
+                    hole['fill'] = fillcolor
+                    hole['fill-opacity'] = 1
+                    hole['class'] = 'normal'
+            else:
+                # Create an allow (white) mask in the shape of the filled polygon
+                # with deny (black) masks for the holes.
+                dwg = self.screen.drawing
+                mask_id = uuid.uuid4().hex
+                mask = dwg.defs.add(dwg.mask(id=mask_id))
+                allow_mask = mask.add(dwg.polygon())
+                allow_mask['fill'] = 'white'
+                allow_mask.points.extend(fill_container.points)
+                for component in fill_holes:
+                    component = self._copy_component_to_mask(component)
+                    if component is None:
+                        continue
+                    mask.add(component)
+                fill_container['mask'] = "url(#{})".format(mask_id)
 
     def _copy_component_to_mask(self, c):
         """
@@ -393,6 +403,8 @@ class SVGTurtle:
         theta = (self._heading + 90) % 360
         xcenter = x + math.cos(deg2rad(theta)) * radius
         ycenter = y + math.sin(deg2rad(theta)) * radius
+        self._adjust_bounds(xcenter - radius, ycenter - radius)
+        self._adjust_bounds(xcenter + radius, ycenter + radius)
         if angle != 0 and (angle % 360 == 0):
             component = self.screen.drawing.circle((ycenter, xcenter), radius)
             component['transform'] = 'rotate(-90)'
