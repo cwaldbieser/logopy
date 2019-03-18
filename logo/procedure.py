@@ -152,6 +152,7 @@ def create_primitives_map():
     m['equalp'] = make_primitive("equalp", ['thing1', 'thing2'], [], None, 2, process_equalp)
     m['equal?'] = m['equalp'] 
     m['exp'] = make_primitive("exp", ['num'], [], None, 1, process_exp)
+    m['ext.unfilled'] = make_primitive("ext.unfilled", ['instructions'], [], 'args', 1, process_ext_unfilled)
     m['filter'] = make_primitive("filter", ['tftemplate', 'data'], [], 'args', 2, process_filter)
     m['filled'] = make_primitive("filled", ['color', 'instructions'], [], 'args', 2, process_filled)
     m['find'] = make_primitive("find", ['tftemplate', 'data'], [], 'args', 2, process_find)
@@ -664,6 +665,19 @@ def process_exp(logo, num):
         return math.exp(num)
     except ValueError:
         raise errors.LogoError("EXP expected a number, but received `{}` instead.".format(num))
+
+def process_ext_unfilled(logo, instructions):
+    """
+    The EXT.UNFILLED command.
+    """
+    trtl = logo.turtle
+    if hasattr(trtl, 'begin_unfilled'):
+        trtl.begin_unfilled()
+    try:
+        return _process_run_like("EXT.UNFILLED", logo, instructions)
+    finally:
+        if hasattr(trtl, 'end_unfilled'):
+            trtl.end_unfilled()
 
 def process_filter(logo, tftemplate, data):
     """

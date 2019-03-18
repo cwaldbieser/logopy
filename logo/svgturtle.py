@@ -148,8 +148,13 @@ class SVGTurtle:
     _speed = attr.ib(default=5)
     _components = attr.ib(default=attr.Factory(list))
     _bounds = attr.ib(default=(0, 0, 0, 0))
-    _fill_container = attr.ib(default=None)
-    _fill_holes = attr.ib(default=None)
+    # Fill attributes.
+    # _fill_mode: off, fill, or unfill
+    # _filled_components: index 0 is always a polygon
+    # _hole components: index 0 is always a ploygon
+    _fill_mode = attr.ib(default='off') # off, fill, or unfill
+    _filled_components = attr.ib(default=None)
+    _hole_components = attr.ib(default=None)
 
     @classmethod
     def create_turtle(cls, screen):
@@ -210,14 +215,18 @@ class SVGTurtle:
         """
         x0, y0 = self._pos
         self._pos = (x1, y1)
-        fill_container = self._fill_container
+        fill_mode = self._fill_mode
+        if fill_mode != 'off':
+            fill_container = self._filled_components[0]
+            hole_container = self._hole_components[0]
+            fill_container.points.append((y1, x1))
+            if fill_mode == 'unfill':
+                hole_container.points.append((y1, x1)) 
         if self._pendown:
             self._adjust_bounds(x0 + self._pensize * 0.5, -y0 + self._pensize * 0.5)
             self._adjust_bounds(x0 - self._pensize * 0.5, -y0 - self._pensize * 0.5)
             self._adjust_bounds(x1 + self._pensize * 0.5, -y1 + self._pensize * 0.5)
             self._adjust_bounds(x1 - self._pensize * 0.5, -y1 - self._pensize * 0.5)
-            if fill_container is not None:
-                fill_container.points.append((y1, x1))
             drawing = self.screen.drawing
             x0, y0 = y0, x0
             x1, y1 = y1, x1
@@ -325,59 +334,90 @@ class SVGTurtle:
             raise Exception("Invalid color specification `{}`.".format(tuple(*args)))
 
     def begin_fill(self):
-        fill_container = self._fill_container
-        if fill_container is None:
-            fill_container = self.screen.drawing.polygon()
-            fill_container['fill'] = self._fillcolor
-            fill_container['fill-opacity'] = 1
-            fill_container['fill-rule'] = 'evenodd'
-            fill_container['transform'] = 'rotate(-90)'
-            self._components.append(fill_container)
-            self._fill_holes = []
-        self._fill_container = fill_container
+        fill_mode = self._fill_mode 
+        if fill_mode != 'off':
+            raise Exception("`begin_fill()`: Fill mode is already enabled.")
+        self._fill_mode = 'fill'
+        self._filled_components = filled_components = []
+        self._hole_components = hole_components = []
+        fill_container = self.screen.drawing.polygon()
+        fill_container['transform'] = 'rotate(-90)'
+        filled_components.append(fill_container)
+        self._components.append(fill_container)
+        hole_polygon = self.screen.drawing.polygon()
+        hole_polygon['transform'] = 'rotate(-90)'
+        hole_components.append(hole_polygon)
 
     def end_fill(self):
-        fill_container = self._fill_container
-        self._fill_container = None
-        fill_holes = self._fill_holes
-        self._fill_holes = None
-        if len(fill_holes) > 0:
-            if len(fill_container.points) == 0:
-                # There was no primary polygon-- the "holes" should be filled.
-                fillcolor = self._fillcolor
-                for hole in fill_holes:
-                    hole['fill'] = fillcolor
-                    hole['fill-opacity'] = 1
-                    hole['class'] = 'normal'
-            else:
-                # Create an allow (white) mask in the shape of the filled polygon
-                # with deny (black) masks for the holes.
-                dwg = self.screen.drawing
-                mask_id = uuid.uuid4().hex
-                mask = dwg.defs.add(dwg.mask(id=mask_id))
-                allow_mask = mask.add(dwg.polygon())
+        if self._fill_mode != 'fill':
+            raise Exception("`end_fill()` can only be called in fill-mode and after any unfill mode has been cleared.  Fill mode was `{}`.".format(self._fill_mode))
+        self._fill_mode = 'off'
+        filled_components = self._filled_components
+        fill_container = filled_components[0]
+        self._filled_components = None
+        hole_components = self._hole_components
+        self._hole_components = None
+        # If there are holes, create a mask.
+        if len(hole_components) > 1 or len(hole_components[0].points) > 0:
+            if len(fill_container.points) == 0 and len(filled_components) == 1:
+                # No actual filled components; no mask needed to make holes.
+                return
+            dwg = self.screen.drawing
+            mask_id = uuid.uuid4().hex
+            mask = dwg.defs.add(dwg.mask(id=mask_id))
+            for component in filled_components:
+                if hasattr(component, 'points') and len(component.points) == 0:
+                    continue
+                allow_mask = component.copy()
                 allow_mask['fill'] = 'white'
-                allow_mask.points.extend(fill_container.points)
-                for component in fill_holes:
-                    component = self._copy_component_to_mask(component)
-                    if component is None:
-                        continue
-                    mask.add(component)
-                fill_container['mask'] = "url(#{})".format(mask_id)
-
-    def _copy_component_to_mask(self, c):
-        """
-        Copy an SVG componenent to a mask.
-        """
-        dwg = self.screen.drawing
-        if c.elementname == 'circle':
-            new_c = dwg.circle((c['cx'], c['cy']), c['r'], fill="black")
-        elif c.elementname == 'path':
-            new_c = dwg.path(d=c.commands, fill="black")
+                if allow_mask.attribs.get('transform') is not None:
+                    del allow_mask.attribs['transform']
+                mask.add(allow_mask)
+                component['fill'] = self._fillcolor
+                component['fill-opacity'] = 1
+                component['fill-rule'] = 'evenodd'
+                component['mask'] = "url(#{})".format(mask_id)
+                component['transform'] = 'rotate(-90)'
+            for component in hole_components:
+                if hasattr(component, 'points') and len(component.points) == 0:
+                    continue
+                deny_mask = component.copy()
+                deny_mask['fill'] = 'black'
+                if deny_mask.attribs.get('transform') is not None:
+                    del deny_mask.attribs['transform']
+                component['class'] = 'hole'
+                component['fill-opacity'] = 0
+                component['transform'] = 'rotate(-90)'
+                mask.add(deny_mask)
         else:
-            new_c = None
-        return new_c
-  
+            for component in filled_components:
+                if hasattr(component, 'points') and len(component.points) == 0:
+                    continue
+                component['fill'] = self._fillcolor
+                component['fill-opacity'] = 1
+                component['fill-rule'] = 'evenodd'
+                component['transform'] = 'rotate(-90)'
+
+    def begin_unfilled(self):
+        """
+        Only valid within `begin_fill()` and `end_fill()` context.
+        Shapes drawn in between inocations of this method and `end_unfilled()`
+        will not be filled but instead will behave as holes in the current fill.
+        """
+        if self._fill_mode != 'fill':
+            raise Exception("`begin_unfilled()` can only be called within `begin_fill()` ... `end_fill()` context.")
+        self._fill_mode = 'unfill'
+
+    def end_unfilled(self):
+        """
+        Only valid within `begin_fill()` and `end_fill()` context.
+        Shapes drawn in between inocations of `begin_unfilled()` and this method
+        will not be filled but instead will behave as holes in the current fill.
+        """
+        if self._fill_mode != 'unfill':
+            raise Exception("`end_unfilled()` can only be called after `begin_unfilled()`.")
+        self._fill_mode = 'fill'
+
     def hideturtle(self):
         self._visible = False
 
@@ -407,9 +447,6 @@ class SVGTurtle:
         self._adjust_bounds(xcenter + radius, ycenter + radius)
         if angle != 0 and (angle % 360 == 0):
             component = self.screen.drawing.circle((ycenter, xcenter), radius)
-            component['transform'] = 'rotate(-90)'
-            component['stroke'] = self._pencolor
-            component['fill-opacity'] = 0
         else:
             rx = radius
             ry = radius
@@ -425,20 +462,19 @@ class SVGTurtle:
             theta = (theta - 180 + angle)
             xdest = xcenter + math.cos(deg2rad(theta)) * radius
             ydest = ycenter + math.sin(deg2rad(theta)) * radius
-            path = self.screen.drawing.path()
-            path['transform'] = 'rotate(-90)'
-            path['stroke'] = self._pencolor
-            path['fill-opacity'] = 0
+            component = self.screen.drawing.path()
             command = "M {} {}".format(y, x)
-            path.push(command)
+            component.push(command)
             command = "A {} {} {} {} {} {} {}".format(abs(radius), abs(radius), xrot, large_arc, sweep_flag, ydest, xdest)
-            path.push(command)
-            component = path
+            component.push(command)
+        component['transform'] = 'rotate(-90)'
+        component['stroke'] = self._pencolor
+        component['stroke-width'] = self._pensize
         self._components.append(component)
-        fill_holes = self._fill_holes
-        if fill_holes is not None:
-            fill_holes.append(component)
-            component['class'] = 'hole'
+        if self._fill_mode == 'unfill':
+            self._hole_components.append(component)
+        elif self._fill_mode == 'fill':
+            self._filled_components.append(component)
 
     def setundobuffer(self, num):
         pass

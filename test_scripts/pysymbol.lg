@@ -4,7 +4,9 @@ load "arcs.lg
 to snake
 pu lt 90 fd 25 pd fd 175
 pu back 80 rt 90 fd 65 
-pd arc 360 25 pu
+pd
+ext.unfilled [ arc 360 25 ]
+pu
 back 65 lt 90 fd 80 pd
 rt 90 pd fd 75
 (ellipse2 140 350 180 )
