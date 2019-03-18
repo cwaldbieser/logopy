@@ -148,6 +148,7 @@ class SVGTurtle:
     _speed = attr.ib(default=5)
     _components = attr.ib(default=attr.Factory(list))
     _bounds = attr.ib(default=(0, 0, 0, 0))
+    _curr_polyline = attr.ib(default=None)
     # Fill attributes.
     # _fill_mode: off, fill, or unfill
     # _filled_components: index 0 is always a polygon
@@ -214,7 +215,6 @@ class SVGTurtle:
         If the pen is down, add a new line.
         """
         x0, y0 = self._pos
-        self._pos = (x1, y1)
         fill_mode = self._fill_mode
         if fill_mode != 'off':
             fill_container = self._filled_components[0]
@@ -228,10 +228,29 @@ class SVGTurtle:
             self._adjust_bounds(x1 + self._pensize * 0.5, -y1 + self._pensize * 0.5)
             self._adjust_bounds(x1 - self._pensize * 0.5, -y1 - self._pensize * 0.5)
             drawing = self.screen.drawing
-            x0, y0 = y0, x0
-            x1, y1 = y1, x1
-            line = drawing.line((x0, y0), (x1, y1), stroke=self._pencolor, stroke_width=self._pensize, transform="rotate(-90)")
-            self._components.append(line)
+            polyline = self._get_current_polyline()
+            polyline.points.append((y1, x1))
+        else:
+            self._current_polyline = None
+        self._pos = (x1, y1)
+
+    def _get_current_polyline(self):
+        """
+        Get the current polyline or create a new one if it doesn't exist.
+        """
+        polyline = self._current_polyline
+        if polyline is None:
+            polyline = self.screen.drawing.polyline()
+            polyline['transform'] = "rotate(-90)"
+            polyline['stroke'] = self._pencolor
+            polyline['stroke-width'] = self._pensize
+            polyline['class'] = 'hole'
+            polyline['fill-opacity'] = 0
+            x, y = self._pos
+            polyline.points.append((y, x))
+            self._components.append(polyline)
+            self._current_polyline = polyline
+        return polyline
 
     def _adjust_bounds(self, x, y):
         """
@@ -312,12 +331,14 @@ class SVGTurtle:
             self._pencolor = rgb2hex(*args, mode=self.screen.colormode())
         else:
             raise Exception("Invalid color specification `{}`.".format(tuple(*args)))
+        self._current_polyline = None
 
     def pensize(self, width=None):
         if width is None:
             return self._pensize
         else:
             self._pensize = width
+            self._current_polyline = None
 
     def fillcolor(self, *args):
         arg_count = len(args)
