@@ -13,6 +13,7 @@ Welcome to logopy's documentation!
 
    intro
    installation
+   turtle_backends 
 
 
 Indices and tables
