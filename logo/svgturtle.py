@@ -148,7 +148,7 @@ class SVGTurtle:
     _speed = attr.ib(default=5)
     _components = attr.ib(default=attr.Factory(list))
     _bounds = attr.ib(default=(0, 0, 0, 0))
-    _curr_polyline = attr.ib(default=None)
+    _current_polyline = attr.ib(default=None)
     # Fill attributes.
     # _fill_mode: off, fill, or unfill
     # _filled_components: index 0 is always a polygon
