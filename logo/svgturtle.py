@@ -32,6 +32,7 @@ class SVGTurtleEnv:
         self.screen = SVGScreen.create_screen()
         self.output_file = kwargs.get('output_file')
         self.html_folder = kwargs.get('html_folder')
+        self.html_args = kwargs.get('html_args', {})
         self.initialized = True
 
     def create_turtle(self):
@@ -62,6 +63,7 @@ class SVGTurtleEnv:
         Create HTML resources for displaying SVG and animations in a web
         page.
         """
+        turtle = self.turtle
         respath = os.path.join(os.path.dirname(os.path.dirname(__file__)), "resources/html")
         html_folder = self.html_folder
         if not os.path.isdir(html_folder):
@@ -70,14 +72,26 @@ class SVGTurtleEnv:
         html_template_path = os.path.join(respath, "svg.html.jinja2")
         with open(html_template_path, "r") as f:
             template = jinja2_env.from_string(f.read())
+        x, y, w, h = turtle.get_bounds()
         args = {
             'html_title': 'SVG Test',
             'bgcolor': 'black',
-            'html_width': 700,
+            'html_width': "{}px".format(math.ceil(abs(w))),
             'animation_duration': 1000,
             'animation_type': 'sync',
         }
-        args.update(self.html_args)
+        args['bgcolor'] = turtle.screen.bgcolor()
+        html_args = dict(self.html_args)
+        html_width = html_args.get('html_width')
+        if html_width is not None:
+            args['html_width'] = "{}px".format(html_width)
+        html_scale = html_args.get('html_scale')
+        if html_scale is not None:
+            args['html_width'] = "{}%".format(html_scale)
+        for k in ('html_title', 'animation_duration', 'animation_type'):
+            v = html_args.get(k)
+            if v is not None:
+                args[k] = v
         html_path = os.path.join(html_folder, "svg.html")
         with open(html_path, "w") as fout:
             fout.write(template.render(args))
@@ -122,6 +136,7 @@ class SVGTurtleEnv:
         """
         return theta
 
+
 @attr.s
 class SVGScreen:
     """
@@ -130,7 +145,7 @@ class SVGScreen:
     drawing = attr.ib(default=None)
     _mode = attr.ib(default=None)
     _colormode = attr.ib(default=None)
-    _bgcolor = attr.ib(default=None)
+    _bgcolor = attr.ib(default='black')
 
     @classmethod
     def create_screen(cls, size=(1000, 1000), viewbox='-500 -500 1000 1000'):
@@ -169,7 +184,6 @@ class SVGScreen:
             self._bgcolor = rgb2hex(*args, mode=self._colormode)
         else:
             raise Exception("Invalid color specification `{}`.".format(tuple(*args)))
-
 
 
 @attr.s
@@ -222,6 +236,13 @@ class SVGTurtle:
                 continue
             drawing.add(component)
         drawing.write(fout)
+
+    def get_bounds(self):
+        """
+        Return the current bounds of the graphics as a tuple of
+        (x, y, w, h)
+        """
+        return self._bounds
 
     def isdown(self):
         return self._pendown

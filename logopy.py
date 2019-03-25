@@ -751,10 +751,29 @@ def main(args):
     interpreter.script_folders = script_folders
     if args.turtle == 'svg':
         interpreter.turtle_backend = svgturtle.SVGTurtleEnv.create_turtle_env()
-        interpreter.turtle_backend_args = dict(
+        svg_args = dict(
             output_file=args.outfile,
             html_folder=args.html,
         )
+        html_args = {}
+        d = vars(args)
+        for k in ('html_title', 'animation_duration', 'animation_type'):
+            v = d.get(k)
+            if v is not None:
+                html_args[k] = v
+        if args.html_width:
+            html_args['html_width'] = args.html_width
+        if args.html_scale:
+            html_args['html_scale'] = args.html_scale
+        if args.animation_duration:
+            html_args['animation_duration'] = args.animation_duration
+        if args.animation_type:
+            animation_type = args.animation_type
+            if animation_type == 'onebyone':
+                animation_type = 'oneByOne'
+            html_args['animation_type'] = animation_type
+        svg_args['html_args'] = html_args
+        interpreter.turtle_backend_args = svg_args
     if args.file is not None:
         script = args.file.read()
         tokens = parse_tokens(grammar, script, debug=args.debug_tokens)
@@ -828,7 +847,33 @@ if __name__ == "__main__":
         "--html",
         metavar="FOLDER",
         action="store",
-        help="Save turtle graphics to folder, FOLDER, and create HTML resources for web display.")
+        help="Save turtle graphics to folder, FOLDER, and create resources for web display.")
+    parser_svg.add_argument(
+        "--html-title",
+        action="store",
+        help="Set HTML title for web resources.")
+    parser_svg.add_argument(
+        "--html-width",
+        action="store",
+        type=int,
+        help="Set width of image in pixels for web resources.")
+    parser_svg.add_argument(
+        "--html-scale",
+        action="store",
+        type=float,
+        metavar='PERCENT',
+        help="Scale width of image in web resource to PERCENT of display width.")
+    parser_svg.add_argument(
+        "--animation-duration",
+        action="store",
+        type=int,
+        help="Set animation duration in milliseconds for web resources.")
+    parser_svg.add_argument(
+        "--animation-type",
+        action="store",
+        choices=['sync', 'delayed', 'onebyone'],
+        default='sync',
+        help="Set animation type for web resources.")
     args = parser.parse_args()
     main(args)
 
