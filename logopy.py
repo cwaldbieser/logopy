@@ -739,7 +739,7 @@ def main(args):
     grammar = make_token_grammar()
     interpreter = LogoInterpreter.create_interpreter()
     interpreter.turtle_backend_args = dict(input_handler=interpreter.receive_input)
-    if args.interactive:
+    if args.turtle == 'tk':
         interpreter.init_turtle_graphics()
     interpreter.debug_tokens = args.debug_tokens
     interpreter.grammar = grammar
@@ -749,9 +749,9 @@ def main(args):
     if script_folders is None:
         script_folders = []
     interpreter.script_folders = script_folders
-    if args.svg is not None:
+    if args.turtle == 'svg':
         interpreter.turtle_backend = svgturtle.SVGTurtleEnv.create_turtle_env()
-        interpreter.turtle_backend_args = dict(output_file=args.svg)
+        interpreter.turtle_backend_args = dict(output_file=args.outfile)
     if args.file is not None:
         script = args.file.read()
         tokens = parse_tokens(grammar, script, debug=args.debug_tokens)
@@ -774,20 +774,10 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Logo programming language interpreter")
     parser.add_argument(
-    "-i",
-    "--interactive",
-    action="store_true",
-    help="Enter interactive mode.  If a Logo script is loaded, it will be run first.")
-    parser.add_argument(
         "-f",
         "--file",
         type=argparse.FileType("r"),
         help="Logo script file to interpret.")
-    parser.add_argument(
-        "--svg",
-        type=argparse.FileType("w"),
-        metavar="FILE",
-        help="Batch mode for writing turtle output to an SVG file, FILE.")
     parser.add_argument(
         "-s",
         "--script-folder",
@@ -813,6 +803,24 @@ if __name__ == "__main__":
         "--tokenize-only",
         action="store_true",
         help="Only tokenize input.  Don't interpret.")
+    parser.set_defaults(turtle=None)
+    subparsers = parser.add_subparsers(help='Turtle back ends.')
+    parser_tk = subparsers.add_parser('gui', help='GUI mode')
+    parser_tk.set_defaults(turtle='tk')
+    parser_tk.add_argument(
+        "-i",
+        "--interactive",
+        action="store_true",
+        help="Enter interactive mode.  If a Logo script is loaded, it will be run first.")
+    parser_svg = subparsers.add_parser('svg', help='SVG turtle backend.')
+    parser_svg.set_defaults(turtle='svg')
+    parser_svg.add_argument(
+        "-o",
+        "--outfile",
+        type=argparse.FileType("w"),
+        metavar="OUTFILE",
+        action="store",
+        help="Save turtle graphics to SVG file, OUTFILE.")
     args = parser.parse_args()
     main(args)
 

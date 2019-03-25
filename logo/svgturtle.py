@@ -45,7 +45,8 @@ class SVGTurtleEnv:
         For a GUI backend, this could mean the user has exited the GUI.
         """
         output_file = self.output_file
-        self.turtle.write_svg(output_file)
+        if output_file is not None:
+            self.turtle.write_svg(output_file)
 
     @property
     def stdout(self):

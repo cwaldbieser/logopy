@@ -3,11 +3,11 @@ Turtle Back Ends
 ================
 
 By default, when *logopy* is run, it will not activate any turtle graphics
-unless either the :option:`-i` (interactive) flag is used or if the program
+unless one of the turtle sub-commands is used (`gui`, `svg`) or if the program
 specified by the :option:`-f` option invokes any turtle commands.  In
-either of these cases, the default Python-TKinter turtle backend is launched.
+the latter case, the default Python-TKinter turtle backend is launched.
 
-Other back ends can be specified with explicit options.
+Specific sub-commands can be used to activate individual turtle back ends.
 
 Python-TKinter Turtle Graphics
 ------------------------------
