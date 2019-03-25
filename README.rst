@@ -13,6 +13,12 @@ To run using `pipenv`:
 
 .. code:: bash
 
-    $ pipenv run ./logopy.py --interactive -s ./test_scripts/ -f ./test_scripts/pysymbol.lg 
+    $ pipenv run ./logopy.py -s ./test_scripts/ -s ~/git-repos/logo-procedures/logo-procs/ -f ./test_scripts/pysymbol.lg
+
+To create an SVG image:
+
+.. code:: bash
+
+    $ pipenv run ./logopy.py -s ./test_scripts/ -s ~/git-repos/logo-procedures/logo-procs/ -f ./test_scripts/pysymbol.lg svg -o pysymbol.svg 
 
 Full docs at `Read the Docs <https://logopy.readthedocs.io/>`_ .    
