@@ -867,7 +867,7 @@ if __name__ == "__main__":
         "--animation-duration",
         action="store",
         type=int,
-        help="Set animation duration in milliseconds for web resources.")
+        help="Set animation duration (in frames) for web resources.")
     parser_svg.add_argument(
         "--animation-type",
         action="store",
