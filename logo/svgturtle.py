@@ -1,8 +1,11 @@
 
 import math
+import os
+import shutil
 import sys
 import uuid
 import attr
+import jinja2
 import svgwrite
 
 @attr.s
@@ -11,7 +14,9 @@ class SVGTurtleEnv:
     initialized = attr.ib(default=False)
     screen = attr.ib(default=None)
     output_file = attr.ib(default=None)
+    html_folder = attr.ib(default=None)
     turtle = attr.ib(default=None)
+    html_args = attr.ib(default=attr.Factory(dict))
 
     @classmethod
     def create_turtle_env(cls):
@@ -26,6 +31,7 @@ class SVGTurtleEnv:
         """
         self.screen = SVGScreen.create_screen()
         self.output_file = kwargs.get('output_file')
+        self.html_folder = kwargs.get('html_folder')
         self.initialized = True
 
     def create_turtle(self):
@@ -47,6 +53,40 @@ class SVGTurtleEnv:
         output_file = self.output_file
         if output_file is not None:
             self.turtle.write_svg(output_file)
+        html_folder = self.html_folder
+        if html_folder is not None:
+            self.create_html_()
+
+    def create_html_(self):
+        """
+        Create HTML resources for displaying SVG and animations in a web
+        page.
+        """
+        respath = os.path.join(os.path.dirname(os.path.dirname(__file__)), "resources/html")
+        html_folder = self.html_folder
+        if not os.path.isdir(html_folder):
+            os.mkdir(html_folder)
+        jinja2_env = jinja2.Environment(trim_blocks=True, lstrip_blocks=True)
+        html_template_path = os.path.join(respath, "svg.html.jinja2")
+        with open(html_template_path, "r") as f:
+            template = jinja2_env.from_string(f.read())
+        args = {
+            'html_title': 'SVG Test',
+            'bgcolor': 'black',
+            'html_width': 700,
+            'animation_duration': 1000,
+            'animation_type': 'sync',
+        }
+        args.update(self.html_args)
+        html_path = os.path.join(html_folder, "svg.html")
+        with open(html_path, "w") as fout:
+            fout.write(template.render(args))
+        svg_file = os.path.join(html_folder, "logo.svg")
+        with open(svg_file, "w") as fout:
+            self.turtle.write_svg(fout)
+        js_respath = os.path.join(respath, "vivus.min.js")
+        js_htmlpath = os.path.join(html_folder, "vivus.min.js")
+        shutil.copyfile(js_respath, js_htmlpath)
 
     @property
     def stdout(self):

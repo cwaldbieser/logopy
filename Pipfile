@@ -9,6 +9,7 @@ verify_ssl = true
 parsley = "*"
 attrs = "*"
 svgwrite = "*"
+jinja2 = "*"
 
 [requires]
 python_version = "3.6"

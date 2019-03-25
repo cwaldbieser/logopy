@@ -751,7 +751,10 @@ def main(args):
     interpreter.script_folders = script_folders
     if args.turtle == 'svg':
         interpreter.turtle_backend = svgturtle.SVGTurtleEnv.create_turtle_env()
-        interpreter.turtle_backend_args = dict(output_file=args.outfile)
+        interpreter.turtle_backend_args = dict(
+            output_file=args.outfile,
+            html_folder=args.html,
+        )
     if args.file is not None:
         script = args.file.read()
         tokens = parse_tokens(grammar, script, debug=args.debug_tokens)
@@ -821,6 +824,11 @@ if __name__ == "__main__":
         metavar="OUTFILE",
         action="store",
         help="Save turtle graphics to SVG file, OUTFILE.")
+    parser_svg.add_argument(
+        "--html",
+        metavar="FOLDER",
+        action="store",
+        help="Save turtle graphics to folder, FOLDER, and create HTML resources for web display.")
     args = parser.parse_args()
     main(args)
 
