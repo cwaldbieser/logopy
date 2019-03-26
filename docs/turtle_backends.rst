@@ -33,3 +33,13 @@ can be used directly in web pages or other applications that can use SVG.
 It can also be animated in web pages using 
 `Vivus <https://maxwellito.github.io/vivus/>`_ .
 
+Detailed Turtle Back End Information
+------------------------------------
+
+.. toctree::
+   :maxdepth: 2
+   :glob:
+
+   turtles/*
+
+
