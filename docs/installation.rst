@@ -7,9 +7,9 @@ made any actual releases.  That said, the code is on Github, and I've been
 using `pipenv <https://pipenv.readthedocs.io/en/latest/>`_ to manage the
 dependencies and run the software.  A typical command line might look like:
 
-.. code::shell
+.. code:: shell
 
-    $ pipenv run ./logopy.py --interactive -s ./test_scripts/
+    $ pipenv run ./logopy.py -s ./test_scripts/ gui
 
 Where I am running the interpreter in interactive mode and have set the 
 folder where I can load my logo scripts from with the `load` command.
