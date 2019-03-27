@@ -9,6 +9,7 @@ import operator
 import random
 import textwrap
 import time
+import traceback
 from logo import errors
 
 COLOR_MAP = {
@@ -178,6 +179,7 @@ def create_primitives_map():
     m['int'] = make_primitive("int", ['num'], [], None, 1, process_int)
     m['iseq'] = make_primitive("iseq", ['from', 'to'], [], None, 2, process_iseq)
     m['item'] = make_primitive("item", ['index', 'thing'], [], None, 2, process_item)
+    m['label'] = make_primitive("label", ['text'], [('move', 'false'), ('align', 'left'), ('font', ['Arial', 8, 'normal'])], None, 1, process_label)
     m['last'] = make_primitive("last", ['thing'], [], None, 1, process_last)
     m['left'] = make_primitive("left", ['angle'], [], None, 1, process_left)
     m['lt'] = m['left']
@@ -1117,6 +1119,31 @@ def process_item(logo, index, thing):
         return thing[py_index]
     except IndexError:
         raise errors.LogoError("ITEM index {} out of range.".format(index))
+
+def process_label(logo, text, move='false', align='left', font=['Arial', 8, 'normal']):
+    """
+    The LABEL turtle command.
+    """
+    move = _is_true(move)
+    if not _is_word(text):
+        raise errors.LogoError("LABEL expects a word for its `text` argument, but it received `{}` instead.".format(text))
+    if not _is_word(align):
+        raise errors.LogoError("LABEL expects `left`, `right`, or `center` for its `align` argument, but it received `{}` instead.".format(align))
+    if not align in ('left', 'right', 'center'):
+        raise errors.LogoError("LABEL expects `left`, `right`, or `center` for its `align` argument, but it received `{}` instead.".format(align))
+    if not _is_list(font):
+        raise errors.LogoError("LABEL expects a list for its `font` argument, but it received `{}` instead.".format(font))
+    font = tuple(font)
+    if len(font) != 3:
+        raise errors.LogoError("LABEL expects a 3-word list for its `font` argument, but it received `{}` instead.".format(font))
+    turtle = logo.turtle
+    try:
+        turtle.write(text, move=move, align=align, font=font) 
+    except errors.LogoError as lex:
+        raise
+    except Exception as ex:
+        tb_string = traceback.format_exc()
+        raise errors.LogoError("The turtle encountered an error while running the LABEL command:\n{}".format(tb_string))
 
 def process_last(logo, thing):
     """

@@ -211,6 +211,7 @@ class SVGTurtle:
     _fill_mode = attr.ib(default='off') # off, fill, or unfill
     _filled_components = attr.ib(default=None)
     _hole_components = attr.ib(default=None)
+    _text_alignments = attr.ib(default=dict(left='start', right='end', center='middle'))
 
     @classmethod
     def create_turtle(cls, screen):
@@ -306,6 +307,7 @@ class SVGTurtle:
             polyline['transform'] = "rotate(-90)"
             polyline['stroke'] = self._pencolor
             polyline['stroke-width'] = self._pensize
+            polyline['stroke-linecap'] = 'square'
             polyline['class'] = 'hole'
             polyline['fill-opacity'] = 0
             x, y = self._pos
@@ -568,6 +570,36 @@ class SVGTurtle:
     def undobufferentries(self):
         return 0
 
+    def write(self, text, move=False, align='left', font=('Arial', 8, 'normal')):
+        """
+        Write text to the image.
+        """
+        if move:
+            raise errors.LogoError("Moving the turtle to the end of the text is not supported by the SVG Turtle back end.")
+        x, y = self._pos
+        x, y = self.rotate_coords_(0, 0, y, x, -90)
+        txt_obj = self.screen.drawing.text(text, insert=(x, y))
+        txt_obj['fill'] = self._pencolor
+        txt_obj['text-anchor'] = self._text_alignments[align]
+        font_face, font_size, font_weight = font
+        txt_obj['style'] = "font-size:{}pt;font-family:{};font-weight:{};".format(font_size, font_face, font_weight)
+        self._components.append(txt_obj)
+
+    def rotate_coords_(self, cx, cy, x, y, theta):
+        """
+        Rotate coordinate (x, y) about (cx, cy) by angle theta in degrees.
+        Return the resulting (xrot, yrot)
+        """
+        theta = deg2rad(theta)
+        cos_theta = math.cos(theta)
+        sin_theta = math.sin(theta)
+        x0 = x - cx
+        y0 = y - cy
+        xnew = x0 * cos_theta - y0 * sin_theta
+        ynew = x0 * sin_theta + y0 * cos_theta
+        xnew += cx
+        ynew += cy
+        return (xnew, ynew)
 
 def deg2rad(degrees):
     """
