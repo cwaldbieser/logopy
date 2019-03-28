@@ -2010,63 +2010,73 @@ def process_to(logo, tokens):
     """
     Process the TO command.
     """
+    scope_stack = logo.scope_stack
+    scope = {}
+    scope_stack.append(scope)
     try:
-        procedure_name = tokens.popleft()
-    except IndexError:
-        raise errors.LogoError("TO command requires a procedure name.")
-    required_inputs = []
-    while True:
-        if len(tokens) > 0:
-            peek = tokens[0]
-            if _is_dots_name(peek):
-                required_inputs.append(tokens.popleft()[1:])
-                continue
-        break
-    optional_inputs = []
-    while True:
-        if len(tokens) > 0:
-            peek = tokens[0]
-            if _datatypename(peek) == 'list' and len(peek) > 1:
-                opt_name = peek[0]
-                if _is_dots_name(opt_name):
-                    lst = tokens.popleft()
-                    value = lst[1:]
-                    value = logo.evaluate_token_list(value)
-                    optional_inputs.append((opt_name[1:], value))
+        try:
+            procedure_name = tokens.popleft()
+        except IndexError:
+            raise errors.LogoError("TO command requires a procedure name.")
+        required_inputs = []
+        while True:
+            if len(tokens) > 0:
+                peek = tokens[0]
+                if _is_dots_name(peek):
+                    param_name = tokens.popleft()[1:]
+                    required_inputs.append(param_name)
+                    scope[param_name] = ":" + param_name
                     continue
-        break
-    rest_input = None
-    if len(tokens) > 0:
-        peek = tokens[0]
-        if _datatypename(peek) == 'list' and len(peek) == 1:
-            rest_name = peek[0]
-            if _is_dots_name(rest_name):
-                rest_input = tokens.popleft()[0][1:]
-    default_arity = len(required_inputs)
-    if len(tokens) > 0:
-        peek = tokens[0]
-        if isinstance(peek, int):
-            default_arity = tokens.popleft()
-    procedure_tokens = collections.deque([])
-    try:
-        token = tokens.popleft()
-    except IndexError:
-        raise errors.ExpectedEndError("Expected END to complete procedure `{}`.".format(procedure_name))
-    _test = (lambda x: hasattr(x, 'lower') and x.lower() == 'end')
-    while not _test(token):
-        procedure_tokens.append(token)
+            break
+        optional_inputs = []
+        while True:
+            if len(tokens) > 0:
+                peek = tokens[0]
+                if _datatypename(peek) == 'list' and len(peek) > 1:
+                    opt_name = peek[0]
+                    if _is_dots_name(opt_name):
+                        lst = tokens.popleft()
+                        value = lst[1:]
+                        value = logo.evaluate_token_list(value)
+                        param_name = opt_name[1:]
+                        optional_inputs.append((param_name, value))
+                        scope[param_name] = ":" + param_name
+                        continue
+            break
+        rest_input = None
+        if len(tokens) > 0:
+            peek = tokens[0]
+            if _datatypename(peek) == 'list' and len(peek) == 1:
+                rest_name = peek[0]
+                if _is_dots_name(rest_name):
+                    rest_input = tokens.popleft()[0][1:]
+        default_arity = len(required_inputs)
+        if len(tokens) > 0:
+            peek = tokens[0]
+            if isinstance(peek, int):
+                default_arity = tokens.popleft()
+        procedure_tokens = collections.deque([])
         try:
             token = tokens.popleft()
         except IndexError:
             raise errors.ExpectedEndError("Expected END to complete procedure `{}`.".format(procedure_name))
-    procedure = LogoProcedure.make_procedure(
-        name=procedure_name,
-        required_inputs=required_inputs,
-        optional_inputs=optional_inputs,
-        rest_input=rest_input,
-        default_arity=default_arity,
-        tokens=procedure_tokens)
-    logo.procedures[procedure_name.lower()] = procedure 
+        _test = (lambda x: hasattr(x, 'lower') and x.lower() == 'end')
+        while not _test(token):
+            procedure_tokens.append(token)
+            try:
+                token = tokens.popleft()
+            except IndexError:
+                raise errors.ExpectedEndError("Expected END to complete procedure `{}`.".format(procedure_name))
+        procedure = LogoProcedure.make_procedure(
+            name=procedure_name,
+            required_inputs=required_inputs,
+            optional_inputs=optional_inputs,
+            rest_input=rest_input,
+            default_arity=default_arity,
+            tokens=procedure_tokens)
+        logo.procedures[procedure_name.lower()] = procedure 
+    finally:
+        scope_stack.pop()
 
 def process_towards(logo, pos):
     """

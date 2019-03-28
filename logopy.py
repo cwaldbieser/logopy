@@ -460,7 +460,16 @@ class LogoInterpreter:
             else:
                 varname, default_value = vardef
                 if value is None:
-                    value = default_value
+                    if default_value != ':' and hasattr(default_value, 'startswith') and default_value.startswith(':'):
+                        name = default_value[1:]
+                        for a_scope in reversed(scope_stack):
+                            if name in a_scope:
+                                value = a_scope[name]
+                                break
+                        if value is None:
+                            raise errors.LogoError("Default parameter `{}` could not find `:{}` in any scope.".format(varname, name)) 
+                    else:
+                        value = default_value
                 if value is None:
                     raise errors.LogoError("Must have a value for formal parameter `{}` in procedure `{}`.".format(varname, proc.name))
                 scope[varname] = value
