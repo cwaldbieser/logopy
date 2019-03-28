@@ -582,7 +582,8 @@ class SVGTurtle:
         txt_obj['fill'] = self._pencolor
         txt_obj['text-anchor'] = self._text_alignments[align]
         font_face, font_size, font_weight = font
-        txt_obj['style'] = "font-size:{}pt;font-family:{};font-weight:{};".format(font_size, font_face, font_weight)
+        txt_obj['style'] = "font-family:{};font-weight:{};".format(font_face, font_weight)
+        txt_obj['font-size'] = "{}pt".format(font_size)
         self._components.append(txt_obj)
 
     def rotate_coords_(self, cx, cy, x, y, theta):
