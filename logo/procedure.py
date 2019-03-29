@@ -226,6 +226,7 @@ def create_primitives_map():
     m['pots'] = make_primitive("pots", [], [], None, 0, process_pots)
     m['pu'] = m['penup']
     m['pick'] = make_primitive("pick", ['list'], [], None, 1, process_pick)
+    m['polygon'] = make_primitive("polygon", ['n', 'radius'], [('clockwise', 'true'), ('sides', ':n')], None, 2, process_polygon)
     m['pop'] = make_primitive("pop", ['stackname'], [], None, 1, process_pop)
     m['pos'] = make_primitive("pos", [], [], None, 0, process_pos)
     m['power'] = make_primitive("power", ['num1', 'num2'], [], None, 2, process_power)
@@ -1523,6 +1524,37 @@ def process_pick(logo, lst):
     if len(lst) == 0:
         raise errors.LogoError("PICK does not like `{}` as input.".format(lst))
     return random.choice(lst)
+
+def process_polygon(logo, n, radius, clockwise='true', sides=None):
+    """
+    The POLYGON turtle command.
+    Used for creating regular polygon shapes.
+    The center is radius units left of the turtle.
+    The first vertex will be placed at the turtle's current position.
+    
+    :param:`n` - The type of polygon-- 3=triangle, 4=square, 5=pentagon, N=N-gon.
+    :param:`clockwise` - true/false.  Determines direction of drawing.
+    :param:`sides` - If not specified, will be `n`.  The number of sides that
+        will actually be drawn.
+    """
+    turtle = logo.turtle
+    try:
+        n = int(n)
+    except (TypeError, ValueError) as ex:
+        raise errors.LogoError("POLYGON expects an integer, `n`, but received `{}` instead.".format(n))
+    try:
+        radius = float(radius)
+    except (TypeError, ValueError) as ex:
+        raise errors.LogoError("POLYGON expects a number for `radius`, but received `{}` instead.".format(n))
+    if sides is None:
+        sides = n
+    if n == sides:
+        degrees = 360
+    else:
+        degrees = (360 / n) * sides
+    if _is_true(clockwise):
+        degrees = -degrees
+    turtle.circle(radius, degrees, sides)
 
 def process_pop(logo, stackname):
     """

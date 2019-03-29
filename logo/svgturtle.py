@@ -379,7 +379,7 @@ class SVGTurtle:
         self._heading = self.home_heading
 
     def home(self):
-        self._pos = (0, 0)
+        self._line_to(0, 0)
         self._heading = self.home_heading
 
     def pencolor(self, *args):
@@ -518,7 +518,7 @@ class SVGTurtle:
         else:
             self._speed = num
 
-    def circle(self, radius, angle):
+    def circle(self, radius, angle, steps=None):
         """
         The center of the circle with be `radius` units to 90 degrees left of
         the turtle's current heading.
@@ -530,28 +530,13 @@ class SVGTurtle:
         ycenter = y + math.sin(deg2rad(theta)) * radius
         self._adjust_bounds(xcenter - radius, ycenter - radius)
         self._adjust_bounds(xcenter + radius, ycenter + radius)
-        if angle != 0 and (angle % 360 == 0):
+        if steps is None and angle != 0 and (angle % 360 == 0):
             component = self.screen.drawing.circle((ycenter, xcenter), radius)
+        elif steps is None:
+            component = self.circle_arc_(radius, angle, theta, xcenter, ycenter)
         else:
-            rx = radius
-            ry = radius
-            xrot = 0
-            if abs(angle) > 180.0:
-                large_arc = 1
-            else:
-                large_arc = 0
-            if angle < 0:
-                sweep_flag = 1
-            else:
-                sweep_flag = 0
-            theta = (theta - 180 + angle)
-            xdest = xcenter + math.cos(deg2rad(theta)) * radius
-            ydest = ycenter + math.sin(deg2rad(theta)) * radius
-            component = self.screen.drawing.path()
-            command = "M {} {}".format(y, x)
-            component.push(command)
-            command = "A {} {} {} {} {} {} {}".format(abs(radius), abs(radius), xrot, large_arc, sweep_flag, ydest, xdest)
-            component.push(command)
+            self.regular_polygon_(radius, steps, angle, xcenter, ycenter)
+            return
         component['transform'] = 'rotate(-90)'
         component['stroke'] = self._pencolor
         component['stroke-width'] = self._pensize
@@ -560,6 +545,53 @@ class SVGTurtle:
             self._hole_components.append(component)
         elif self._fill_mode == 'fill':
             self._filled_components.append(component)
+
+    def regular_polygon_(self, radius, sides, angle, xcenter, ycenter):
+        """
+        Add the coordinates of a regular polygon (or segments of it)
+        to the primary component.
+        """
+        heading = self._heading 
+        step_angle = angle / sides
+        angle = abs(angle)
+        alpha = heading - 90
+        angle_offset = 0
+        for n in range(sides + 1):
+            angle_offset = step_angle * n
+            theta = deg2rad(alpha + angle_offset)
+            x = xcenter + radius * math.cos(theta)
+            y = ycenter + radius * math.sin(theta)
+            self._line_to(x, y)
+            if abs(angle_offset) >= angle:
+                break
+        if angle == 360:
+            polyline = self._get_current_polyline() 
+            polyline['stroke-linecap'] = 'round'
+
+    def circle_arc_(self, radius, angle, theta, xcenter, ycenter):
+        """
+        Create a circular arc component and return it.
+        """
+        rx = radius
+        ry = radius
+        xrot = 0
+        if abs(angle) > 180.0:
+            large_arc = 1
+        else:
+            large_arc = 0
+        if angle < 0:
+            sweep_flag = 1
+        else:
+            sweep_flag = 0
+        theta = (theta - 180 + angle)
+        xdest = xcenter + math.cos(deg2rad(theta)) * radius
+        ydest = ycenter + math.sin(deg2rad(theta)) * radius
+        component = self.screen.drawing.path()
+        command = "M {} {}".format(y, x)
+        component.push(command)
+        command = "A {} {} {} {} {} {} {}".format(abs(radius), abs(radius), xrot, large_arc, sweep_flag, ydest, xdest)
+        component.push(command)
+        return component
 
     def setundobuffer(self, num):
         pass
