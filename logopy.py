@@ -49,6 +49,8 @@ class DeferredTKTurtleEnv:
         Create a turtle.
         """
         turtle = gui.turtle.RawTurtle(self.screen)
+        turtle.ellipse = gui.ext_ellipse.__get__(turtle)
+        turtle.backend = self
         turtle.pencolor("white")
         return turtle 
 

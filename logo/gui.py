@@ -1,6 +1,8 @@
 
 import collections
+import functools
 import io
+import math
 from tkinter import *
 from tkinter.scrolledtext import ScrolledText
 import turtle
@@ -193,3 +195,64 @@ class TurtleGui:
         self._command_hist_idx = None
         return result
 
+
+def ext_ellipse(self, major, minor, angle=360, clockwise=True):
+    """
+    Extension method added to turtle instance.
+    """
+    backend = self.backend
+    orig_heading = self.heading()
+    theta = backend.cartesian_heading(orig_heading)
+    orig_pos = self.pos()
+    i = orig_pos[0]
+    j = orig_pos[1]
+    angle_count = int(angle)
+    pos_fn = lambda frm, to, count, i: (to * i + frm * (count - i - 1)) / (count - 1)
+    if clockwise:
+        start_angle = 90
+        p = functools.partial(pos_fn, start_angle, start_angle - angle + 1, angle_count)
+        angles = list(map(p, range(angle_count)))
+    else:
+        start_angle = -90
+        p = functools.partial(pos_fn, start_angle, start_angle + angle - 1, angle_count)
+        angles = list(map(p, range(angle_count)))
+    half_major = major / 2
+    half_minor = minor / 2
+    coords = [rotate_coords(0, 0, half_major * math.cos(deg2rad(alpha)), half_minor * math.sin(deg2rad(alpha)), theta) for alpha in angles]
+    if not clockwise:
+        xsign = -1
+        ysign = 1
+    else:
+        xsign = 1
+        ysign = -1
+    i = half_minor * math.sin(deg2rad(theta)) * xsign + i
+    j = half_minor * math.cos(deg2rad(theta)) * ysign + j 
+    coords = [(i + x, j + y) for x, y in coords]
+    self.pu()
+    coord = coords[0]
+    self.setpos(*coord)
+    self.pd()
+    for x, y in coords:
+        self.setpos(x, y)
+
+def deg2rad(degrees):
+    """
+    Convert degrees to radians.
+    """
+    return degrees * (math.pi / 180.0)
+
+def rotate_coords(cx, cy, x, y, theta):
+    """
+    Rotate coordinate (x, y) about (cx, cy) by angle theta in degrees.
+    Return the resulting (xrot, yrot)
+    """
+    theta = deg2rad(theta)
+    cos_theta = math.cos(theta)
+    sin_theta = math.sin(theta)
+    x0 = x - cx
+    y0 = y - cy
+    xnew = x0 * cos_theta - y0 * sin_theta
+    ynew = x0 * sin_theta + y0 * cos_theta
+    xnew += cx
+    ynew += cy
+    return (xnew, ynew)

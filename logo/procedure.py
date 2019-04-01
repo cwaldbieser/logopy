@@ -153,6 +153,7 @@ def create_primitives_map():
     m['equalp'] = make_primitive("equalp", ['thing1', 'thing2'], [], None, 2, process_equalp)
     m['equal?'] = m['equalp'] 
     m['exp'] = make_primitive("exp", ['num'], [], None, 1, process_exp)
+    m['ext.ellipse'] = make_primitive("ext.ellipse", ['major', 'minor'], [('angle', 360), ('clockwise', 'true')], None, 2, process_ext_ellipse)
     m['ext.unfilled'] = make_primitive("ext.unfilled", ['instructions'], [], 'args', 1, process_ext_unfilled)
     m['filter'] = make_primitive("filter", ['tftemplate', 'data'], [], 'args', 2, process_filter)
     m['filled'] = make_primitive("filled", ['color', 'instructions'], [], 'args', 2, process_filled)
@@ -668,6 +669,21 @@ def process_exp(logo, num):
         return math.exp(num)
     except ValueError:
         raise errors.LogoError("EXP expected a number, but received `{}` instead.".format(num))
+
+def process_ext_ellipse(logo, major, minor, angle=360, clockwise="true"):
+    """
+    The EXT.ELLIPSE turtle command.
+    """
+    trtl = logo.turtle
+    if not hasattr(trtl, 'ellipse'):
+        return
+    if not _is_number(major):
+        raise errors.LogoError("EXT.ELLIPSE expects `major` to be a number, but received `{}`.".format(major)) 
+    if not _is_number(minor):
+        raise errors.LogoError("EXT.ELLIPSE expects `minor` to be a number, but received `{}`.".format(minor)) 
+    if not _is_number(angle):
+        raise errors.LogoError("EXT.ELLIPSE expects `angle` to be a number, but received `{}`.".format(angle)) 
+    trtl.ellipse(major, minor, angle, _is_true(clockwise))
 
 def process_ext_unfilled(logo, instructions):
     """
