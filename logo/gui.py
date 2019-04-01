@@ -7,6 +7,7 @@ from tkinter import *
 from tkinter.scrolledtext import ScrolledText
 import turtle
 from logo import errors
+from logo.trig import deg2rad, rotate_coords
 import attr
 import parsley
 
@@ -235,24 +236,3 @@ def ext_ellipse(self, major, minor, angle=360, clockwise=True):
     for x, y in coords:
         self.setpos(x, y)
 
-def deg2rad(degrees):
-    """
-    Convert degrees to radians.
-    """
-    return degrees * (math.pi / 180.0)
-
-def rotate_coords(cx, cy, x, y, theta):
-    """
-    Rotate coordinate (x, y) about (cx, cy) by angle theta in degrees.
-    Return the resulting (xrot, yrot)
-    """
-    theta = deg2rad(theta)
-    cos_theta = math.cos(theta)
-    sin_theta = math.sin(theta)
-    x0 = x - cx
-    y0 = y - cy
-    xnew = x0 * cos_theta - y0 * sin_theta
-    ynew = x0 * sin_theta + y0 * cos_theta
-    xnew += cx
-    ynew += cy
-    return (xnew, ynew)

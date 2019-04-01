@@ -4,6 +4,7 @@ import os
 import shutil
 import sys
 import uuid
+from logo.trig import (deg2rad, rad2deg, calc_distance, rotate_coords)
 import attr
 import jinja2
 import svgwrite
@@ -609,7 +610,7 @@ class SVGTurtle:
         if move:
             raise errors.LogoError("Moving the turtle to the end of the text is not supported by the SVG Turtle back end.")
         x, y = self._pos
-        x, y = self.rotate_coords_(0, 0, y, x, -90)
+        x, y = rotate_coords(0, 0, y, x, -90)
         txt_obj = self.screen.drawing.text(text, insert=(x, y))
         txt_obj['fill'] = self._pencolor
         txt_obj['text-anchor'] = self._text_alignments[align]
@@ -618,43 +619,6 @@ class SVGTurtle:
         txt_obj['font-size'] = "{}pt".format(font_size)
         self._components.append(txt_obj)
 
-    def rotate_coords_(self, cx, cy, x, y, theta):
-        """
-        Rotate coordinate (x, y) about (cx, cy) by angle theta in degrees.
-        Return the resulting (xrot, yrot)
-        """
-        theta = deg2rad(theta)
-        cos_theta = math.cos(theta)
-        sin_theta = math.sin(theta)
-        x0 = x - cx
-        y0 = y - cy
-        xnew = x0 * cos_theta - y0 * sin_theta
-        ynew = x0 * sin_theta + y0 * cos_theta
-        xnew += cx
-        ynew += cy
-        return (xnew, ynew)
-
-def deg2rad(degrees):
-    """
-    Convert degrees to radians.
-    """
-    return degrees * (math.pi / 180.0)
-
-def rad2deg(radians):
-    """
-    Convert radians to degrees.
-    """
-    return radians * (180.0 / math.pi)
-
-def calc_distance(theta, dist):
-    """
-    Calculate x and y offsets for moving forward `dist` units at heading `theta`.
-    `theta` is in degrees.
-    """
-    rad = deg2rad(theta)
-    x = dist * math.cos(rad)
-    y = dist * math.sin(rad)
-    return (x, y) 
 
 def hexpair(x): 
     """
