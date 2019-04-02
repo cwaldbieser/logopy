@@ -573,6 +573,7 @@ class SVGTurtle:
         """
         Create a circular arc component and return it.
         """
+        x, y = self._pos
         rx = radius
         ry = radius
         xrot = 0
@@ -591,6 +592,63 @@ class SVGTurtle:
         command = "M {} {}".format(y, x)
         component.push(command)
         command = "A {} {} {} {} {} {} {}".format(abs(radius), abs(radius), xrot, large_arc, sweep_flag, ydest, xdest)
+        component.push(command)
+        return component
+
+    def ellipse(self, major, minor, angle=360, clockwise=True):
+        """
+        Plot an ellipse or an arc of an ellipse with axes of length `major`
+        and `minor`.  The arc will start at the turtle current position.
+        The final position will be located `angle` degrees from the line that 
+        joins the starting position and the center of the ellipse in a direction
+        determined by `clockwise`.
+        """
+        x, y = self._pos
+        rx = major / 2
+        ry = minor / 2
+        theta = (self._heading - 90) % 360
+        xcenter = x + math.cos(deg2rad(theta)) * rx
+        ycenter = y + math.sin(deg2rad(theta)) * ry
+        #xcenter, ycenter = rotate_coords(0, 0, xcenter, ycenter, 90)
+        ps = self._pensize
+        self._adjust_bounds(ycenter - ry - ps, xcenter - rx - ps)
+        self._adjust_bounds(ycenter + ry + ps, xcenter + rx + ps)
+        if angle != 0 and (angle % 360 == 0):
+            component = self.screen.drawing.ellipse((ycenter, xcenter), (ry, rx))
+        else:
+            component = self.elliptic_arc_(rx, ry, angle, theta, xcenter, ycenter)
+        #component['transform'] = 'rotate(-90)'
+        component['stroke'] = self._pencolor
+        component['stroke-width'] = self._pensize
+        component['fill-opacity'] = 0
+        component['class'] = 'hole'
+        self._components.append(component)
+        if self._fill_mode == 'unfill':
+            self._hole_components.append(component)
+        elif self._fill_mode == 'fill':
+            self._filled_components.append(component)
+
+    def elliptic_arc_(self, rx, ry, angle, theta, xcenter, ycenter):
+        """
+        Plot an elliptic arc.
+        """
+        x, y = self._pos
+        xrot = 0
+        if abs(angle) > 180.0:
+            large_arc = 1
+        else:
+            large_arc = 0
+        if angle < 0:
+            sweep_flag = 1
+        else:
+            sweep_flag = 0
+        theta = (theta - 180 + angle)
+        xdest = xcenter + math.cos(deg2rad(theta)) * rx
+        ydest = ycenter + math.sin(deg2rad(theta)) * ry
+        component = self.screen.drawing.path()
+        command = "M {} {}".format(y, x)
+        component.push(command)
+        command = "A {} {} {} {} {} {} {}".format(abs(rx), abs(ry), xrot, large_arc, sweep_flag, ydest, xdest)
         component.push(command)
         return component
 
