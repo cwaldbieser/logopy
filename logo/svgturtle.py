@@ -607,17 +607,40 @@ class SVGTurtle:
         rx = major / 2
         ry = minor / 2
         theta = (self._heading - 90) % 360
-        xcenter = x + math.cos(deg2rad(theta)) * rx
-        ycenter = y + math.sin(deg2rad(theta)) * ry
-        #xcenter, ycenter = rotate_coords(0, 0, xcenter, ycenter, 90)
+        print("THETA", theta)
+        cx = y + math.sin(deg2rad(theta)) * rx
+        cy = x + math.cos(deg2rad(theta)) * ry
+        #cx, cy = rotate_coords(0, 0, xcenter, ycenter, 90)
         ps = self._pensize
-        self._adjust_bounds(ycenter - ry - ps, xcenter - rx - ps)
-        self._adjust_bounds(ycenter + ry + ps, xcenter + rx + ps)
+        #self._adjust_bounds(y - ry - ps, x - rx - ps)
+        #self._adjust_bounds(y + ry + ps, x + rx + ps)
+        angles = [theta, theta + 90, theta + 180, theta + 270]
+        half_ps = ps / 2
+        for alpha in angles:
+            s = math.sin(deg2rad(alpha))
+            c = math.cos(deg2rad(alpha))
+            px = cx + s * rx
+            py = cy + c * ry
+            if s < 0:
+                px -= half_ps
+            else:
+                px += half_ps
+            if c < 0:
+                py -= half_ps
+            else:
+                py += half_ps
+            py, px = rotate_coords(0, 0, py, px, 90)
+            print("ROTATED BOUND", (px, py))
+            self._adjust_bounds(px, py)
         if angle != 0 and (angle % 360 == 0):
-            component = self.screen.drawing.ellipse((ycenter, xcenter), (ry, rx))
+            print("X,Y", (x, y), "CX,CY", (cx, cy), "RX,RY", (rx, ry))
+            print("ROTATED X,Y", rotate_coords(0, 0, x, y, 90))
+            component = self.screen.drawing.ellipse((cx, cy), (rx, ry))
         else:
-            component = self.elliptic_arc_(rx, ry, angle, theta, xcenter, ycenter)
-        #component['transform'] = 'rotate(-90)'
+            component = self.elliptic_arc_(rx, ry, angle, theta, cx, cy)
+        #heading = self._heading
+        #component['transform'] = 'rotate({} {} {})'.format(heading, ycenter, xcenter)
+        component['transform'] = 'rotate(-90)'
         component['stroke'] = self._pencolor
         component['stroke-width'] = self._pensize
         component['fill-opacity'] = 0
