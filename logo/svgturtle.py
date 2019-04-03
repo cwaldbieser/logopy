@@ -547,7 +547,7 @@ class SVGTurtle:
         elif self._fill_mode == 'fill':
             self._filled_components.append(component)
         else:
-            component['class'] = 'hole'
+            component['class'] = 'no-fill'
             component['fill-opacity'] = 0
 
     def regular_polygon_(self, radius, sides, angle, xcenter, ycenter):
@@ -633,57 +633,7 @@ class SVGTurtle:
         component['stroke'] = self._pencolor
         component['stroke-width'] = self._pensize
         component['fill-opacity'] = 0
-        component['class'] = 'hole'
-        self._components.append(component)
-        if self._fill_mode == 'unfill':
-            self._hole_components.append(component)
-        elif self._fill_mode == 'fill':
-            self._filled_components.append(component)
-
-    def phony(self):
-        x, y = self._pos
-        heading = self._heading
-        rx = major / 2
-        ry = minor / 2
-        theta = (heading - 90) % 360
-        print("THETA", theta)
-        cx = y + math.sin(deg2rad(theta)) * rx
-        cy = x + math.cos(deg2rad(theta)) * ry
-        #cx, cy = rotate_coords(0, 0, xcenter, ycenter, 90)
-        ps = self._pensize
-        #self._adjust_bounds(y - ry - ps, x - rx - ps)
-        #self._adjust_bounds(y + ry + ps, x + rx + ps)
-        angles = [theta, theta + 90, theta + 180, theta + 270]
-        half_ps = ps / 2
-        for alpha in angles:
-            s = math.sin(deg2rad(alpha))
-            c = math.cos(deg2rad(alpha))
-            px = cx + s * rx
-            py = cy + c * ry
-            if s < 0:
-                px -= half_ps
-            else:
-                px += half_ps
-            if c < 0:
-                py -= half_ps
-            else:
-                py += half_ps
-            #py, px = rotate_coords(0, 0, py, px, 90)
-            py, px = rotate_coords(0, 0, py, px, 90 - (heading - 90))
-            print("ROTATED BOUND", (px, py))
-            self._adjust_bounds(px, py)
-        if angle != 0 and (angle % 360 == 0):
-            print("X,Y", (x, y), "CX,CY", (cx, cy), "RX,RY", (rx, ry))
-            print("ROTATED X,Y", rotate_coords(0, 0, x, y, 90))
-            component = self.screen.drawing.ellipse((cx, cy), (rx, ry))
-        else:
-            component = self.elliptic_arc_(rx, ry, angle, theta, cx, cy)
-        component['transform'] = 'rotate({})'.format(-theta)
-        #component['transform'] = 'rotate(-90)'
-        component['stroke'] = self._pencolor
-        component['stroke-width'] = self._pensize
-        component['fill-opacity'] = 0
-        component['class'] = 'hole'
+        component['class'] = 'no-fill'
         self._components.append(component)
         if self._fill_mode == 'unfill':
             self._hole_components.append(component)
