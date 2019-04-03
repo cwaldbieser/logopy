@@ -546,6 +546,9 @@ class SVGTurtle:
             self._hole_components.append(component)
         elif self._fill_mode == 'fill':
             self._filled_components.append(component)
+        else:
+            component['class'] = 'hole'
+            component['fill-opacity'] = 0
 
     def regular_polygon_(self, radius, sides, angle, xcenter, ycenter):
         """
@@ -604,9 +607,45 @@ class SVGTurtle:
         determined by `clockwise`.
         """
         x, y = self._pos
+        heading = self._heading
         rx = major / 2
         ry = minor / 2
-        theta = (self._heading - 90) % 360
+        # Apply angle theta to current heading to rotate back to 0 degrees.
+        theta = -heading 
+        cx = x
+        cy = y
+        #rot90cx, rot90cy = rotate_coords(0, 0, cx, cy, 90)
+        ps = self._pensize
+        self._adjust_bounds(-350, -350)
+        self._adjust_bounds(350, 350)
+        if angle != 0 and (angle % 360 == 0):
+            component = self.screen.drawing.ellipse((cy, cx), (rx, ry))
+        else:
+            component = self.elliptic_arc_(rx, ry, angle, theta, cx, cy)
+        # Rotate 90 degrees about origin to get back to a standard cartesian coordinate system.
+        # Next rotate the figure 90 - heading degrees to orient it correctly in the new system.
+        # Finally, translate the center so `cy` is at the center of the ellipse.
+        # The center was initially set to the current position.  It is actually to the right
+        # in the cartesian system, or down (increasing y-axis) in the SVG coordinate system.
+        # That is why the translation is by `ry` units in the y-direction.
+        transform = "rotate(-90) rotate({} {} {}) translate(0 {})".format(90 - heading, cy, cx, ry)
+        component['transform'] = transform
+        component['stroke'] = self._pencolor
+        component['stroke-width'] = self._pensize
+        component['fill-opacity'] = 0
+        component['class'] = 'hole'
+        self._components.append(component)
+        if self._fill_mode == 'unfill':
+            self._hole_components.append(component)
+        elif self._fill_mode == 'fill':
+            self._filled_components.append(component)
+
+    def phony(self):
+        x, y = self._pos
+        heading = self._heading
+        rx = major / 2
+        ry = minor / 2
+        theta = (heading - 90) % 360
         print("THETA", theta)
         cx = y + math.sin(deg2rad(theta)) * rx
         cy = x + math.cos(deg2rad(theta)) * ry
@@ -629,7 +668,8 @@ class SVGTurtle:
                 py -= half_ps
             else:
                 py += half_ps
-            py, px = rotate_coords(0, 0, py, px, 90)
+            #py, px = rotate_coords(0, 0, py, px, 90)
+            py, px = rotate_coords(0, 0, py, px, 90 - (heading - 90))
             print("ROTATED BOUND", (px, py))
             self._adjust_bounds(px, py)
         if angle != 0 and (angle % 360 == 0):
@@ -638,9 +678,8 @@ class SVGTurtle:
             component = self.screen.drawing.ellipse((cx, cy), (rx, ry))
         else:
             component = self.elliptic_arc_(rx, ry, angle, theta, cx, cy)
-        #heading = self._heading
-        #component['transform'] = 'rotate({} {} {})'.format(heading, ycenter, xcenter)
-        component['transform'] = 'rotate(-90)'
+        component['transform'] = 'rotate({})'.format(-theta)
+        #component['transform'] = 'rotate(-90)'
         component['stroke'] = self._pencolor
         component['stroke-width'] = self._pensize
         component['fill-opacity'] = 0
