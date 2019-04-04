@@ -613,8 +613,6 @@ class SVGTurtle:
         cx = x
         cy = y
         ps = self._pensize
-        self._adjust_bounds(-350, -350)
-        self._adjust_bounds(350, 350)
         if angle != 0 and (angle % 360 == 0):
             component = self.screen.drawing.ellipse((cy, cx), (rx, ry))
         else:
@@ -636,6 +634,16 @@ class SVGTurtle:
             self._hole_components.append(component)
         elif self._fill_mode == 'fill':
             self._filled_components.append(component)
+        max_radius = max(abs(rx), abs(ry))
+        theta = (heading - 90) % 360
+        theta_rad = deg2rad(theta)
+        cos = math.cos(theta_rad)
+        sin = math.sin(theta_rad)
+        xrot, yrot = rotate_coords(0, 0, y, x, -90)
+        cx2 = xrot + rx * cos
+        cy2 = yrot + ry * sin
+        self._adjust_bounds(cx2 - max_radius, cy2 - max_radius)
+        self._adjust_bounds(cx2 + max_radius, cy2 + max_radius)
 
     def elliptic_arc_(self, rx, ry, angle, cx, cy, clockwise):
         """
