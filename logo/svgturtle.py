@@ -610,18 +610,15 @@ class SVGTurtle:
         heading = self._heading
         rx = major / 2
         ry = minor / 2
-        # Apply angle theta to current heading to rotate back to 0 degrees.
-        theta = -heading 
         cx = x
         cy = y
-        #rot90cx, rot90cy = rotate_coords(0, 0, cx, cy, 90)
         ps = self._pensize
         self._adjust_bounds(-350, -350)
         self._adjust_bounds(350, 350)
         if angle != 0 and (angle % 360 == 0):
             component = self.screen.drawing.ellipse((cy, cx), (rx, ry))
         else:
-            component = self.elliptic_arc_(rx, ry, angle, theta, cx, cy)
+            component = self.elliptic_arc_(rx, ry, angle, cx, cy, clockwise)
         # Rotate 90 degrees about origin to get back to a standard cartesian coordinate system.
         # Next rotate the figure 90 - heading degrees to orient it correctly in the new system.
         # Finally, translate the center so `cy` is at the center of the ellipse.
@@ -640,25 +637,26 @@ class SVGTurtle:
         elif self._fill_mode == 'fill':
             self._filled_components.append(component)
 
-    def elliptic_arc_(self, rx, ry, angle, theta, xcenter, ycenter):
+    def elliptic_arc_(self, rx, ry, angle, cx, cy, clockwise):
         """
         Plot an elliptic arc.
         """
         x, y = self._pos
         xrot = 0
+        angle = angle % 360
         if abs(angle) > 180.0:
             large_arc = 1
         else:
             large_arc = 0
-        if angle < 0:
-            sweep_flag = 1
-        else:
+        if not clockwise:
             sweep_flag = 0
-        theta = (theta - 180 + angle)
-        xdest = xcenter + math.cos(deg2rad(theta)) * rx
-        ydest = ycenter + math.sin(deg2rad(theta)) * ry
+        else:
+            sweep_flag = 1
+        xstart, ystart = x - ry, y
+        xdest = cx + ry * math.cos(deg2rad(angle))
+        ydest = cy + rx * math.sin(deg2rad(angle))
         component = self.screen.drawing.path()
-        command = "M {} {}".format(y, x)
+        command = "M {} {}".format(ystart, xstart)
         component.push(command)
         command = "A {} {} {} {} {} {} {}".format(abs(rx), abs(ry), xrot, large_arc, sweep_flag, ydest, xdest)
         component.push(command)
