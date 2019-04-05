@@ -225,18 +225,23 @@ class SVGTurtle:
         Write SVG output to file object `fout`.
         """
         drawing = self.screen.drawing
+        group = drawing.g()
+        group['transform'] = "matrix(0 1 1 0 0 0) rotate(90)"
+        drawing.add(group)
         xmin, xmax, ymin, ymax = self._bounds
         w = xmax - xmin
         h = ymax - ymin
         vb = "{} {} {} {}".format(xmin, ymin, w, h)
-        drawing['width'] = h
-        drawing['height'] = w
+        #drawing['width'] = h
+        #drawing['height'] = w
+        drawing['width'] = '100%'
+        drawing['height'] = '100%'
         drawing['viewBox'] = vb
         components = self._components 
         for component in components:
             if hasattr(component, 'points') and len(component.points) == 0:
                 continue
-            drawing.add(component)
+            group.add(component)
         drawing.write(fout)
 
     def get_bounds(self):
@@ -283,9 +288,9 @@ class SVGTurtle:
         if fill_mode != 'off':
             fill_container = self._filled_components[0]
             hole_container = self._hole_components[0]
-            fill_container.points.append((y1, x1))
+            fill_container.points.append((x1, y1))
             if fill_mode == 'unfill':
-                hole_container.points.append((y1, x1)) 
+                hole_container.points.append((x1, y1)) 
         if self._pendown:
             self._adjust_bounds(x0 + self._pensize * 0.5, -y0 + self._pensize * 0.5)
             self._adjust_bounds(x0 - self._pensize * 0.5, -y0 - self._pensize * 0.5)
@@ -293,7 +298,7 @@ class SVGTurtle:
             self._adjust_bounds(x1 - self._pensize * 0.5, -y1 - self._pensize * 0.5)
             drawing = self.screen.drawing
             polyline = self._get_current_polyline()
-            polyline.points.append((y1, x1))
+            polyline.points.append((x1, y1))
         else:
             self._current_polyline = None
         self._pos = (x1, y1)
@@ -305,14 +310,13 @@ class SVGTurtle:
         polyline = self._current_polyline
         if polyline is None:
             polyline = self.screen.drawing.polyline()
-            polyline['transform'] = "rotate(-90)"
             polyline['stroke'] = self._pencolor
             polyline['stroke-width'] = self._pensize
             polyline['stroke-linecap'] = 'square'
             polyline['class'] = 'hole'
             polyline['fill-opacity'] = 0
             x, y = self._pos
-            polyline.points.append((y, x))
+            polyline.points.append((x, y))
             self._components.append(polyline)
             self._current_polyline = polyline
         return polyline
@@ -427,11 +431,11 @@ class SVGTurtle:
         self._filled_components = filled_components = []
         self._hole_components = hole_components = []
         fill_container = self.screen.drawing.polygon()
-        fill_container['transform'] = 'rotate(-90)'
+        #fill_container['transform'] = 'rotate(-90)'
         filled_components.append(fill_container)
         self._components.append(fill_container)
         hole_polygon = self.screen.drawing.polygon()
-        hole_polygon['transform'] = 'rotate(-90)'
+        #hole_polygon['transform'] = 'rotate(-90)'
         hole_components.append(hole_polygon)
 
     def end_fill(self):
@@ -463,7 +467,7 @@ class SVGTurtle:
                 component['fill-opacity'] = 1
                 component['fill-rule'] = 'evenodd'
                 component['mask'] = "url(#{})".format(mask_id)
-                component['transform'] = 'rotate(-90)'
+                #component['transform'] = 'rotate(-90)'
             for component in hole_components:
                 if hasattr(component, 'points') and len(component.points) == 0:
                     continue
@@ -473,7 +477,7 @@ class SVGTurtle:
                     del deny_mask.attribs['transform']
                 component['class'] = 'hole'
                 component['fill-opacity'] = 0
-                component['transform'] = 'rotate(-90)'
+                #component['transform'] = 'rotate(-90)'
                 mask.add(deny_mask)
         else:
             for component in filled_components:
@@ -482,7 +486,7 @@ class SVGTurtle:
                 component['fill'] = self._fillcolor
                 component['fill-opacity'] = 1
                 component['fill-rule'] = 'evenodd'
-                component['transform'] = 'rotate(-90)'
+                #component['transform'] = 'rotate(-90)'
 
     def begin_unfilled(self):
         """
@@ -532,13 +536,13 @@ class SVGTurtle:
         self._adjust_bounds(xcenter - radius, ycenter - radius)
         self._adjust_bounds(xcenter + radius, ycenter + radius)
         if steps is None and angle != 0 and (angle % 360 == 0):
-            component = self.screen.drawing.circle((ycenter, xcenter), radius)
+            component = self.screen.drawing.circle((xcenter, ycenter), radius)
         elif steps is None:
             component = self.circle_arc_(radius, angle, theta, xcenter, ycenter)
         else:
             self.regular_polygon_(radius, steps, angle, xcenter, ycenter)
             return
-        component['transform'] = 'rotate(-90)'
+        #component['transform'] = 'rotate(-90)'
         component['stroke'] = self._pencolor
         component['stroke-width'] = self._pensize
         self._components.append(component)
@@ -558,7 +562,7 @@ class SVGTurtle:
         heading = self._heading 
         step_angle = angle / sides
         angle = abs(angle)
-        alpha = heading - 90
+        alpha = heading
         angle_offset = 0
         for n in range(sides + 1):
             angle_offset = step_angle * n
@@ -592,9 +596,9 @@ class SVGTurtle:
         xdest = xcenter + math.cos(deg2rad(theta)) * radius
         ydest = ycenter + math.sin(deg2rad(theta)) * radius
         component = self.screen.drawing.path()
-        command = "M {} {}".format(y, x)
+        command = "M {} {}".format(x, y)
         component.push(command)
-        command = "A {} {} {} {} {} {} {}".format(abs(radius), abs(radius), xrot, large_arc, sweep_flag, ydest, xdest)
+        command = "A {} {} {} {} {} {} {}".format(abs(radius), abs(radius), xrot, large_arc, sweep_flag, xdest, ydest)
         component.push(command)
         return component
 
@@ -613,17 +617,44 @@ class SVGTurtle:
         cx = x
         cy = y
         ps = self._pensize
+
+        def svg2cartesian(x, y):
+            return rotate_coords(0, 0, y, x, 90)
+
+        def cartesian2svg(x, y):
+            return rotate_coords(0, 0, y, x, -90)
+
+        def round(x):
+            return int(x * 10) / 10
+
         if angle != 0 and (angle % 360 == 0):
-            component = self.screen.drawing.ellipse((cy, cx), (rx, ry))
+            component = self.screen.drawing.ellipse((cx, cy), (rx, ry))
         else:
             component = self.elliptic_arc_(rx, ry, angle, cx, cy, clockwise)
+            cxsvg = y
+            cysvg = x + ry
+            cxcart, cycart = svg2cartesian(cxsvg, cysvg)
+            print("CXCART,CYCART", (round(cxcart), round(cycart)))
+            if clockwise:
+                theta = (heading - angle) % 360
+            else:
+                theta = (heading + angle) % 360
+            theta_rad = deg2rad(theta)
+            cost = math.cos(theta_rad)
+            sint = math.sin(theta_rad)
+            xdst_cart = cxcart - cost * ry
+            ydst_cart = cycart - sint * rx
+            xdst_svg, ydst_svg = cartesian2svg(xdst_cart, ydst_cart)
+            print("XDST_SVG,YDST_SVG", (round(xdst_svg), round(ydst_svg)))
+            self._line_to(-100, 300)
         # Rotate 90 degrees about origin to get back to a standard cartesian coordinate system.
         # Next rotate the figure 90 - heading degrees to orient it correctly in the new system.
         # Finally, translate the center so `cy` is at the center of the ellipse.
         # The center was initially set to the current position.  It is actually to the right
         # in the cartesian system, or down (increasing y-axis) in the SVG coordinate system.
         # That is why the translation is by `ry` units in the y-direction.
-        transform = "rotate(-90) rotate({} {} {}) translate(0 {})".format(90 - heading, cy, cx, ry)
+        #transform = "rotate({} {} {}) translate(0 {})".format(90 - heading, cy, cx, ry)
+        transform = "translate(0 {})".format(ry)
         component['transform'] = transform
         component['stroke'] = self._pencolor
         component['stroke-width'] = self._pensize
@@ -644,6 +675,9 @@ class SVGTurtle:
         cy2 = yrot + ry * sin
         self._adjust_bounds(cx2 - max_radius, cy2 - max_radius)
         self._adjust_bounds(cx2 + max_radius, cy2 + max_radius)
+        self._adjust_bounds(-500, -500)
+        self._adjust_bounds(500, 500)
+
 
     def elliptic_arc_(self, rx, ry, angle, cx, cy, clockwise):
         """
@@ -661,12 +695,16 @@ class SVGTurtle:
         else:
             sweep_flag = 1
         xstart, ystart = x - ry, y
-        xdest = cx + ry * math.cos(deg2rad(angle))
+        if angle > 90:
+            xsign = -1
+        else:
+            xsign = 1
+        xdest = cx + xsign * ry * math.cos(deg2rad(angle))
         ydest = cy + rx * math.sin(deg2rad(angle))
         component = self.screen.drawing.path()
         command = "M {} {}".format(ystart, xstart)
         component.push(command)
-        command = "A {} {} {} {} {} {} {}".format(abs(rx), abs(ry), xrot, large_arc, sweep_flag, ydest, xdest)
+        command = "A {} {} {} {} {} {} {}".format(abs(rx), abs(ry), xrot, large_arc, sweep_flag, xdest, ydest)
         component.push(command)
         return component
 
@@ -693,6 +731,7 @@ class SVGTurtle:
         font_face, font_size, font_weight = font
         txt_obj['style'] = "font-family:{};font-weight:{};".format(font_face, font_weight)
         txt_obj['font-size'] = "{}pt".format(font_size)
+        txt_obj['transform'] = "matrix(0 1 1 0 0 0) rotate(90)"
         self._components.append(txt_obj)
 
 
