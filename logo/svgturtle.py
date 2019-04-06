@@ -614,47 +614,14 @@ class SVGTurtle:
         heading = self._heading
         rx = major / 2
         ry = minor / 2
-        cx = x
-        cy = y
         ps = self._pensize
-
-        def svg2cartesian(x, y):
-            return rotate_coords(0, 0, y, x, 90)
-
-        def cartesian2svg(x, y):
-            return rotate_coords(0, 0, y, x, -90)
-
-        def round(x):
-            return int(x * 10) / 10
-
         if angle != 0 and (angle % 360 == 0):
-            component = self.screen.drawing.ellipse((cx, cy), (rx, ry))
+            component = self.screen.drawing.ellipse((x, y), (rx, ry))
         else:
-            component = self.elliptic_arc_(rx, ry, angle, cx, cy, clockwise)
-            cxsvg = y
-            cysvg = x + ry
-            cxcart, cycart = svg2cartesian(cxsvg, cysvg)
-            print("CXCART,CYCART", (round(cxcart), round(cycart)))
-            if clockwise:
-                theta = (heading - angle) % 360
-            else:
-                theta = (heading + angle) % 360
-            theta_rad = deg2rad(theta)
-            cost = math.cos(theta_rad)
-            sint = math.sin(theta_rad)
-            xdst_cart = cxcart - cost * ry
-            ydst_cart = cycart - sint * rx
-            xdst_svg, ydst_svg = cartesian2svg(xdst_cart, ydst_cart)
-            print("XDST_SVG,YDST_SVG", (round(xdst_svg), round(ydst_svg)))
-            self._line_to(-100, 300)
-        # Rotate 90 degrees about origin to get back to a standard cartesian coordinate system.
-        # Next rotate the figure 90 - heading degrees to orient it correctly in the new system.
-        # Finally, translate the center so `cy` is at the center of the ellipse.
-        # The center was initially set to the current position.  It is actually to the right
-        # in the cartesian system, or down (increasing y-axis) in the SVG coordinate system.
-        # That is why the translation is by `ry` units in the y-direction.
-        #transform = "rotate({} {} {}) translate(0 {})".format(90 - heading, cy, cx, ry)
-        transform = "translate(0 {})".format(ry)
+            component = self.elliptic_arc_(rx, ry, angle, clockwise)
+        # Orientation of ellipse or arc will be 90 degrees off.
+        # Assume current position is center of ellipse, then translate.
+        transform = "rotate(90) translate(0 {})".format(-ry)
         component['transform'] = transform
         component['stroke'] = self._pencolor
         component['stroke-width'] = self._pensize
@@ -665,46 +632,50 @@ class SVGTurtle:
             self._hole_components.append(component)
         elif self._fill_mode == 'fill':
             self._filled_components.append(component)
+        # Compute bounds.
         max_radius = max(abs(rx), abs(ry))
-        theta = (heading - 90) % 360
-        theta_rad = deg2rad(theta)
-        cos = math.cos(theta_rad)
-        sin = math.sin(theta_rad)
-        xrot, yrot = rotate_coords(0, 0, y, x, -90)
-        cx2 = xrot + rx * cos
-        cy2 = yrot + ry * sin
-        self._adjust_bounds(cx2 - max_radius, cy2 - max_radius)
-        self._adjust_bounds(cx2 + max_radius, cy2 + max_radius)
         self._adjust_bounds(-500, -500)
         self._adjust_bounds(500, 500)
 
 
-    def elliptic_arc_(self, rx, ry, angle, cx, cy, clockwise):
+    def elliptic_arc_(self, rx, ry, angle, clockwise):
         """
         Plot an elliptic arc.
         """
-        x, y = self._pos
-        xrot = 0
+        print("RX,RY", (rx,ry), "ANGLE", angle, "CLOCKWISE", clockwise)
+        xrot = 90
         angle = angle % 360
         if abs(angle) > 180.0:
             large_arc = 1
         else:
             large_arc = 0
-        if not clockwise:
+        if clockwise:
             sweep_flag = 0
         else:
             sweep_flag = 1
-        xstart, ystart = x - ry, y
         if angle > 90:
             xsign = -1
         else:
             xsign = 1
-        xdest = cx + xsign * ry * math.cos(deg2rad(angle))
-        ydest = cy + rx * math.sin(deg2rad(angle))
+        cx = 0
+        cy = 0
+        x, y = 0, ry
+        theta = 90 + angle
+        theta_rad = deg2rad(theta)
+        cost = math.cos(theta_rad)
+        sint = math.sin(theta_rad)
+        xd = cx - rx * cost
+        yd = cy - ry * sint 
+        # "M 0 75 A 75 150 90 1 0 -150 0"
+        print("X,Y", (x, y), "CX,CY", (cx,cy), "THETA", theta, "COS(t)", _round1(cost), "SIN(t)", _round1(sint), "XD,YD", (_round1(xd), _round1(yd)))
         component = self.screen.drawing.path()
-        command = "M {} {}".format(ystart, xstart)
+        command = "M {} {}".format(x, y)
+        #command = "M 0 200"
         component.push(command)
-        command = "A {} {} {} {} {} {} {}".format(abs(rx), abs(ry), xrot, large_arc, sweep_flag, xdest, ydest)
+        command = "A {} {} {} {} {} {} {}".format(abs(ry), abs(rx), xrot, large_arc, sweep_flag, xd, yd)
+        print("PROPOSED", command)
+        command = "A 75 150 90 1 0 -150 0"
+        print("ACTUAL  ", command)
         component.push(command)
         return component
 
@@ -746,4 +717,13 @@ def rgb2hex(r, g, b, mode=255):
     Return a hex color suitble for SVG given RGB components.
     """
     return "#{}{}{}".format(hexpair(r), hexpair(g), hexpair(b)) 
+
+def _round1(x):
+    return int(x * 10) / 10
+
+def svg2cartesian(x, y):
+    return rotate_coords(0, 0, y, x, 90)
+
+def cartesian2svg(x, y):
+    return rotate_coords(0, 0, y, x, -90)
 
