@@ -616,12 +616,17 @@ class SVGTurtle:
         ry = minor / 2
         ps = self._pensize
         if angle != 0 and (angle % 360 == 0):
+            print("ELLIPSE X,Y", (x,y))
             component = self.screen.drawing.ellipse((x, y), (rx, ry))
+            alpha = -x
+            beta = -y
         else:
             component = self.elliptic_arc_(rx, ry, angle, clockwise)
+            alpha = 0
+            beta = 0
         # Orientation of ellipse or arc will be 90 degrees off.
         # Assume current position is center of ellipse, then translate.
-        transform = "rotate({}) translate(0 {})".format(heading, -ry)
+        transform = "translate({} {}) rotate({}) translate({} {})".format(x, y, heading, alpha, beta - ry)
         component['transform'] = transform
         component['stroke'] = self._pencolor
         component['stroke-width'] = self._pensize
@@ -653,19 +658,20 @@ class SVGTurtle:
             sweep_flag = 0
         else:
             sweep_flag = 1
-        if angle > 90:
-            xsign = -1
+        if angle <= 90:
+            ysign = -1
         else:
-            xsign = 1
+            ysign = 1
         cx = 0
         cy = 0
         x, y = 0, ry
-        theta = 90 + angle
+        heading = self._heading % 360
+        theta = angle + heading
         theta_rad = deg2rad(theta)
         cost = math.cos(theta_rad)
         sint = math.sin(theta_rad)
         xd = cx - rx * cost
-        yd = cy - ry * sint 
+        yd = cy + ry * sint 
         # "M 0 75 A 75 150 90 1 0 -150 0"
         print("X,Y", (x, y), "CX,CY", (cx,cy), "THETA", theta, "COS(t)", _round1(cost), "SIN(t)", _round1(sint), "XD,YD", (_round1(xd), _round1(yd)))
         component = self.screen.drawing.path()
