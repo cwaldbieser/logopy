@@ -621,7 +621,7 @@ class SVGTurtle:
             component = self.elliptic_arc_(rx, ry, angle, clockwise)
         # Orientation of ellipse or arc will be 90 degrees off.
         # Assume current position is center of ellipse, then translate.
-        transform = "rotate(90) translate(0 {})".format(-ry)
+        transform = "rotate({}) translate(0 {})".format(heading, -ry)
         component['transform'] = transform
         component['stroke'] = self._pencolor
         component['stroke-width'] = self._pensize
@@ -674,8 +674,7 @@ class SVGTurtle:
         component.push(command)
         command = "A {} {} {} {} {} {} {}".format(abs(ry), abs(rx), xrot, large_arc, sweep_flag, xd, yd)
         print("PROPOSED", command)
-        command = "A 75 150 90 1 0 -150 0"
-        print("ACTUAL  ", command)
+        print("ACTUAL  ", "A 75 150 90 1 0 -150 0")
         component.push(command)
         return component
 
