@@ -616,7 +616,6 @@ class SVGTurtle:
         ry = minor / 2
         ps = self._pensize
         if angle != 0 and (angle % 360 == 0):
-            print("ELLIPSE X,Y", (x,y))
             component = self.screen.drawing.ellipse((x, y), (rx, ry))
             alpha = -x
             beta = -y
@@ -648,7 +647,10 @@ class SVGTurtle:
         Plot an elliptic arc.
         """
         xrot = 90
+        orig_angle = angle
         angle = angle % 360
+        if angle == 0 and orig_angle != 0:
+            angle = 360
         if angle > 180.0:
             large_arc = 1
         else:
