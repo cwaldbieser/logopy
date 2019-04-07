@@ -647,10 +647,9 @@ class SVGTurtle:
         """
         Plot an elliptic arc.
         """
-        print("RX,RY", (rx,ry), "ANGLE", angle, "CLOCKWISE", clockwise)
         xrot = 90
         angle = angle % 360
-        if abs(angle) > 180.0:
+        if angle > 180.0:
             large_arc = 1
         else:
             large_arc = 0
@@ -666,22 +665,23 @@ class SVGTurtle:
         cy = 0
         x, y = 0, ry
         heading = self._heading % 360
-        theta = angle + heading
+        theta = angle + 90
         theta_rad = deg2rad(theta)
         cost = math.cos(theta_rad)
         sint = math.sin(theta_rad)
         xd = cx - rx * cost
         yd = cy + ry * sint 
-        # "M 0 75 A 75 150 90 1 0 -150 0"
-        print("X,Y", (x, y), "CX,CY", (cx,cy), "THETA", theta, "COS(t)", _round1(cost), "SIN(t)", _round1(sint), "XD,YD", (_round1(xd), _round1(yd)))
         component = self.screen.drawing.path()
         command = "M {} {}".format(x, y)
-        #command = "M 0 200"
         component.push(command)
         command = "A {} {} {} {} {} {} {}".format(abs(ry), abs(rx), xrot, large_arc, sweep_flag, xd, yd)
-        print("PROPOSED", command)
-        print("ACTUAL  ", "A 75 150 90 1 0 -150 0")
         component.push(command)
+        # DEBUG
+        cx = _round1(cx)
+        cy = _round1(cy)
+        xd = _round1(xd)
+        yd = _round1(yd)
+        print("X,Y", (x,y), "CX,CY", (cx,cy), "XD,YD", (xd,yd), "HEADING", heading, "EXTENT", angle, "THETA", theta, "COS(t)", cost, "SIN(t)", sint)
         return component
 
     def setundobuffer(self, num):
