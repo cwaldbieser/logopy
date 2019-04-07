@@ -664,7 +664,6 @@ class SVGTurtle:
         cx = 0
         cy = 0
         x, y = 0, ry
-        heading = self._heading % 360
         theta = angle + 90
         theta_rad = deg2rad(theta)
         cost = math.cos(theta_rad)
@@ -676,12 +675,6 @@ class SVGTurtle:
         component.push(command)
         command = "A {} {} {} {} {} {} {}".format(abs(ry), abs(rx), xrot, large_arc, sweep_flag, xd, yd)
         component.push(command)
-        # DEBUG
-        cx = _round1(cx)
-        cy = _round1(cy)
-        xd = _round1(xd)
-        yd = _round1(yd)
-        print("X,Y", (x,y), "CX,CY", (cx,cy), "XD,YD", (xd,yd), "HEADING", heading, "EXTENT", angle, "THETA", theta, "COS(t)", cost, "SIN(t)", sint)
         return component
 
     def setundobuffer(self, num):
