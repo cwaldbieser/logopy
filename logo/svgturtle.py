@@ -617,12 +617,28 @@ class SVGTurtle:
         ps = self._pensize
         if angle != 0 and (angle % 360 == 0):
             component = self.screen.drawing.ellipse((x, y), (rx, ry))
+            xd, yd = x, y
             alpha = -x
             beta = -y
         else:
-            component = self.elliptic_arc_(rx, ry, angle, clockwise)
+            component, (xd, yd) = self.elliptic_arc_(rx, ry, angle, clockwise)
             alpha = 0
             beta = 0
+            # debug center
+            cx = x + ry
+            cy = y
+            cxrot, cyrot = rotate_coords(x, y, cx, cy, (heading - 90))
+            self.pencolor("gold")
+            self._line_to(cxrot, cyrot)
+            # End debug center.
+            self.pencolor("red")
+            xdp, ydp = xd, yd
+            ydp -= ry
+            xdp, ydp = rotate_coords(0, 0, xdp, ydp, heading)
+            xdp = xdp + x
+            ydp = ydp + y
+            self._line_to(xdp, ydp) 
+            self.pencolor("lime")
         # Orientation of ellipse or arc will be 90 degrees off.
         # Assume current position is center of ellipse, then translate.
         transform = "translate({} {}) rotate({}) translate({} {})".format(x, y, heading, alpha, beta - ry)
@@ -677,7 +693,7 @@ class SVGTurtle:
         component.push(command)
         command = "A {} {} {} {} {} {} {}".format(abs(ry), abs(rx), xrot, large_arc, sweep_flag, xd, yd)
         component.push(command)
-        return component
+        return component, (xd, yd)
 
     def setundobuffer(self, num):
         pass
