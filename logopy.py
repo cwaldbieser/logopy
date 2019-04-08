@@ -97,7 +97,7 @@ class DeferredTKTurtleEnv:
         """
         Return an absolute turtle heading from a Cartesian heading.
         """
-        alpha = theta - 90
+        alpha = 90 - theta
         alpha = alpha % 360
         return alpha
 

@@ -235,4 +235,9 @@ def ext_ellipse(self, major, minor, angle=360, clockwise=True):
     self.pd()
     for x, y in coords:
         self.setpos(x, y)
-
+    if clockwise:
+        turtle_heading = backend.turtle_heading_from_cartesian_heading(theta - angle)
+    else:
+        turtle_heading = backend.turtle_heading_from_cartesian_heading(theta + angle)
+    self.setheading(turtle_heading)
+        

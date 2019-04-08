@@ -624,21 +624,19 @@ class SVGTurtle:
             component, (xd, yd) = self.elliptic_arc_(rx, ry, angle, clockwise)
             alpha = 0
             beta = 0
-            # debug center
-            cx = x + ry
-            cy = y
-            cxrot, cyrot = rotate_coords(x, y, cx, cy, (heading - 90))
-            self.pencolor("gold")
-            self._line_to(cxrot, cyrot)
-            # End debug center.
-            self.pencolor("red")
             xdp, ydp = xd, yd
             ydp -= ry
             xdp, ydp = rotate_coords(0, 0, xdp, ydp, heading)
             xdp = xdp + x
             ydp = ydp + y
+            pd = self._pendown
+            self._pendown = False
             self._line_to(xdp, ydp) 
-            self.pencolor("lime")
+            self._pendown = pd
+            if clockwise:
+                self._heading = heading - angle
+            else:
+                self._heading = heading + angle
         # Orientation of ellipse or arc will be 90 degrees off.
         # Assume current position is center of ellipse, then translate.
         transform = "translate({} {}) rotate({}) translate({} {})".format(x, y, heading, alpha, beta - ry)
