@@ -625,7 +625,10 @@ class SVGTurtle:
             alpha = 0
             beta = 0
             xdp, ydp = xd, yd
-            ydp -= ry
+            if clockwise:
+                ydp -= ry
+            else:
+                ydp += ry
             xdp, ydp = rotate_coords(0, 0, xdp, ydp, heading)
             xdp = xdp + x
             ydp = ydp + y
@@ -639,7 +642,11 @@ class SVGTurtle:
                 self._heading = heading + angle
         # Orientation of ellipse or arc will be 90 degrees off.
         # Assume current position is center of ellipse, then translate.
-        transform = "translate({} {}) rotate({}) translate({} {})".format(x, y, heading, alpha, beta - ry)
+        if clockwise:
+            yoff = -ry
+        else:
+            yoff = ry
+        transform = "translate({} {}) rotate({}) translate({} {})".format(x, y, heading, alpha, beta + yoff)
         component['transform'] = transform
         component['stroke'] = self._pencolor
         component['stroke-width'] = self._pensize
@@ -680,12 +687,18 @@ class SVGTurtle:
         cx = 0
         cy = 0
         x, y = 0, ry
-        theta = angle + 90
+        if clockwise:
+            theta = angle + 90
+        else:
+            theta = -angle + 90
         theta_rad = deg2rad(theta)
         cost = math.cos(theta_rad)
         sint = math.sin(theta_rad)
         xd = cx - rx * cost
         yd = cy + ry * sint 
+        if not clockwise:
+            x, y = rotate_coords(cx, cy, x, y, 180)
+            xd, yd = rotate_coords(cx, cy, xd, yd, 180)
         component = self.screen.drawing.path()
         command = "M {} {}".format(x, y)
         component.push(command)
