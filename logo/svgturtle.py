@@ -431,11 +431,9 @@ class SVGTurtle:
         self._filled_components = filled_components = []
         self._hole_components = hole_components = []
         fill_container = self.screen.drawing.polygon()
-        #fill_container['transform'] = 'rotate(-90)'
         filled_components.append(fill_container)
         self._components.append(fill_container)
         hole_polygon = self.screen.drawing.polygon()
-        #hole_polygon['transform'] = 'rotate(-90)'
         hole_components.append(hole_polygon)
 
     def end_fill(self):
@@ -455,6 +453,8 @@ class SVGTurtle:
             dwg = self.screen.drawing
             mask_id = uuid.uuid4().hex
             mask = dwg.defs.add(dwg.mask(id=mask_id))
+            mask_group = dwg.g()
+            mask.add(mask_group)
             for component in filled_components:
                 if hasattr(component, 'points') and len(component.points) == 0:
                     continue
@@ -462,12 +462,13 @@ class SVGTurtle:
                 allow_mask['fill'] = 'white'
                 if allow_mask.attribs.get('transform') is not None:
                     del allow_mask.attribs['transform']
-                mask.add(allow_mask)
+                if allow_mask.attribs.get('class') is not None:
+                    del allow_mask.attribs['class']
+                mask_group.add(allow_mask)
                 component['fill'] = self._fillcolor
                 component['fill-opacity'] = 1
                 component['fill-rule'] = 'evenodd'
                 component['mask'] = "url(#{})".format(mask_id)
-                #component['transform'] = 'rotate(-90)'
             for component in hole_components:
                 if hasattr(component, 'points') and len(component.points) == 0:
                     continue
@@ -475,10 +476,11 @@ class SVGTurtle:
                 deny_mask['fill'] = 'black'
                 if deny_mask.attribs.get('transform') is not None:
                     del deny_mask.attribs['transform']
+                if deny_mask.attribs.get('class') is not None:
+                    del deny_mask.attribs['class']
                 component['class'] = 'hole'
                 component['fill-opacity'] = 0
-                #component['transform'] = 'rotate(-90)'
-                mask.add(deny_mask)
+                mask_group.add(deny_mask)
         else:
             for component in filled_components:
                 if hasattr(component, 'points') and len(component.points) == 0:
@@ -486,7 +488,6 @@ class SVGTurtle:
                 component['fill'] = self._fillcolor
                 component['fill-opacity'] = 1
                 component['fill-rule'] = 'evenodd'
-                #component['transform'] = 'rotate(-90)'
 
     def begin_unfilled(self):
         """
@@ -615,20 +616,18 @@ class SVGTurtle:
         rx = major / 2
         ry = minor / 2
         ps = self._pensize
-        if angle != 0 and (angle % 360 == 0):
-            component = self.screen.drawing.ellipse((x, y), (rx, ry))
-            xd, yd = x, y
-            alpha = -x
-            beta = -y
+        # Assume current position is center of ellipse, then translate.
+        if clockwise:
+            yoff = -ry
         else:
-            component, (xd, yd) = self.elliptic_arc_(rx, ry, angle, clockwise)
-            alpha = 0
-            beta = 0
+            yoff = ry
+        # Choose component to use.
+        if angle != 0 and (angle % 360 == 0):
+            component = self.screen.drawing.ellipse((0, yoff), (rx, ry))
+            xd, yd = x, y
+        else:
+            component, (xd, yd) = self.elliptic_arc_(rx, ry, angle, clockwise, yoff)
             xdp, ydp = xd, yd
-            if clockwise:
-                ydp -= ry
-            else:
-                ydp += ry
             xdp, ydp = rotate_coords(0, 0, xdp, ydp, heading)
             xdp = xdp + x
             ydp = ydp + y
@@ -641,29 +640,30 @@ class SVGTurtle:
             else:
                 self._heading = heading + angle
         # Orientation of ellipse or arc will be 90 degrees off.
-        # Assume current position is center of ellipse, then translate.
-        if clockwise:
-            yoff = -ry
-        else:
-            yoff = ry
-        transform = "translate({} {}) rotate({}) translate({} {})".format(x, y, heading, alpha, beta + yoff)
+        transform = "translate({} {}) rotate({})".format(x, y, heading)
         component['transform'] = transform
         component['stroke'] = self._pencolor
         component['stroke-width'] = self._pensize
-        component['fill-opacity'] = 0
+        component['fill-opacity'] = 1
         component['class'] = 'no-fill'
         self._components.append(component)
         if self._fill_mode == 'unfill':
             self._hole_components.append(component)
         elif self._fill_mode == 'fill':
             self._filled_components.append(component)
+            component['class'] = 'fill'
+            component['fill-opacity'] = 1
+        else:
+            component['class'] = 'no-fill'
+            component['fill-opacity'] = 0
+            
         # Compute bounds.
         max_radius = max(abs(rx), abs(ry))
         self._adjust_bounds(-500, -500)
         self._adjust_bounds(500, 500)
 
 
-    def elliptic_arc_(self, rx, ry, angle, clockwise):
+    def elliptic_arc_(self, rx, ry, angle, clockwise, cy):
         """
         Plot an elliptic arc.
         """
@@ -685,8 +685,9 @@ class SVGTurtle:
         else:
             ysign = 1
         cx = 0
-        cy = 0
-        x, y = 0, ry
+        #cy = 0
+        #x, y = 0, ry
+        x, y = 0, cy + ry
         if clockwise:
             theta = angle + 90
         else:
