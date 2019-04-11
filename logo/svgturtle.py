@@ -212,6 +212,8 @@ class SVGTurtle:
     _fill_mode = attr.ib(default='off') # off, fill, or unfill
     _filled_components = attr.ib(default=None)
     _hole_components = attr.ib(default=None)
+    _mask_id = attr.ib(default=None)
+    _mask_group = attr.ib(default=None)
     _text_alignments = attr.ib(default=dict(left='start', right='end', center='middle'))
 
     @classmethod
@@ -227,6 +229,9 @@ class SVGTurtle:
         drawing = self.screen.drawing
         group = drawing.g()
         group['transform'] = "matrix(0 1 1 0 0 0) rotate(90)"
+        mask_id = self._mask_id
+        if mask_id is not None:
+            group['mask'] = "url(#{})".format(mask_id)
         drawing.add(group)
         xmin, xmax, ymin, ymax = self._bounds
         w = xmax - xmin
@@ -450,32 +455,27 @@ class SVGTurtle:
             if len(fill_container.points) == 0 and len(filled_components) == 1:
                 # No actual filled components; no mask needed to make holes.
                 return
-            dwg = self.screen.drawing
-            mask_id = uuid.uuid4().hex
-            mask = dwg.defs.add(dwg.mask(id=mask_id))
-            mask_group = dwg.g()
-            mask.add(mask_group)
+            mask_id, mask_group = self.get_mask_()
             for component in filled_components:
                 if hasattr(component, 'points') and len(component.points) == 0:
                     continue
                 allow_mask = component.copy()
                 allow_mask['fill'] = 'white'
-                if allow_mask.attribs.get('transform') is not None:
-                    del allow_mask.attribs['transform']
+                #if allow_mask.attribs.get('transform') is not None:
+                #    del allow_mask.attribs['transform']
                 if allow_mask.attribs.get('class') is not None:
                     del allow_mask.attribs['class']
                 mask_group.add(allow_mask)
                 component['fill'] = self._fillcolor
                 component['fill-opacity'] = 1
                 component['fill-rule'] = 'evenodd'
-                component['mask'] = "url(#{})".format(mask_id)
             for component in hole_components:
                 if hasattr(component, 'points') and len(component.points) == 0:
                     continue
                 deny_mask = component.copy()
                 deny_mask['fill'] = 'black'
-                if deny_mask.attribs.get('transform') is not None:
-                    del deny_mask.attribs['transform']
+                #if deny_mask.attribs.get('transform') is not None:
+                #    del deny_mask.attribs['transform']
                 if deny_mask.attribs.get('class') is not None:
                     del deny_mask.attribs['class']
                 component['class'] = 'hole'
@@ -488,6 +488,20 @@ class SVGTurtle:
                 component['fill'] = self._fillcolor
                 component['fill-opacity'] = 1
                 component['fill-rule'] = 'evenodd'
+
+    def get_mask_(self):
+        """
+        Return the current (mask_id, mask_group).
+        """
+        if self._mask_id is None:
+            dwg = self.screen.drawing
+            mask_id = uuid.uuid4().hex
+            mask = dwg.defs.add(dwg.mask(id=mask_id))
+            mask_group = dwg.g()
+            mask.add(mask_group)
+            self._mask_id = mask_id
+            self._mask_group = mask_group
+        return (self._mask_id, self._mask_group)
 
     def begin_unfilled(self):
         """
