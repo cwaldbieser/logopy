@@ -283,20 +283,28 @@ class SVGTurtle:
         pos = self._get_xy(x, y)
         self._line_to(x, y)
 
-    def _line_to(self, x1, y1):
+    def _line_to(self, x1, y1, no_stroke=False):
         """
         Set the new pos.
         If the pen is down, add a new line.
         """
         x0, y0 = self._pos
         fill_mode = self._fill_mode
+        pendown = self._pendown
         if fill_mode != 'off':
             fill_container = self._filled_components[0]
             hole_container = self._hole_components[0]
+            if not pendown:
+                #if len(fill_container.points) <= 2:
+                #    fill_container = self.screen.drawing.polygon()
+                #    self._filled_components[0] = fill_container
+                if fill_mode == 'unfill' and len(hole_container.points) <= 2:
+                    hole_container = self.screen.drawing.polygon()
+                    self._hole_components[0] = hole_container
             fill_container.points.append((x1, y1))
             if fill_mode == 'unfill':
                 hole_container.points.append((x1, y1)) 
-        if self._pendown:
+        if self._pendown and not no_stroke:
             self._adjust_bounds(x0 + self._pensize * 0.5, -y0 + self._pensize * 0.5)
             self._adjust_bounds(x0 - self._pensize * 0.5, -y0 - self._pensize * 0.5)
             self._adjust_bounds(x1 + self._pensize * 0.5, -y1 + self._pensize * 0.5)
@@ -457,6 +465,7 @@ class SVGTurtle:
                 return
             mask_id, mask_group = self.get_mask_()
             for component in filled_components:
+                #if hasattr(component, 'points') and len(component.points) <= 2:
                 if hasattr(component, 'points') and len(component.points) == 0:
                     continue
                 allow_mask = component.copy()
@@ -469,8 +478,9 @@ class SVGTurtle:
                 component['fill'] = self._fillcolor
                 component['fill-opacity'] = 1
                 component['fill-rule'] = 'evenodd'
+                component['stroke'] = self._fillcolor
             for component in hole_components:
-                if hasattr(component, 'points') and len(component.points) == 0:
+                if hasattr(component, 'points') and len(component.points) <= 2:
                     continue
                 deny_mask = component.copy()
                 deny_mask['fill'] = 'black'
@@ -480,6 +490,7 @@ class SVGTurtle:
                     del deny_mask.attribs['class']
                 component['class'] = 'hole'
                 component['fill-opacity'] = 0
+                component['stroke'] = '#ffffff'
                 mask_group.add(deny_mask)
         else:
             for component in filled_components:
@@ -645,10 +656,7 @@ class SVGTurtle:
             xdp, ydp = rotate_coords(0, 0, xdp, ydp, heading)
             xdp = xdp + x
             ydp = ydp + y
-            pd = self._pendown
-            self._pendown = False
-            self._line_to(xdp, ydp) 
-            self._pendown = pd
+            self._line_to(xdp, ydp, no_stroke=True) 
             if clockwise:
                 self._heading = heading - angle
             else:
