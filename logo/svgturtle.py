@@ -9,6 +9,22 @@ import attr
 import jinja2
 import svgwrite
 
+
+class FakeValidator:
+
+    def check_all_svg_attribute_values(self, *args):
+        return True
+
+    def check_svg_type(self, *args):
+        return True
+
+    def check_svg_attribute_value(self, *args):
+        return True
+
+    def check_valid_children(self, *args):
+        return True
+
+
 @attr.s
 class SVGTurtleEnv:
 
@@ -212,8 +228,6 @@ class SVGTurtle:
     _fill_mode = attr.ib(default='off') # off, fill, or unfill
     _filled_components = attr.ib(default=None)
     _hole_components = attr.ib(default=None)
-    _mask_id = attr.ib(default=None)
-    _mask_group = attr.ib(default=None)
     _text_alignments = attr.ib(default=dict(left='start', right='end', center='middle'))
 
     @classmethod
@@ -227,18 +241,13 @@ class SVGTurtle:
         Write SVG output to file object `fout`.
         """
         drawing = self.screen.drawing
-        group = drawing.g()
-        group['transform'] = "matrix(0 1 1 0 0 0) rotate(90)"
-        mask_id = self._mask_id
-        if mask_id is not None:
-            group['mask'] = "url(#{})".format(mask_id)
-        drawing.add(group)
+        g = self.screen.drawing.g()
+        g['transform'] = "matrix(0 1 1 0 0 0) rotate(90)"
+        drawing.add(g)
         xmin, xmax, ymin, ymax = self._bounds
         w = xmax - xmin
         h = ymax - ymin
         vb = "{} {} {} {}".format(xmin, ymin, w, h)
-        #drawing['width'] = h
-        #drawing['height'] = w
         drawing['width'] = '100%'
         drawing['height'] = '100%'
         drawing['viewBox'] = vb
@@ -246,7 +255,7 @@ class SVGTurtle:
         for component in components:
             if hasattr(component, 'points') and len(component.points) == 0:
                 continue
-            group.add(component)
+            g.add(component)
         drawing.write(fout)
 
     def get_bounds(self):
@@ -330,7 +339,14 @@ class SVGTurtle:
             polyline['fill-opacity'] = 0
             x, y = self._pos
             polyline.points.append((x, y))
-            self._components.append(polyline)
+            if self._fill_mode == 'unfill':
+                self._hole_components.append(polyline)
+            elif self._fill_mode == 'fill':
+                self._filled_components.append(polyline)
+            else:
+                polyline['class'] = 'no-fill'
+                polyline['fill-opacity'] = 0
+                self._components.append(polyline)
             self._current_polyline = polyline
         return polyline
 
@@ -444,8 +460,8 @@ class SVGTurtle:
         self._filled_components = filled_components = []
         self._hole_components = hole_components = []
         fill_container = self.screen.drawing.polygon()
+        fill_container['stroke-width'] = self._pensize
         filled_components.append(fill_container)
-        self._components.append(fill_container)
         hole_polygon = self.screen.drawing.polygon()
         hole_components.append(hole_polygon)
 
@@ -458,18 +474,23 @@ class SVGTurtle:
         self._filled_components = None
         hole_components = self._hole_components
         self._hole_components = None
+        components = self._components
         # If there are holes, create a mask.
         if len(hole_components) > 1 or len(hole_components[0].points) > 0:
             if len(fill_container.points) == 0 and len(filled_components) == 1:
                 # No actual filled components; no mask needed to make holes.
                 return
             mask_id, mask_group = self.get_mask_()
+            g = self.screen.drawing.g()
+            g['mask'] = "url(#{})".format(mask_id)
+            g.validator = FakeValidator()
+            g.attribs['paint-order'] = "fill stroke"
             for component in filled_components:
-                #if hasattr(component, 'points') and len(component.points) <= 2:
                 if hasattr(component, 'points') and len(component.points) == 0:
                     continue
                 allow_mask = component.copy()
                 allow_mask['fill'] = 'white'
+                allow_mask['stroke'] = '#ffffff'
                 #if allow_mask.attribs.get('transform') is not None:
                 #    del allow_mask.attribs['transform']
                 if allow_mask.attribs.get('class') is not None:
@@ -478,20 +499,22 @@ class SVGTurtle:
                 component['fill'] = self._fillcolor
                 component['fill-opacity'] = 1
                 component['fill-rule'] = 'evenodd'
-                component['stroke'] = self._fillcolor
+                g.add(component) 
             for component in hole_components:
                 if hasattr(component, 'points') and len(component.points) <= 2:
                     continue
                 deny_mask = component.copy()
                 deny_mask['fill'] = 'black'
+                deny_mask['stroke'] = '#ffffff'
                 #if deny_mask.attribs.get('transform') is not None:
                 #    del deny_mask.attribs['transform']
                 if deny_mask.attribs.get('class') is not None:
                     del deny_mask.attribs['class']
                 component['class'] = 'hole'
                 component['fill-opacity'] = 0
-                component['stroke'] = '#ffffff'
                 mask_group.add(deny_mask)
+                g.add(component)
+            components.append(g)
         else:
             for component in filled_components:
                 if hasattr(component, 'points') and len(component.points) == 0:
@@ -499,20 +522,18 @@ class SVGTurtle:
                 component['fill'] = self._fillcolor
                 component['fill-opacity'] = 1
                 component['fill-rule'] = 'evenodd'
+                components.append(component)
 
     def get_mask_(self):
         """
-        Return the current (mask_id, mask_group).
+        Generate a mask_group and its ID as (mask_id, mask_group).
         """
-        if self._mask_id is None:
-            dwg = self.screen.drawing
-            mask_id = uuid.uuid4().hex
-            mask = dwg.defs.add(dwg.mask(id=mask_id))
-            mask_group = dwg.g()
-            mask.add(mask_group)
-            self._mask_id = mask_id
-            self._mask_group = mask_group
-        return (self._mask_id, self._mask_group)
+        dwg = self.screen.drawing
+        mask_id = uuid.uuid4().hex
+        mask = dwg.defs.add(dwg.mask(id=mask_id))
+        mask_group = dwg.g()
+        mask.add(mask_group)
+        return (mask_id, mask_group)
 
     def begin_unfilled(self):
         """
@@ -571,7 +592,6 @@ class SVGTurtle:
         #component['transform'] = 'rotate(-90)'
         component['stroke'] = self._pencolor
         component['stroke-width'] = self._pensize
-        self._components.append(component)
         if self._fill_mode == 'unfill':
             self._hole_components.append(component)
         elif self._fill_mode == 'fill':
@@ -579,6 +599,7 @@ class SVGTurtle:
         else:
             component['class'] = 'no-fill'
             component['fill-opacity'] = 0
+            self._components.append(component)
 
     def regular_polygon_(self, radius, sides, angle, xcenter, ycenter):
         """
@@ -668,7 +689,6 @@ class SVGTurtle:
         component['stroke-width'] = self._pensize
         component['fill-opacity'] = 1
         component['class'] = 'no-fill'
-        self._components.append(component)
         if self._fill_mode == 'unfill':
             self._hole_components.append(component)
         elif self._fill_mode == 'fill':
@@ -678,6 +698,7 @@ class SVGTurtle:
         else:
             component['class'] = 'no-fill'
             component['fill-opacity'] = 0
+            self._components.append(component)
             
         # Compute bounds.
         max_radius = max(abs(rx), abs(ry))
