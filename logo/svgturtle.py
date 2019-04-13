@@ -458,6 +458,7 @@ class SVGTurtle:
         fill_container = self.screen.drawing.polygon()
         fill_container['stroke-width'] = self._pensize
         filled_components.append(fill_container)
+        self._fill_index = len(self._components)
 
     def end_fill(self):
         if self._fill_mode != 'fill':
@@ -472,6 +473,7 @@ class SVGTurtle:
         self._complete_hole_components = None
         hole_components.extend(complete_hole_components)
         components = self._components
+        fill_index = self._fill_index
         # If there are holes, create a mask.
         if len(hole_components) > 1 or (len(hole_components) > 0 and len(hole_components[0].points)) > 0:
             if len(fill_container.points) == 0 and len(filled_components) == 1:
@@ -507,7 +509,8 @@ class SVGTurtle:
                 component['fill-opacity'] = 0
                 mask_group.add(deny_mask)
                 g.add(component)
-            components.append(g)
+            #components.append(g)
+            components.insert(fill_index, g)
         else:
             for component in filled_components:
                 if hasattr(component, 'points') and len(component.points) == 0:
@@ -515,7 +518,8 @@ class SVGTurtle:
                 component['fill'] = self._fillcolor
                 component['fill-opacity'] = 1
                 component['fill-rule'] = 'evenodd'
-                components.append(component)
+                #components.append(component)
+                components.insert(fill_index, component)
 
     def get_mask_(self):
         """
