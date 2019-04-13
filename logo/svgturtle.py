@@ -226,10 +226,12 @@ class SVGTurtle:
     # Fill attributes.
     # _fill_mode: off, fill, or unfill
     # _filled_components: index 0 is always a polygon
-    # _hole components: index 0 is always a ploygon
+    # _hole components: always a polygons; may not have any entries
+    # _complete_hole_components: Holes of complete figures (arcs, ellipses, circles).
     _fill_mode = attr.ib(default='off') # off, fill, or unfill
     _filled_components = attr.ib(default=None)
     _hole_components = attr.ib(default=None)
+    _complete_hole_components = attr.ib(default=None)
     _text_alignments = attr.ib(default=dict(left='start', right='end', center='middle'))
 
     @classmethod
@@ -307,9 +309,6 @@ class SVGTurtle:
             if fill_mode == 'unfill':
                 hole_container = self.get_hole_component_()
             if not pendown:
-                #if len(fill_container.points) <= 2:
-                #    fill_container = self.screen.drawing.polygon()
-                #    self._filled_components[0] = fill_container
                 hole_container = self.add_hole_component_()
             fill_container.points.append((x1, y1))
             if fill_mode == 'unfill':
@@ -340,14 +339,6 @@ class SVGTurtle:
             polyline['fill-opacity'] = 0
             x, y = self._pos
             polyline.points.append((x, y))
-            #if self._fill_mode == 'unfill':
-            #    self.add_hole_component_(polyline)
-            #elif self._fill_mode == 'fill':
-            #    self._filled_components.append(polyline)
-            #else:
-            #    polyline['class'] = 'no-fill'
-            #    polyline['fill-opacity'] = 0
-            #    self._components.append(polyline)
             polyline['class'] = 'no-fill'
             polyline['fill-opacity'] = 0
             self._components.append(polyline)
@@ -497,8 +488,6 @@ class SVGTurtle:
                 allow_mask = component.copy()
                 allow_mask['fill'] = 'white'
                 allow_mask['stroke'] = '#ffffff'
-                #if allow_mask.attribs.get('transform') is not None:
-                #    del allow_mask.attribs['transform']
                 if allow_mask.attribs.get('class') is not None:
                     del allow_mask.attribs['class']
                 mask_group.add(allow_mask)
@@ -512,8 +501,6 @@ class SVGTurtle:
                 deny_mask = component.copy()
                 deny_mask['fill'] = 'black'
                 deny_mask['stroke'] = '#ffffff'
-                #if deny_mask.attribs.get('transform') is not None:
-                #    del deny_mask.attribs['transform']
                 if deny_mask.attribs.get('class') is not None:
                     del deny_mask.attribs['class']
                 component['class'] = 'hole'
@@ -628,7 +615,6 @@ class SVGTurtle:
         else:
             self.regular_polygon_(radius, steps, angle, xcenter, ycenter)
             return
-        #component['transform'] = 'rotate(-90)'
         component['stroke'] = self._pencolor
         component['stroke-width'] = self._pensize
         if self._fill_mode == 'unfill':
@@ -655,7 +641,11 @@ class SVGTurtle:
             theta = deg2rad(alpha + angle_offset)
             x = xcenter + radius * math.cos(theta)
             y = ycenter + radius * math.sin(theta)
-            self._line_to(x, y)
+            if n == 0:
+                no_stroke = True
+            else:
+                no_stroke = False
+            self._line_to(x, y, no_stroke=no_stroke)
             if abs(angle_offset) >= angle:
                 break
         if angle == 360:
