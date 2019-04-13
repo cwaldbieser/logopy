@@ -1,4 +1,6 @@
 
+import collections
+import functools
 import math
 import os
 import shutil
@@ -302,14 +304,13 @@ class SVGTurtle:
         pendown = self._pendown
         if fill_mode != 'off':
             fill_container = self._filled_components[0]
-            hole_container = self._hole_components[0]
+            if fill_mode == 'unfill':
+                hole_container = self.get_hole_component_()
             if not pendown:
                 #if len(fill_container.points) <= 2:
                 #    fill_container = self.screen.drawing.polygon()
                 #    self._filled_components[0] = fill_container
-                if fill_mode == 'unfill' and len(hole_container.points) <= 2:
-                    hole_container = self.screen.drawing.polygon()
-                    self._hole_components[0] = hole_container
+                hole_container = self.add_hole_component_()
             fill_container.points.append((x1, y1))
             if fill_mode == 'unfill':
                 hole_container.points.append((x1, y1)) 
@@ -339,14 +340,17 @@ class SVGTurtle:
             polyline['fill-opacity'] = 0
             x, y = self._pos
             polyline.points.append((x, y))
-            if self._fill_mode == 'unfill':
-                self._hole_components.append(polyline)
-            elif self._fill_mode == 'fill':
-                self._filled_components.append(polyline)
-            else:
-                polyline['class'] = 'no-fill'
-                polyline['fill-opacity'] = 0
-                self._components.append(polyline)
+            #if self._fill_mode == 'unfill':
+            #    self.add_hole_component_(polyline)
+            #elif self._fill_mode == 'fill':
+            #    self._filled_components.append(polyline)
+            #else:
+            #    polyline['class'] = 'no-fill'
+            #    polyline['fill-opacity'] = 0
+            #    self._components.append(polyline)
+            polyline['class'] = 'no-fill'
+            polyline['fill-opacity'] = 0
+            self._components.append(polyline)
             self._current_polyline = polyline
         return polyline
 
@@ -458,12 +462,11 @@ class SVGTurtle:
             raise Exception("`begin_fill()`: Fill mode is already enabled.")
         self._fill_mode = 'fill'
         self._filled_components = filled_components = []
-        self._hole_components = hole_components = []
+        self._hole_components = []
+        self._complete_hole_components = []
         fill_container = self.screen.drawing.polygon()
         fill_container['stroke-width'] = self._pensize
         filled_components.append(fill_container)
-        hole_polygon = self.screen.drawing.polygon()
-        hole_components.append(hole_polygon)
 
     def end_fill(self):
         if self._fill_mode != 'fill':
@@ -474,9 +477,12 @@ class SVGTurtle:
         self._filled_components = None
         hole_components = self._hole_components
         self._hole_components = None
+        complete_hole_components = self._complete_hole_components
+        self._complete_hole_components = None
+        hole_components.extend(complete_hole_components)
         components = self._components
         # If there are holes, create a mask.
-        if len(hole_components) > 1 or len(hole_components[0].points) > 0:
+        if len(hole_components) > 1 or (len(hole_components) > 0 and len(hole_components[0].points)) > 0:
             if len(fill_container.points) == 0 and len(filled_components) == 1:
                 # No actual filled components; no mask needed to make holes.
                 return
@@ -535,6 +541,38 @@ class SVGTurtle:
         mask.add(mask_group)
         return (mask_id, mask_group)
 
+    def add_hole_component_(self, component=None):
+        """
+        Add a hole component and return it.
+        """
+        if component is not None:
+            self.add_complete_hole_component_(component)
+            return
+        hole_components = self._hole_components
+        if len(hole_components) > 0:
+            container = hole_components[-1] 
+            if len(container.points) <= 2:
+                hole_components.pop()
+        hole_polygon = self.screen.drawing.polygon()
+        hole_components.append(hole_polygon)
+        return hole_polygon 
+
+    def add_complete_hole_component_(self, component):
+        """
+        Add independent hole components.
+        """
+        self._complete_hole_components.append(component)
+
+    def get_hole_component_(self):
+        """
+        Get the current hole component.
+        Raise error if no current holes.
+        """
+        hole_components = self._hole_components
+        if len(hole_components) == 0:
+            raise Exception("No hole components.  No UNFILL command.")
+        return hole_components[-1]
+
     def begin_unfilled(self):
         """
         Only valid within `begin_fill()` and `end_fill()` context.
@@ -544,6 +582,7 @@ class SVGTurtle:
         if self._fill_mode != 'fill':
             raise Exception("`begin_unfilled()` can only be called within `begin_fill()` ... `end_fill()` context.")
         self._fill_mode = 'unfill'
+        self.add_hole_component_()
 
     def end_unfilled(self):
         """
@@ -593,7 +632,7 @@ class SVGTurtle:
         component['stroke'] = self._pencolor
         component['stroke-width'] = self._pensize
         if self._fill_mode == 'unfill':
-            self._hole_components.append(component)
+            self.add_hole_component_(component)
         elif self._fill_mode == 'fill':
             self._filled_components.append(component)
         else:
@@ -677,7 +716,8 @@ class SVGTurtle:
             xdp, ydp = rotate_coords(0, 0, xdp, ydp, heading)
             xdp = xdp + x
             ydp = ydp + y
-            self._line_to(xdp, ydp, no_stroke=True) 
+            #self._line_to(xdp, ydp, no_stroke=True) 
+            self.ellipse_simulation_(major, minor, angle, clockwise)
             if clockwise:
                 self._heading = heading - angle
             else:
@@ -690,7 +730,7 @@ class SVGTurtle:
         component['fill-opacity'] = 1
         component['class'] = 'no-fill'
         if self._fill_mode == 'unfill':
-            self._hole_components.append(component)
+            self.add_hole_component_(component)
         elif self._fill_mode == 'fill':
             self._filled_components.append(component)
             component['class'] = 'fill'
@@ -749,6 +789,43 @@ class SVGTurtle:
         command = "A {} {} {} {} {} {} {}".format(abs(ry), abs(rx), xrot, large_arc, sweep_flag, xd, yd)
         component.push(command)
         return component, (xd, yd)
+
+    def ellipse_simulation_(self, major, minor, angle=360, clockwise=True):
+        """
+        Simulate an ellipse using many straight segments.  Used in conjunction
+        with fills and masks so that the result minimizes and gaps.
+        """
+        orig_heading = self._heading
+        theta = orig_heading
+        orig_pos = self._pos
+        i = orig_pos[0]
+        j = orig_pos[1]
+        angle_count = int(angle)
+        pos_fn = lambda frm, to, count, i: (to * i + frm * (count - i - 1)) / (count - 1)
+        if clockwise:
+            start_angle = 90
+            p = functools.partial(pos_fn, start_angle, start_angle - angle + 1, angle_count)
+            angles = list(map(p, range(angle_count)))
+        else:
+            start_angle = -90
+            p = functools.partial(pos_fn, start_angle, start_angle + angle - 1, angle_count)
+            angles = list(map(p, range(angle_count)))
+        half_major = major / 2
+        half_minor = minor / 2
+        coords = [rotate_coords(0, 0, half_major * math.cos(deg2rad(alpha)), half_minor * math.sin(deg2rad(alpha)), theta) for alpha in angles]
+        if not clockwise:
+            xsign = -1
+            ysign = 1
+        else:
+            xsign = 1
+            ysign = -1
+        i = half_minor * math.sin(deg2rad(theta)) * xsign + i
+        j = half_minor * math.cos(deg2rad(theta)) * ysign + j 
+        coords = [(i + x, j + y) for x, y in coords]
+        coord = coords[0]
+        self._line_to(coord[0], coord[1], no_stroke=True)
+        for x, y in coords:
+            self._line_to(x, y, no_stroke=True)
 
     def setundobuffer(self, num):
         pass
