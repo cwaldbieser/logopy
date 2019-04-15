@@ -509,7 +509,6 @@ class SVGTurtle:
                 component['fill-opacity'] = 0
                 mask_group.add(deny_mask)
                 g.add(component)
-            #components.append(g)
             components.insert(fill_index, g)
         else:
             for component in filled_components:
@@ -518,7 +517,6 @@ class SVGTurtle:
                 component['fill'] = self._fillcolor
                 component['fill-opacity'] = 1
                 component['fill-rule'] = 'evenodd'
-                #components.append(component)
                 components.insert(fill_index, component)
 
     def get_mask_(self):
@@ -716,7 +714,7 @@ class SVGTurtle:
                 self._heading = heading - angle
             else:
                 self._heading = heading + angle
-        # Orientation of ellipse or arc will be 90 degrees off.
+        # Component needs to be oriented and translated.
         transform = "translate({} {}) rotate({})".format(x, y, heading)
         component['transform'] = transform
         component['stroke'] = self._pencolor
@@ -735,9 +733,22 @@ class SVGTurtle:
             self._components.append(component)
             
         # Compute bounds.
+        # 1) Compute the center.
+        cx = 0
+        cy = yoff
+        cx, cy = rotate_coords(0, 0, cx, cy, heading)
+        cx += x
+        cy += y
+        ps = self._pensize
         max_radius = max(abs(rx), abs(ry))
-        self._adjust_bounds(-500, -500)
-        self._adjust_bounds(500, 500)
+        west = cx - max_radius
+        east = cx + max_radius
+        north = -(cy + max_radius)
+        south = -(cy - max_radius)
+        self._adjust_bounds(east - ps, north - ps)
+        self._adjust_bounds(west + ps, south + ps)
+        #self._adjust_bounds(-500, -500)
+        #self._adjust_bounds(500, 500)
 
 
     def elliptic_arc_(self, rx, ry, angle, clockwise, cy):
