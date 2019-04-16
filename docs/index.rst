@@ -14,7 +14,7 @@ Welcome to logopy's documentation!
    intro
    installation
    turtle_backends 
-
+   extension_commands
 
 Indices and tables
 ==================

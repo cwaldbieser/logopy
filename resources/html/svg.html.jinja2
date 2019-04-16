@@ -22,7 +22,8 @@
         new Vivus('animation', {
             file: './logo.svg',
             duration: {{animation_duration}},
-            type: '{{animation_type}}'
+            type: '{{animation_type}}',
+            start: '{{animation_start}}'
         },
         function (obj) {
             document.getElementById("animation").classList.add('finished');

@@ -783,6 +783,9 @@ def main(args):
             if animation_type == 'onebyone':
                 animation_type = 'oneByOne'
             html_args['animation_type'] = animation_type
+        if args.animation_start:
+            animation_start = args.animation_start
+            html_args['animation_start'] = animation_start
         svg_args['html_args'] = html_args
         interpreter.turtle_backend_args = svg_args
     if args.file is not None:
@@ -884,6 +887,12 @@ if __name__ == "__main__":
         action="store",
         choices=['sync', 'delayed', 'onebyone'],
         default='sync',
+        help="Set animation type for web resources.")
+    parser_svg.add_argument(
+        "--animation-start",
+        action="store",
+        choices=['inviewport', 'automatic'],
+        default='automatic',
         help="Set animation type for web resources.")
     args = parser.parse_args()
     main(args)
