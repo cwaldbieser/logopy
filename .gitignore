@@ -3,3 +3,6 @@
 *.pyc
 *.lg
 svg/*
+build/
+dist/
+logopy.egg-info/

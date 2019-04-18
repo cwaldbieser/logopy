@@ -1,6 +1,6 @@
 
 include README.rst
 include docs/*.rst
-include resources/*
+include resources/html/*
 include example_scripts/*.lg
 
