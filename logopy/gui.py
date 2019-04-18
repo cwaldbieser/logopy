@@ -6,8 +6,8 @@ import math
 from tkinter import *
 from tkinter.scrolledtext import ScrolledText
 import turtle
-from logo import errors
-from logo.trig import deg2rad, rotate_coords
+from logopy import errors
+from logopy.trig import deg2rad, rotate_coords
 import attr
 import parsley
 

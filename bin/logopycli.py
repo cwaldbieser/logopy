@@ -9,9 +9,9 @@ import string
 import sys
 import attr
 import parsley
-from logo import errors
-from logo import procedure
-from logo import svgturtle
+from logopy import errors
+from logopy import procedure
+from logopy import svgturtle
 
 
 @attr.s
@@ -33,7 +33,7 @@ class DeferredTKTurtleEnv:
         Initialize the turtle environment.
         """
         global gui
-        from logo import gui
+        from logopy import gui
         input_handler = kwargs.get("input_handler")
         self.turtle_gui = gui.TurtleGui.make_gui(interactive=(input_handler is not None))
         self.screen = self.turtle_gui.screen

@@ -6,7 +6,7 @@ import os
 import shutil
 import sys
 import uuid
-from logo.trig import (deg2rad, rad2deg, calc_distance, rotate_coords)
+from logopy.trig import (deg2rad, rad2deg, calc_distance, rotate_coords)
 import attr
 import jinja2
 import svgwrite

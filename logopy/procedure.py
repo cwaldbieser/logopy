@@ -10,7 +10,7 @@ import random
 import textwrap
 import time
 import traceback
-from logo import errors
+from logopy import errors
 
 COLOR_MAP = {
     0: 'black',
