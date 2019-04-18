@@ -9,7 +9,7 @@ dependencies and run the software.  A typical command line might look like:
 
 .. code:: shell
 
-    $ pipenv run ./logopy.py -s ./test_scripts/ gui
+    $ pipenv run ./logopy.py -s ./example_scripts/ gui
 
 Where I am running the interpreter in interactive mode and have set the 
 folder where I can load my logo scripts from with the `load` command.

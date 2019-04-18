@@ -1,0 +1,56 @@
+
+
+to snake
+pu lt 90 fd 25 pd fd 175
+pu back 80 rt 90 fd 65 
+pd 
+ext.unfilled [ arc 360 25] 
+pu
+back 65 lt 90 fd 80 pd
+rt 90 pd fd 75
+(ext.ellipse 140 350 180 )
+fd 180
+(ext.ellipse 200 200 90)
+fd 180
+ext.unfilled [ (ext.ellipse 200 200 90 "false) ]
+fd 120
+rt 90
+fd 70 
+(ext.ellipse 150 380 180)
+fd 275
+lt 90
+fd 42
+end
+
+to arrange :angle [:pos [0 0]]
+pu 
+setpos :pos
+setheading turtle.heading 90
+rt :angle
+fd 220 
+rt 90 
+fd 30 
+lt 90 
+pd
+end 
+
+setspeed 5
+setpensize 1
+cs
+make "blue [ 0 0 255 ]
+make "dark.blue [ 0 0 128 ]
+make "yellow [ 255 255 0]
+make "dark.yellow [ 128 128 0 ]
+setpencolor :dark.blue
+(arrange 0 [ 20 -20])
+filled :dark.blue [ snake ]
+setpencolor :blue
+arrange 0
+filled :blue [ snake ]
+(arrange 180 [ 20 -20 ])
+setpencolor :dark.yellow
+filled :dark.yellow [ snake ]
+(arrange 180)
+setpencolor :yellow
+filled :yellow [ snake ]
+
