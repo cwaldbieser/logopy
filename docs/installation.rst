@@ -28,13 +28,15 @@ Using `pipenv`
 
 Information about `pipenv <https://pipenv.readthedocs.io/en/latest/>`_ .
 
-Clone the repository from GitHub:
+Clone the repository from GitHub and install dependencies:
 
 .. code:: shell
 
     $ git clone https://github.com/cwaldbieser/logopy.git
+    $ cd logopy/
+    $ pipenv install
 
-Install dependencies into a virtual environment on demand and run logopy:
+Run logopy:
 
 .. code:: shell
 

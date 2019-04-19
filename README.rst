@@ -9,6 +9,13 @@ interesting features.
 Quick Start
 -----------
 
+To install using `pipenv`:
+
+.. code:: bash
+
+    $ cd logopy/
+    $ pipenv install
+
 To run using `pipenv`:
 
 .. code:: bash
