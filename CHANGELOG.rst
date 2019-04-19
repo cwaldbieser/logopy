@@ -2,7 +2,23 @@
 CHANGELOG
 =========
 
+Contributors
+^^^^^^^^^^^^
+
+* Carl Waldbieser <cwaldbieser@gmail.com>
+
+
+Releases
+^^^^^^^^
+
 -----
 0.0.1
 -----
-* Carl Waldbieser <cwaldbieser@gmail.com> : Initial release.
+* Initial release.
+
+-----
+0.0.2
+-----
+
+* Resources folder for SVG was missing from distribution.
+

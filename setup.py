@@ -3,24 +3,15 @@
 
 from __future__ import print_function
 
-import os
 import sys
-from setuptools import setup
-
-pjoin = os.path.join
-here = os.path.abspath(os.path.dirname(__file__))
-
-# Get the current package version.
-version_ns = {}
-with open(pjoin(here, 'version.py')) as f:
-    exec(f.read(), {}, version_ns)
+from setuptools import setup, find_packages
 
 setup_args = dict(
     name                    = 'logopy',
-    packages                = ['logopy'],
-    version                 = version_ns['__version__'],
+    packages                = find_packages(),
+    version                 = '0.0.2',
     description             = """LogoPy: An implementation of the Logo programming language in Python with TK and SVG turtle back ends.""",
-    long_description        = "",
+    long_description        = """LogoPy: An implementation of the Logo programming language in Python with TK and SVG turtle back ends.""",
     author                  = "Carl (https://github.com/cwaldbieser)",
     author_email            = "cwaldbieser@gmail.com",
     url                     = "https://github.com/cwaldbieser/logopy",
@@ -36,9 +27,8 @@ setup_args = dict(
         'Programming Language :: Python',
         'Programming Language :: Python :: 3',
     ],
-    data_files              = [('.', ['version.py'])],
     scripts                 = ['bin/logopycli.py'],
-    include_package_data    = True,
+    include_package_data    = True
 )
 
 # setuptools requirements

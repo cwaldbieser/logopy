@@ -83,7 +83,7 @@ class SVGTurtleEnv:
         page.
         """
         turtle = self.turtle
-        respath = os.path.join(os.path.dirname(os.path.dirname(__file__)), "resources/html")
+        respath = os.path.join(os.path.dirname(__file__), "resources/html")
         html_folder = self.html_folder
         if not os.path.isdir(html_folder):
             os.mkdir(html_folder)

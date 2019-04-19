@@ -1,6 +1,4 @@
 
 include README.rst
-include docs/*.rst
-include resources/html/*
-include example_scripts/*.lg
+recursive-include logopy/resources *
 
