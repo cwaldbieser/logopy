@@ -21,14 +21,14 @@ To run using `pipenv`:
 .. code:: bash
 
     $ cd logopy/
-    $ PYTHONPATH=. pipenv run ./bin/logopycli.py -s ./example_scripts/ -s ~/git-repos/logo-procedures/logo-procs/ -f ./test_scripts/pysymbol2.lg
+    $ PYTHONPATH=. pipenv run ./bin/logopycli.py -f ./example_scripts/pysymbol2.lg
 
 To create an SVG image:
 
 .. code:: bash
 
     $ cd logopy/
-    $ PYTHONPATH=. pipenv run ./bin/logopycli.py -s ./example_scripts/ -s ~/git-repos/logo-procedures/logo-procs/ -f ./test_scripts/pysymbol2.lg svg -o pysymbol2.svg 
+    $ PYTHONPATH=. pipenv run ./bin/logopycli.py -f ./example_scripts/pysymbol2.lg svg -o pysymbol2.svg 
 
 To create an animated SVG image that can be viewed in a web browser:
 
