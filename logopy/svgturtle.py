@@ -111,6 +111,11 @@ class SVGTurtleEnv:
             v = html_args.get(k)
             if v is not None:
                 args[k] = v
+        animation_start = html_args['animation_start']
+        if animation_start == 'automatic':
+            args['animation_start'] = 'autostart'
+        elif animation_start == 'inviewport':
+            args['animation_start'] = 'inViewport'
         html_path = os.path.join(html_folder, "svg.html")
         with open(html_path, "w") as fout:
             fout.write(template.render(args))
@@ -456,7 +461,6 @@ class SVGTurtle:
         self._hole_components = []
         self._complete_hole_components = []
         fill_container = self.screen.drawing.polygon()
-        fill_container['stroke-width'] = self._pensize
         filled_components.append(fill_container)
         self._fill_index = len(self._components)
 
