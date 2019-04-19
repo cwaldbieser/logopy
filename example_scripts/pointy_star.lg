@@ -3,7 +3,7 @@ to pointy.star
     stellation
 end
 
-to stellation [:size 200] [:angle 170]
+to stellation [:size 500] [:angle 170]
     localmake "start.heading heading
     localmake "start.pos pos 
     localmake "count 1 
@@ -16,8 +16,9 @@ to stellation [:size 200] [:angle 170]
     setheading :start.heading
 end
 
-setspeed 0
+setspeed 7
 setpencolor "red
-setpensize 1
+setpensize 3
+pu back 250 pd
 filled "yellow [ pointy.star ]
 

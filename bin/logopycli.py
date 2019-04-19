@@ -42,6 +42,11 @@ class DeferredTKTurtleEnv:
         self.screen.colormode(255)
         if input_handler is not None:
             self.turtle_gui.set_input_handler(input_handler)
+        maximize = kwargs.get('maximize', False)
+        if maximize:
+            root = self.turtle_gui.root
+            w, h = root.winfo_screenwidth(), root.winfo_screenheight()
+            root.geometry("%dx%d+0+0" % (w, h))
         self.initialized = True
 
     def create_turtle(self):
@@ -751,6 +756,9 @@ def main(args):
     interpreter = LogoInterpreter.create_interpreter()
     interpreter.turtle_backend_args = dict(input_handler=interpreter.receive_input)
     if args.turtle == 'tk':
+        interpreter.turtle_backend_args = {
+            'maximize': args.maximize,
+        }
         interpreter.init_turtle_graphics()
     interpreter.debug_tokens = args.debug_tokens
     interpreter.grammar = grammar
@@ -844,10 +852,9 @@ if __name__ == "__main__":
     parser_tk = subparsers.add_parser('gui', help='GUI mode')
     parser_tk.set_defaults(turtle='tk')
     parser_tk.add_argument(
-        "-i",
-        "--interactive",
+        "--maximize",
         action="store_true",
-        help="Enter interactive mode.  If a Logo script is loaded, it will be run first.")
+        help="Maximize the window on startup.")
     parser_svg = subparsers.add_parser('svg', help='SVG turtle backend.')
     parser_svg.set_defaults(turtle='svg')
     parser_svg.add_argument(
