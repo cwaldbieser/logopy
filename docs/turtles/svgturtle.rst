@@ -42,6 +42,9 @@ of the animations:
   duration in frames (see vivus documentation).
 * :option:`--animation-type` allows you to specify the animation type (see the
   vivus documentation).
+* :option:`--animation-start` allows you to specify if the animation should
+  start automatically (**automatic**) or when the image scrolls into the 
+  viewport (**inviewport**).
 
 Examples of SVG images created with the SVG turtle can be seen in the 
 `Logopy Gallery <https://cwaldbieser.github.io/logo-gallery/index.html>`_ .
