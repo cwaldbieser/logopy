@@ -14,7 +14,7 @@ To run using `pipenv`:
 .. code:: bash
 
     $ cd logopy/
-    $ PYTHONPATH=. pipenv run ./logopycli.py -s ./example_scripts/ -s ~/git-repos/logo-procedures/logo-procs/ -f ./test_scripts/pysymbol2.lg
+    $ PYTHONPATH=. pipenv run ./bin/logopycli.py -s ./example_scripts/ -s ~/git-repos/logo-procedures/logo-procs/ -f ./test_scripts/pysymbol2.lg
 
 To create an SVG image:
 
