@@ -22,3 +22,9 @@ Releases
 
 * Resources folder for SVG was missing from distribution.
 
+-----
+0.0.3
+-----
+
+* Resources folder for SVG was *still* missing from distribution.
+

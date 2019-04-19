@@ -9,7 +9,7 @@ from setuptools import setup, find_packages
 setup_args = dict(
     name                    = 'logopy',
     packages                = find_packages(),
-    version                 = '0.0.2',
+    version                 = '0.0.3',
     description             = """LogoPy: An implementation of the Logo programming language in Python with TK and SVG turtle back ends.""",
     long_description        = """LogoPy: An implementation of the Logo programming language in Python with TK and SVG turtle back ends.""",
     author                  = "Carl (https://github.com/cwaldbieser)",
@@ -28,7 +28,7 @@ setup_args = dict(
         'Programming Language :: Python :: 3',
     ],
     scripts                 = ['bin/logopycli.py'],
-    include_package_data    = True
+    package_data            = {'logopy': ['resources/html/*']}
 )
 
 # setuptools requirements

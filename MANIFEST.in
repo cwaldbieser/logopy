@@ -1,4 +1,3 @@
 
 include README.rst
-recursive-include logopy/resources *
 
