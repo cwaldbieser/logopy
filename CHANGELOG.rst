@@ -28,3 +28,9 @@ Releases
 
 * Resources folder for SVG was *still* missing from distribution.
 
+-----
+0.0.4
+-----
+
+* Corrected TK GUI defect that prevented user interaction.
+

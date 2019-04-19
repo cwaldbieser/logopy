@@ -756,9 +756,7 @@ def main(args):
     interpreter = LogoInterpreter.create_interpreter()
     interpreter.turtle_backend_args = dict(input_handler=interpreter.receive_input)
     if args.turtle == 'tk':
-        interpreter.turtle_backend_args = {
-            'maximize': args.maximize,
-        }
+        interpreter.turtle_backend_args['maximize'] = args.maximize
         interpreter.init_turtle_graphics()
     interpreter.debug_tokens = args.debug_tokens
     interpreter.grammar = grammar

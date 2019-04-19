@@ -9,7 +9,7 @@ from setuptools import setup, find_packages
 setup_args = dict(
     name                    = 'logopy',
     packages                = find_packages(),
-    version                 = '0.0.3',
+    version                 = '0.0.4',
     description             = """LogoPy: An implementation of the Logo programming language in Python with TK and SVG turtle back ends.""",
     long_description        = """LogoPy: An implementation of the Logo programming language in Python with TK and SVG turtle back ends.""",
     author                  = "Carl (https://github.com/cwaldbieser)",
