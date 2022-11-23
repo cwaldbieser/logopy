@@ -1,19 +1,19 @@
-
-import collections
 import functools
 import math
 import os
 import shutil
 import sys
 import uuid
-from logopy.trig import (deg2rad, rad2deg, calc_distance, rotate_coords)
+
 import attr
 import jinja2
 import svgwrite
 
+from logopy import errors
+from logopy.trig import calc_distance, deg2rad, rotate_coords
+
 
 class FakeValidator:
-
     def check_all_svg_attribute_values(self, *args):
         return True
 
@@ -49,9 +49,9 @@ class SVGTurtleEnv:
         Initialize the turtle environment.
         """
         self.screen = SVGScreen.create_screen()
-        self.output_file = kwargs.get('output_file')
-        self.html_folder = kwargs.get('html_folder')
-        self.html_args = kwargs.get('html_args', {})
+        self.output_file = kwargs.get("output_file")
+        self.html_folder = kwargs.get("html_folder")
+        self.html_args = kwargs.get("html_args", {})
         self.initialized = True
 
     def create_turtle(self):
@@ -61,8 +61,8 @@ class SVGTurtleEnv:
         turtle = self.turtle
         if turtle is None:
             turtle = SVGTurtle.create_turtle(self.screen)
-            self.turtle = turtle 
-        return turtle 
+            self.turtle = turtle
+        return turtle
 
     def wait_complete(self):
         """
@@ -93,29 +93,29 @@ class SVGTurtleEnv:
             template = jinja2_env.from_string(f.read())
         x, y, w, h = turtle.get_bounds()
         args = {
-            'html_title': 'SVG Test',
-            'bgcolor': 'black',
-            'html_width': "{}px".format(math.ceil(abs(w))),
-            'animation_duration': 1000,
-            'animation_type': 'sync',
+            "html_title": "SVG Test",
+            "bgcolor": "black",
+            "html_width": "{}px".format(math.ceil(abs(w))),
+            "animation_duration": 1000,
+            "animation_type": "sync",
         }
-        args['bgcolor'] = turtle.screen.bgcolor()
+        args["bgcolor"] = turtle.screen.bgcolor()
         html_args = dict(self.html_args)
-        html_width = html_args.get('html_width')
+        html_width = html_args.get("html_width")
         if html_width is not None:
-            args['html_width'] = "{}px".format(html_width)
-        html_scale = html_args.get('html_scale')
+            args["html_width"] = "{}px".format(html_width)
+        html_scale = html_args.get("html_scale")
         if html_scale is not None:
-            args['html_width'] = "{}%".format(html_scale)
-        for k in ('html_title', 'animation_duration', 'animation_type'):
+            args["html_width"] = "{}%".format(html_scale)
+        for k in ("html_title", "animation_duration", "animation_type"):
             v = html_args.get(k)
             if v is not None:
                 args[k] = v
-        animation_start = html_args['animation_start']
-        if animation_start == 'automatic':
-            args['animation_start'] = 'autostart'
-        elif animation_start == 'inviewport':
-            args['animation_start'] = 'inViewport'
+        animation_start = html_args["animation_start"]
+        if animation_start == "automatic":
+            args["animation_start"] = "autostart"
+        elif animation_start == "inviewport":
+            args["animation_start"] = "inViewport"
         html_path = os.path.join(html_folder, "svg.html")
         with open(html_path, "w") as fout:
             fout.write(template.render(args))
@@ -140,7 +140,9 @@ class SVGTurtleEnv:
 
     @halt.setter
     def halt(self, value):
-        raise NotImplemented("HALT is not implemented for the SVG Turtle environment.")
+        raise NotImplementedError(
+            "HALT is not implemented for the SVG Turtle environment."
+        )
 
     def process_events(self):
         """
@@ -152,7 +154,7 @@ class SVGTurtleEnv:
         """
         Return the aubsolute Cartesian heading for the turtle in degrees.
         """
-        return theta 
+        return theta
 
     def turtle_heading_from_cartesian_heading(self, theta):
         """
@@ -166,28 +168,29 @@ class SVGScreen:
     """
     Screen abstraction for batch SVG turtles.
     """
+
     drawing = attr.ib(default=None)
     _mode = attr.ib(default=None)
     _colormode = attr.ib(default=None)
-    _bgcolor = attr.ib(default='black')
+    _bgcolor = attr.ib(default="black")
 
     @classmethod
-    def create_screen(cls, size=(1000, 1000), viewbox='-500 -500 1000 1000'):
+    def create_screen(cls, size=(1000, 1000), viewbox="-500 -500 1000 1000"):
         screen = cls()
         dwg = svgwrite.Drawing(size=size, viewBox=viewbox)
         screen.drawing = dwg
         return screen
-        
+
     def mode(self, mode=None):
         if mode is None:
             return self._mode
         else:
-            self._mode = mode 
+            self._mode = mode
 
     def colormode(self, colormode=None):
         if colormode is None:
             return self._colormode
-        elif not colormode in (1.0, 255):
+        elif colormode not in (1.0, 255):
             raise Exception("Color mode must be `1.0` or `255`.")
         else:
             self._colormode = colormode
@@ -215,11 +218,12 @@ class SVGTurtle:
     """
     Turtle for drawing to an SVG image.
     """
+
     screen = attr.ib(default=None)
     _pendown = attr.ib(default=True)
-    _pencolor = attr.ib(default='white')
+    _pencolor = attr.ib(default="white")
     _pensize = attr.ib(default=1)
-    _fillcolor = attr.ib(default='white')
+    _fillcolor = attr.ib(default="white")
     _pos = attr.ib(default=(0, 0))
     home_heading = attr.ib(default=90)
     _heading = attr.ib(default=90)
@@ -233,11 +237,11 @@ class SVGTurtle:
     # _filled_components: index 0 is always a polygon
     # _hole components: always a polygons; may not have any entries
     # _complete_hole_components: Holes of complete figures (arcs, ellipses, circles).
-    _fill_mode = attr.ib(default='off') # off, fill, or unfill
+    _fill_mode = attr.ib(default="off")  # off, fill, or unfill
     _filled_components = attr.ib(default=None)
     _hole_components = attr.ib(default=None)
     _complete_hole_components = attr.ib(default=None)
-    _text_alignments = attr.ib(default=dict(left='start', right='end', center='middle'))
+    _text_alignments = attr.ib(default=dict(left="start", right="end", center="middle"))
 
     @classmethod
     def create_turtle(cls, screen):
@@ -251,18 +255,18 @@ class SVGTurtle:
         """
         drawing = self.screen.drawing
         g = self.screen.drawing.g()
-        g['transform'] = "matrix(0 1 1 0 0 0) rotate(90)"
+        g["transform"] = "matrix(0 1 1 0 0 0) rotate(90)"
         drawing.add(g)
         xmin, xmax, ymin, ymax = self._bounds
         w = xmax - xmin
         h = ymax - ymin
         vb = "{} {} {} {}".format(xmin, ymin, w, h)
-        drawing['width'] = '100%'
-        drawing['height'] = '100%'
-        drawing['viewBox'] = vb
-        components = self._components 
+        drawing["width"] = "100%"
+        drawing["height"] = "100%"
+        drawing["viewBox"] = vb
+        components = self._components
         for component in components:
-            if hasattr(component, 'points') and len(component.points) == 0:
+            if hasattr(component, "points") and len(component.points) == 0:
                 continue
             g.add(component)
         drawing.write(fout)
@@ -292,13 +296,16 @@ class SVGTurtle:
         """
         if y is None:
             if len(x) != 2:
-                raise Exception("Expected coordinates `(x, y)` or `x, y`, but received `{}`.".format(x))
+                raise Exception(
+                    "Expected coordinates `(x, y)` or `x, y`, but received `{}`.".format(
+                        x
+                    )
+                )
             else:
                 x, y = x
         return (x, y)
 
     def setpos(self, x, y=None):
-        pos = self._get_xy(x, y)
         self._line_to(x, y)
 
     def _line_to(self, x1, y1, no_stroke=False):
@@ -309,21 +316,20 @@ class SVGTurtle:
         x0, y0 = self._pos
         fill_mode = self._fill_mode
         pendown = self._pendown
-        if fill_mode != 'off':
+        if fill_mode != "off":
             fill_container = self._filled_components[0]
-            if fill_mode == 'unfill':
+            if fill_mode == "unfill":
                 hole_container = self.get_hole_component_()
             if not pendown:
                 hole_container = self.add_hole_component_()
             fill_container.points.append((x1, y1))
-            if fill_mode == 'unfill':
-                hole_container.points.append((x1, y1)) 
+            if fill_mode == "unfill":
+                hole_container.points.append((x1, y1))
         if self._pendown and not no_stroke:
             self._adjust_bounds(x0 + self._pensize * 0.5, -y0 + self._pensize * 0.5)
             self._adjust_bounds(x0 - self._pensize * 0.5, -y0 - self._pensize * 0.5)
             self._adjust_bounds(x1 + self._pensize * 0.5, -y1 + self._pensize * 0.5)
             self._adjust_bounds(x1 - self._pensize * 0.5, -y1 - self._pensize * 0.5)
-            drawing = self.screen.drawing
             polyline = self._get_current_polyline()
             polyline.points.append((x1, y1))
         else:
@@ -337,15 +343,15 @@ class SVGTurtle:
         polyline = self._current_polyline
         if polyline is None:
             polyline = self.screen.drawing.polyline()
-            polyline['stroke'] = self._pencolor
-            polyline['stroke-width'] = self._pensize
-            polyline['stroke-linecap'] = 'square'
-            polyline['class'] = 'hole'
-            polyline['fill-opacity'] = 0
+            polyline["stroke"] = self._pencolor
+            polyline["stroke-width"] = self._pensize
+            polyline["stroke-linecap"] = "square"
+            polyline["class"] = "hole"
+            polyline["fill-opacity"] = 0
             x, y = self._pos
             polyline.points.append((x, y))
-            polyline['class'] = 'no-fill'
-            polyline['fill-opacity'] = 0
+            polyline["class"] = "no-fill"
+            polyline["fill-opacity"] = 0
             self._components.append(polyline)
             self._current_polyline = polyline
         return polyline
@@ -362,7 +368,7 @@ class SVGTurtle:
         self._bounds = (xmin, xmax, ymin, ymax)
 
     def heading(self):
-        return self._heading 
+        return self._heading
 
     def setheading(self, heading):
         self._heading = heading
@@ -370,7 +376,7 @@ class SVGTurtle:
     def towards(self, x, y=None):
         x1, y1 = self._get_xy(x, y)
         x0, y0 = self._pos
-        theta = math.atan2(y1-y0, x1-x0)
+        theta = math.atan2(y1 - y0, x1 - x0)
         return theta * 180.0 / math.pi
 
     def penup(self):
@@ -383,7 +389,7 @@ class SVGTurtle:
         if self._pendown:
             return
         else:
-            self._pendown = True 
+            self._pendown = True
 
     def right(self, angle):
         heading = self._heading - angle
@@ -405,7 +411,7 @@ class SVGTurtle:
         x, y = self._pos
         x += dx
         y += dy
-        self._line_to(x, y) 
+        self._line_to(x, y)
 
     def clear(self):
         self.components = []
@@ -453,10 +459,10 @@ class SVGTurtle:
             raise Exception("Invalid color specification `{}`.".format(tuple(*args)))
 
     def begin_fill(self):
-        fill_mode = self._fill_mode 
-        if fill_mode != 'off':
+        fill_mode = self._fill_mode
+        if fill_mode != "off":
             raise Exception("`begin_fill()`: Fill mode is already enabled.")
-        self._fill_mode = 'fill'
+        self._fill_mode = "fill"
         self._filled_components = filled_components = []
         self._hole_components = []
         self._complete_hole_components = []
@@ -465,9 +471,14 @@ class SVGTurtle:
         self._fill_index = len(self._components)
 
     def end_fill(self):
-        if self._fill_mode != 'fill':
-            raise Exception("`end_fill()` can only be called in fill-mode and after any unfill mode has been cleared.  Fill mode was `{}`.".format(self._fill_mode))
-        self._fill_mode = 'off'
+        if self._fill_mode != "fill":
+            raise Exception(
+                "`end_fill()` can only be called in fill-mode and after any "
+                "unfill mode has been cleared.  Fill mode was `{}`.".format(
+                    self._fill_mode
+                )
+            )
+        self._fill_mode = "off"
         filled_components = self._filled_components
         fill_container = filled_components[0]
         self._filled_components = None
@@ -479,48 +490,50 @@ class SVGTurtle:
         components = self._components
         fill_index = self._fill_index
         # If there are holes, create a mask.
-        if len(hole_components) > 1 or (len(hole_components) > 0 and len(hole_components[0].points)) > 0:
+        cond_a = len(hole_components) > 1
+        cond_b = len(hole_components) > 0 and len(hole_components[0].points) > 0
+        if cond_a or cond_b:
             if len(fill_container.points) == 0 and len(filled_components) == 1:
                 # No actual filled components; no mask needed to make holes.
                 return
             mask_id, mask_group = self.get_mask_()
             g = self.screen.drawing.g()
-            g['mask'] = "url(#{})".format(mask_id)
+            g["mask"] = "url(#{})".format(mask_id)
             g.validator = FakeValidator()
-            g.attribs['paint-order'] = "fill stroke"
+            g.attribs["paint-order"] = "fill stroke"
             for component in filled_components:
-                if hasattr(component, 'points') and len(component.points) == 0:
+                if hasattr(component, "points") and len(component.points) == 0:
                     continue
                 allow_mask = component.copy()
-                allow_mask['fill'] = 'white'
-                allow_mask['stroke'] = '#ffffff'
-                if allow_mask.attribs.get('class') is not None:
-                    del allow_mask.attribs['class']
+                allow_mask["fill"] = "white"
+                allow_mask["stroke"] = "#ffffff"
+                if allow_mask.attribs.get("class") is not None:
+                    del allow_mask.attribs["class"]
                 mask_group.add(allow_mask)
-                component['fill'] = self._fillcolor
-                component['fill-opacity'] = 1
-                component['fill-rule'] = 'evenodd'
-                g.add(component) 
+                component["fill"] = self._fillcolor
+                component["fill-opacity"] = 1
+                component["fill-rule"] = "evenodd"
+                g.add(component)
             for component in hole_components:
-                if hasattr(component, 'points') and len(component.points) <= 2:
+                if hasattr(component, "points") and len(component.points) <= 2:
                     continue
                 deny_mask = component.copy()
-                deny_mask['fill'] = 'black'
-                deny_mask['stroke'] = '#ffffff'
-                if deny_mask.attribs.get('class') is not None:
-                    del deny_mask.attribs['class']
-                component['class'] = 'hole'
-                component['fill-opacity'] = 0
+                deny_mask["fill"] = "black"
+                deny_mask["stroke"] = "#ffffff"
+                if deny_mask.attribs.get("class") is not None:
+                    del deny_mask.attribs["class"]
+                component["class"] = "hole"
+                component["fill-opacity"] = 0
                 mask_group.add(deny_mask)
                 g.add(component)
             components.insert(fill_index, g)
         else:
             for component in filled_components:
-                if hasattr(component, 'points') and len(component.points) == 0:
+                if hasattr(component, "points") and len(component.points) == 0:
                     continue
-                component['fill'] = self._fillcolor
-                component['fill-opacity'] = 1
-                component['fill-rule'] = 'evenodd'
+                component["fill"] = self._fillcolor
+                component["fill-opacity"] = 1
+                component["fill-rule"] = "evenodd"
                 components.insert(fill_index, component)
 
     def get_mask_(self):
@@ -543,12 +556,12 @@ class SVGTurtle:
             return
         hole_components = self._hole_components
         if len(hole_components) > 0:
-            container = hole_components[-1] 
+            container = hole_components[-1]
             if len(container.points) <= 2:
                 hole_components.pop()
         hole_polygon = self.screen.drawing.polygon()
         hole_components.append(hole_polygon)
-        return hole_polygon 
+        return hole_polygon
 
     def add_complete_hole_component_(self, component):
         """
@@ -572,9 +585,12 @@ class SVGTurtle:
         Shapes drawn in between inocations of this method and `end_unfilled()`
         will not be filled but instead will behave as holes in the current fill.
         """
-        if self._fill_mode != 'fill':
-            raise Exception("`begin_unfilled()` can only be called within `begin_fill()` ... `end_fill()` context.")
-        self._fill_mode = 'unfill'
+        if self._fill_mode != "fill":
+            raise Exception(
+                "`begin_unfilled()` can only be called within "
+                "`begin_fill()` ... `end_fill()` context."
+            )
+        self._fill_mode = "unfill"
         self.add_hole_component_()
 
     def end_unfilled(self):
@@ -583,9 +599,11 @@ class SVGTurtle:
         Shapes drawn in between inocations of `begin_unfilled()` and this method
         will not be filled but instead will behave as holes in the current fill.
         """
-        if self._fill_mode != 'unfill':
-            raise Exception("`end_unfilled()` can only be called after `begin_unfilled()`.")
-        self._fill_mode = 'fill'
+        if self._fill_mode != "unfill":
+            raise Exception(
+                "`end_unfilled()` can only be called after `begin_unfilled()`."
+            )
+        self._fill_mode = "fill"
 
     def hideturtle(self):
         self._visible = False
@@ -621,15 +639,15 @@ class SVGTurtle:
         else:
             self.regular_polygon_(radius, steps, angle, xcenter, ycenter)
             return
-        component['stroke'] = self._pencolor
-        component['stroke-width'] = self._pensize
-        if self._fill_mode == 'unfill':
+        component["stroke"] = self._pencolor
+        component["stroke-width"] = self._pensize
+        if self._fill_mode == "unfill":
             self.add_hole_component_(component)
-        elif self._fill_mode == 'fill':
+        elif self._fill_mode == "fill":
             self._filled_components.append(component)
         else:
-            component['class'] = 'no-fill'
-            component['fill-opacity'] = 0
+            component["class"] = "no-fill"
+            component["fill-opacity"] = 0
             self._components.append(component)
 
     def regular_polygon_(self, radius, sides, angle, xcenter, ycenter):
@@ -637,7 +655,7 @@ class SVGTurtle:
         Add the coordinates of a regular polygon (or segments of it)
         to the primary component.
         """
-        heading = self._heading 
+        heading = self._heading
         step_angle = angle / sides
         angle = abs(angle)
         alpha = heading
@@ -655,16 +673,14 @@ class SVGTurtle:
             if abs(angle_offset) >= angle:
                 break
         if angle == 360:
-            polyline = self._get_current_polyline() 
-            polyline['stroke-linecap'] = 'round'
+            polyline = self._get_current_polyline()
+            polyline["stroke-linecap"] = "round"
 
     def circle_arc_(self, radius, angle, theta, xcenter, ycenter):
         """
         Create a circular arc component and return it.
         """
         x, y = self._pos
-        rx = radius
-        ry = radius
         xrot = 0
         if abs(angle) > 180.0:
             large_arc = 1
@@ -674,13 +690,15 @@ class SVGTurtle:
             sweep_flag = 1
         else:
             sweep_flag = 0
-        theta = (theta - 180 + angle)
+        theta = theta - 180 + angle
         xdest = xcenter + math.cos(deg2rad(theta)) * radius
         ydest = ycenter + math.sin(deg2rad(theta)) * radius
         component = self.screen.drawing.path()
         command = "M {} {}".format(x, y)
         component.push(command)
-        command = "A {} {} {} {} {} {} {}".format(abs(radius), abs(radius), xrot, large_arc, sweep_flag, xdest, ydest)
+        command = "A {} {} {} {} {} {} {}".format(
+            abs(radius), abs(radius), xrot, large_arc, sweep_flag, xdest, ydest
+        )
         component.push(command)
         return component
 
@@ -688,7 +706,7 @@ class SVGTurtle:
         """
         Plot an ellipse or an arc of an ellipse with axes of length `major`
         and `minor`.  The arc will start at the turtle current position.
-        The final position will be located `angle` degrees from the line that 
+        The final position will be located `angle` degrees from the line that
         joins the starting position and the center of the ellipse in a direction
         determined by `clockwise`.
         """
@@ -712,7 +730,7 @@ class SVGTurtle:
             xdp, ydp = rotate_coords(0, 0, xdp, ydp, heading)
             xdp = xdp + x
             ydp = ydp + y
-            #self._line_to(xdp, ydp, no_stroke=True) 
+            # self._line_to(xdp, ydp, no_stroke=True)
             self.ellipse_simulation_(major, minor, angle, clockwise)
             if clockwise:
                 self._heading = heading - angle
@@ -720,22 +738,22 @@ class SVGTurtle:
                 self._heading = heading + angle
         # Component needs to be oriented and translated.
         transform = "translate({} {}) rotate({})".format(x, y, heading)
-        component['transform'] = transform
-        component['stroke'] = self._pencolor
-        component['stroke-width'] = self._pensize
-        component['fill-opacity'] = 1
-        component['class'] = 'no-fill'
-        if self._fill_mode == 'unfill':
+        component["transform"] = transform
+        component["stroke"] = self._pencolor
+        component["stroke-width"] = self._pensize
+        component["fill-opacity"] = 1
+        component["class"] = "no-fill"
+        if self._fill_mode == "unfill":
             self.add_hole_component_(component)
-        elif self._fill_mode == 'fill':
+        elif self._fill_mode == "fill":
             self._filled_components.append(component)
-            component['class'] = 'fill'
-            component['fill-opacity'] = 1
+            component["class"] = "fill"
+            component["fill-opacity"] = 1
         else:
-            component['class'] = 'no-fill'
-            component['fill-opacity'] = 0
+            component["class"] = "no-fill"
+            component["fill-opacity"] = 0
             self._components.append(component)
-            
+
         # Compute bounds.
         # 1) Compute the center.
         cx = 0
@@ -751,9 +769,8 @@ class SVGTurtle:
         south = -(cy - max_radius)
         self._adjust_bounds(east - ps, north - ps)
         self._adjust_bounds(west + ps, south + ps)
-        #self._adjust_bounds(-500, -500)
-        #self._adjust_bounds(500, 500)
-
+        # self._adjust_bounds(-500, -500)
+        # self._adjust_bounds(500, 500)
 
     def elliptic_arc_(self, rx, ry, angle, clockwise, cy):
         """
@@ -772,13 +789,9 @@ class SVGTurtle:
             sweep_flag = 0
         else:
             sweep_flag = 1
-        if angle <= 90:
-            ysign = -1
-        else:
-            ysign = 1
         cx = 0
-        #cy = 0
-        #x, y = 0, ry
+        # cy = 0
+        # x, y = 0, ry
         x, y = 0, cy + ry
         if clockwise:
             theta = angle + 90
@@ -788,14 +801,16 @@ class SVGTurtle:
         cost = math.cos(theta_rad)
         sint = math.sin(theta_rad)
         xd = cx - rx * cost
-        yd = cy + ry * sint 
+        yd = cy + ry * sint
         if not clockwise:
             x, y = rotate_coords(cx, cy, x, y, 180)
             xd, yd = rotate_coords(cx, cy, xd, yd, 180)
         component = self.screen.drawing.path()
         command = "M {} {}".format(x, y)
         component.push(command)
-        command = "A {} {} {} {} {} {} {}".format(abs(ry), abs(rx), xrot, large_arc, sweep_flag, xd, yd)
+        command = "A {} {} {} {} {} {} {}".format(
+            abs(ry), abs(rx), xrot, large_arc, sweep_flag, xd, yd
+        )
         component.push(command)
         return component, (xd, yd)
 
@@ -810,18 +825,34 @@ class SVGTurtle:
         i = orig_pos[0]
         j = orig_pos[1]
         angle_count = int(angle)
-        pos_fn = lambda frm, to, count, i: (to * i + frm * (count - i - 1)) / (count - 1)
+
+        def pos_fn(frm, to, count, i):
+            return (to * i + frm * (count - i - 1)) / (count - 1)
+
         if clockwise:
             start_angle = 90
-            p = functools.partial(pos_fn, start_angle, start_angle - angle + 1, angle_count)
+            p = functools.partial(
+                pos_fn, start_angle, start_angle - angle + 1, angle_count
+            )
             angles = list(map(p, range(angle_count)))
         else:
             start_angle = -90
-            p = functools.partial(pos_fn, start_angle, start_angle + angle - 1, angle_count)
+            p = functools.partial(
+                pos_fn, start_angle, start_angle + angle - 1, angle_count
+            )
             angles = list(map(p, range(angle_count)))
         half_major = major / 2
         half_minor = minor / 2
-        coords = [rotate_coords(0, 0, half_major * math.cos(deg2rad(alpha)), half_minor * math.sin(deg2rad(alpha)), theta) for alpha in angles]
+        coords = [
+            rotate_coords(
+                0,
+                0,
+                half_major * math.cos(deg2rad(alpha)),
+                half_minor * math.sin(deg2rad(alpha)),
+                theta,
+            )
+            for alpha in angles
+        ]
         if not clockwise:
             xsign = -1
             ysign = 1
@@ -829,7 +860,7 @@ class SVGTurtle:
             xsign = 1
             ysign = -1
         i = half_minor * math.sin(deg2rad(theta)) * xsign + i
-        j = half_minor * math.cos(deg2rad(theta)) * ysign + j 
+        j = half_minor * math.cos(deg2rad(theta)) * ysign + j
         coords = [(i + x, j + y) for x, y in coords]
         coord = coords[0]
         self._line_to(coord[0], coord[1], no_stroke=True)
@@ -845,42 +876,49 @@ class SVGTurtle:
     def undobufferentries(self):
         return 0
 
-    def write(self, text, move=False, align='left', font=('Arial', 8, 'normal')):
+    def write(self, text, move=False, align="left", font=("Arial", 8, "normal")):
         """
         Write text to the image.
         """
         if move:
-            raise errors.LogoError("Moving the turtle to the end of the text is not supported by the SVG Turtle back end.")
+            raise errors.LogoError(
+                "Moving the turtle to the end of the text is not supported by the SVG Turtle back end."
+            )
         x, y = self._pos
         x, y = rotate_coords(0, 0, y, x, -90)
         txt_obj = self.screen.drawing.text(text, insert=(x, y))
-        txt_obj['fill'] = self._pencolor
-        txt_obj['text-anchor'] = self._text_alignments[align]
+        txt_obj["fill"] = self._pencolor
+        txt_obj["text-anchor"] = self._text_alignments[align]
         font_face, font_size, font_weight = font
-        txt_obj['style'] = "font-family:{};font-weight:{};".format(font_face, font_weight)
-        txt_obj['font-size'] = "{}pt".format(font_size)
-        txt_obj['transform'] = "matrix(0 1 1 0 0 0) rotate(90)"
+        txt_obj["style"] = "font-family:{};font-weight:{};".format(
+            font_face, font_weight
+        )
+        txt_obj["font-size"] = "{}pt".format(font_size)
+        txt_obj["transform"] = "matrix(0 1 1 0 0 0) rotate(90)"
         self._components.append(txt_obj)
 
 
-def hexpair(x): 
+def hexpair(x):
     """
     Return 2 hex digits for integers 0-255.
     """
     return ("0{}".format(hex(x)[2:]))[-2:]
 
+
 def rgb2hex(r, g, b, mode=255):
     """
     Return a hex color suitble for SVG given RGB components.
     """
-    return "#{}{}{}".format(hexpair(r), hexpair(g), hexpair(b)) 
+    return "#{}{}{}".format(hexpair(r), hexpair(g), hexpair(b))
+
 
 def _round1(x):
     return int(x * 10) / 10
 
+
 def svg2cartesian(x, y):
     return rotate_coords(0, 0, y, x, 90)
 
+
 def cartesian2svg(x, y):
     return rotate_coords(0, 0, y, x, -90)
-

@@ -1,15 +1,16 @@
-
 import collections
 import functools
 import io
 import math
-from tkinter import *
-from tkinter.scrolledtext import ScrolledText
 import turtle
-from logopy import errors
-from logopy.trig import deg2rad, rotate_coords
+from tkinter import END, Canvas, Entry, Frame, Label, StringVar, Tk
+from tkinter.scrolledtext import ScrolledText
+
 import attr
 import parsley
+
+from logopy import errors
+from logopy.trig import deg2rad, rotate_coords
 
 
 @attr.s
@@ -27,40 +28,40 @@ class TurtleGui:
     _buffer = attr.ib(default=attr.Factory(list))
     _prompt = attr.ib(default="?")
     _io_outbuf = attr.ib(default=attr.Factory(io.StringIO))
-    _command_history = attr.ib(default=attr.Factory(lambda : collections.deque([], 100)))
+    _command_history = attr.ib(default=attr.Factory(lambda: collections.deque([], 100)))
     _command_hist_idx = attr.ib(default=None)
-    
+
     @classmethod
     def make_gui(cls, interactive=False):
         gui = cls()
         root = Tk()
         gui.root = root
         f = Frame(root)
-        f.pack(side='top', expand=1, fill='both')
+        f.pack(side="top", expand=1, fill="both")
         gui.frame = f
         canvas = Canvas(f)
         canvas.bind("<Configure>", gui.configure_canvas)
-        canvas.pack(side='top', expand=1, fill='both')
+        canvas.pack(side="top", expand=1, fill="both")
         gui.canvas = canvas
         screen = turtle.TurtleScreen(canvas)
         gui.screen = screen
         if interactive:
-            output = ScrolledText(f, height=10, state='disabled')
+            output = ScrolledText(f, height=10, state="disabled")
             output.bind("<1>", lambda event: output.focus_set())
-            output.pack(side='top', expand=0, fill='x')
+            output.pack(side="top", expand=0, fill="x")
             gui.output = output
-            text_input = Frame(f) 
+            text_input = Frame(f)
             prompt = Label(text_input, text="?")
-            prompt.pack(side='left', expand=0)
+            prompt.pack(side="left", expand=0)
             gui._prompt_label = prompt
             input_var = StringVar()
             gui.input_var = input_var
             entry = Entry(text_input, textvariable=input_var)
-            entry.bind('<Return>', gui.handle_input)
-            entry.bind('<Up>', gui.back_history)
-            entry.bind('<Down>', gui.forward_history)
-            entry.pack(side='left', expand=1, fill='x')
-            text_input.pack(side='top', expand=0, fill='x')
+            entry.bind("<Return>", gui.handle_input)
+            entry.bind("<Up>", gui.back_history)
+            entry.bind("<Down>", gui.forward_history)
+            entry.pack(side="left", expand=1, fill="x")
+            text_input.pack(side="top", expand=0, fill="x")
         return gui
 
     def write(self, data):
@@ -76,9 +77,9 @@ class TurtleGui:
         Write to output widget.
         """
         output = self.output
-        output.configure(state='normal')
+        output.configure(state="normal")
         output.insert(END, data)
-        output.configure(state='disabled')
+        output.configure(state="disabled")
         output.see(END)
 
     def _flush_to_output(self):
@@ -121,7 +122,7 @@ class TurtleGui:
         Scroll backward through line history.
         """
         self._hist(1)
-    
+
     def forward_history(self, event):
         """
         Scroll forward through line history.
@@ -155,25 +156,25 @@ class TurtleGui:
         buf = self._buffer
         input_var = self.input_var
         input_data = input_var.get()
-        input_var.set("")    
+        input_var.set("")
         handler = self._input_handler
         if len(buf) > 0:
             buf.append(input_data)
-            data = ' '.join(buf)
+            data = " ".join(buf)
             buf[:] = []
         else:
             data = input_data
         if handler is None:
             return
         prompt = self._prompt
-        if data.strip().lower() == 'halt':
+        if data.strip().lower() == "halt":
             self.halt = True
             return
         self._write("{} {}\n".format(prompt, input_data))
         result = None
         try:
             result = handler(data)
-        except errors.ExpectedEndError as ex:
+        except errors.ExpectedEndError:
             buf.append(data)
             self._prompt_label.configure(text=">")
             self._prompt = ">"
@@ -208,7 +209,10 @@ def ext_ellipse(self, major, minor, angle=360, clockwise=True):
     i = orig_pos[0]
     j = orig_pos[1]
     angle_count = int(angle)
-    pos_fn = lambda frm, to, count, i: (to * i + frm * (count - i - 1)) / (count - 1)
+
+    def pos_fn(frm, to, count, i):
+        return (to * i + frm * (count - i - 1)) / (count - 1)
+
     if clockwise:
         start_angle = 90
         p = functools.partial(pos_fn, start_angle, start_angle - angle + 1, angle_count)
@@ -219,7 +223,16 @@ def ext_ellipse(self, major, minor, angle=360, clockwise=True):
         angles = list(map(p, range(angle_count)))
     half_major = major / 2
     half_minor = minor / 2
-    coords = [rotate_coords(0, 0, half_major * math.cos(deg2rad(alpha)), half_minor * math.sin(deg2rad(alpha)), theta) for alpha in angles]
+    coords = [
+        rotate_coords(
+            0,
+            0,
+            half_major * math.cos(deg2rad(alpha)),
+            half_minor * math.sin(deg2rad(alpha)),
+            theta,
+        )
+        for alpha in angles
+    ]
     if not clockwise:
         xsign = -1
         ysign = 1
@@ -227,7 +240,7 @@ def ext_ellipse(self, major, minor, angle=360, clockwise=True):
         xsign = 1
         ysign = -1
     i = half_minor * math.sin(deg2rad(theta)) * xsign + i
-    j = half_minor * math.cos(deg2rad(theta)) * ysign + j 
+    j = half_minor * math.cos(deg2rad(theta)) * ysign + j
     coords = [(i + x, j + y) for x, y in coords]
     self.pu()
     coord = coords[0]
@@ -240,4 +253,3 @@ def ext_ellipse(self, major, minor, angle=360, clockwise=True):
     else:
         turtle_heading = backend.turtle_heading_from_cartesian_heading(theta + angle)
     self.setheading(turtle_heading)
-        
