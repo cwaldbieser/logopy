@@ -882,7 +882,8 @@ class SVGTurtle:
         """
         if move:
             raise errors.LogoError(
-                "Moving the turtle to the end of the text is not supported by the SVG Turtle back end."
+                "Moving the turtle to the end of the "
+                "text is not supported by the SVG Turtle back end."
             )
         x, y = self._pos
         x, y = rotate_coords(0, 0, y, x, -90)

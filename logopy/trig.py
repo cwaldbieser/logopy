@@ -1,5 +1,5 @@
-
 import math
+
 
 def deg2rad(degrees):
     """
@@ -7,11 +7,13 @@ def deg2rad(degrees):
     """
     return degrees * (math.pi / 180.0)
 
+
 def rad2deg(radians):
     """
     Convert radians to degrees.
     """
     return radians * (180.0 / math.pi)
+
 
 def calc_distance(theta, dist):
     """
@@ -21,7 +23,8 @@ def calc_distance(theta, dist):
     rad = deg2rad(theta)
     x = dist * math.cos(rad)
     y = dist * math.sin(rad)
-    return (x, y) 
+    return (x, y)
+
 
 def rotate_coords(cx, cy, x, y, theta):
     """

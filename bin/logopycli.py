@@ -5,13 +5,12 @@ import collections
 import itertools
 import numbers
 import os
-import string
 import sys
+
 import attr
 import parsley
-from logopy import errors
-from logopy import procedure
-from logopy import svgturtle
+
+from logopy import errors, procedure, svgturtle
 
 
 @attr.s
@@ -34,15 +33,18 @@ class DeferredTKTurtleEnv:
         """
         global gui
         from logopy import gui
+
         input_handler = kwargs.get("input_handler")
-        self.turtle_gui = gui.TurtleGui.make_gui(interactive=(input_handler is not None))
+        self.turtle_gui = gui.TurtleGui.make_gui(
+            interactive=(input_handler is not None)
+        )
         self.screen = self.turtle_gui.screen
         self.screen.bgcolor("black")
         self.screen.mode("logo")
         self.screen.colormode(255)
         if input_handler is not None:
             self.turtle_gui.set_input_handler(input_handler)
-        maximize = kwargs.get('maximize', False)
+        maximize = kwargs.get("maximize", False)
         if maximize:
             root = self.turtle_gui.root
             w, h = root.winfo_screenwidth(), root.winfo_screenheight()
@@ -57,7 +59,7 @@ class DeferredTKTurtleEnv:
         turtle.ellipse = gui.ext_ellipse.__get__(turtle)
         turtle.backend = self
         turtle.pencolor("white")
-        return turtle 
+        return turtle
 
     def wait_complete(self):
         """
@@ -94,7 +96,7 @@ class DeferredTKTurtleEnv:
         """
         Return the absolute Cartesian heading for the turtle in degrees.
         """
-        alpha = 90 - theta        
+        alpha = 90 - theta
         alpha = alpha % 360
         return alpha
 
@@ -106,11 +108,13 @@ class DeferredTKTurtleEnv:
         alpha = alpha % 360
         return alpha
 
+
 @attr.s
 class LogoInterpreter:
     """
     Logo interpreter
     """
+
     primitives = attr.ib(default=attr.Factory(dict))
     procedures = attr.ib(default=attr.Factory(dict))
     scope_stack = attr.ib(default=attr.Factory(list))
@@ -118,7 +122,9 @@ class LogoInterpreter:
     placeholder_stack = attr.ib(default=attr.Factory(list))
     grammar = attr.ib(default=None)
     script_folders = attr.ib(default=attr.Factory(list))
-    turtle_backend = attr.ib(default=attr.Factory(DeferredTKTurtleEnv.create_turtle_env))
+    turtle_backend = attr.ib(
+        default=attr.Factory(DeferredTKTurtleEnv.create_turtle_env)
+    )
     turtle_backend_args = attr.ib(default=attr.Factory(dict))
     _screen = attr.ib(default=None)
     _turtle = attr.ib(default=None)
@@ -188,7 +194,7 @@ class LogoInterpreter:
 
     def load_script(self, filename):
         """
-        Attempt to load a Logo script and insert its 
+        Attempt to load a Logo script and insert its
         contents into the curent token stream.
         """
         script_folders = self.script_folders
@@ -212,7 +218,7 @@ class LogoInterpreter:
         Evaluate input as READLIST.
         """
         stream = TokenStream.make_stream(self.grammar(data).itemlist())
-        return self.evaluate(stream) 
+        return self.evaluate(stream)
 
     def process_instructionlist(self, script):
         """
@@ -240,25 +246,31 @@ class LogoInterpreter:
         primitives = self.primitives
         procedures = self.procedures
         while len(tokens) > 0:
-            token = tokens.popleft()  
+            token = tokens.popleft()
             token = transform_qmark(token)
             is_cmd = is_command(token)
             is_spcl_frm = is_special_form(token)
             if not is_cmd and not is_spcl_frm:
-                raise errors.LogoError("Expected a command.  Instead, got `{}`.".format(token))
+                raise errors.LogoError(
+                    "Expected a command.  Instead, got `{}`.".format(token)
+                )
             if is_spcl_frm:
                 stream = TokenStream.make_stream(token)
                 return self.process_special_form_or_expression(stream)
             else:
                 command = token.lower()
-                if command == 'to': 
+                if command == "to":
                     procedure.process_to(self, tokens)
                 elif command in primitives:
                     proc = primitives[command]
                     args = self.evaluate_args_for_command(proc.default_arity, tokens)
                     for n, arg in enumerate(args):
                         if arg is None:
-                            raise errors.LogoError("Primitive `{}` received a null value for argument {}.".format(command.upper(), n+1))
+                            raise errors.LogoError(
+                                "Primitive `{}` received a null value for argument {}.".format(
+                                    command.upper(), n + 1
+                                )
+                            )
                     if self.debug_primitives:
                         print("PRIMITIVE:", command, "ARGS:", args)
                     return self.execute_procedure(proc, args)
@@ -267,7 +279,11 @@ class LogoInterpreter:
                     args = self.evaluate_args_for_command(proc.default_arity, tokens)
                     for n, arg in enumerate(args):
                         if arg is None:
-                            raise errors.LogoError("Procedure `{}` received a null value for argument {}.".format(command.upper(), n+1))
+                            raise errors.LogoError(
+                                "Procedure `{}` received a null value for argument {}.".format(
+                                    command.upper(), n + 1
+                                )
+                            )
                     if self.debug_procs:
                         print("PROCEDURE:", command, "ARGS:", args)
                     return self.execute_procedure(proc, args)
@@ -342,54 +358,54 @@ class LogoInterpreter:
             terms = [value]
             while True:
                 peek = tokens.peek()
-                if peek == '-':
+                if peek == "-":
                     tokens.popleft()
                     terms.append(-self.evaluate_value(tokens))
-                elif peek == '+':
+                elif peek == "+":
                     tokens.popleft()
                     terms.append(self.evaluate_value(tokens))
-                elif peek == '*':
+                elif peek == "*":
                     tokens.popleft()
                     terms[-1] *= self.evaluate_value(tokens)
-                elif peek == '/':
+                elif peek == "/":
                     tokens.popleft()
                     terms[-1] /= self.evaluate_value(tokens)
-                elif peek == '<':
+                elif peek == "<":
                     tokens.popleft()
-                    p = self.primitives['lessp'].primitive_func
+                    p = self.primitives["lessp"].primitive_func
                     return p(self, sum(terms), self.evaluate_value(tokens))
-                elif peek == '<=':
+                elif peek == "<=":
                     tokens.popleft()
-                    p = self.primitives['lessequalp'].primitive_func
+                    p = self.primitives["lessequalp"].primitive_func
                     return p(self, sum(terms), self.evaluate_value(tokens))
-                elif peek == '>':
+                elif peek == ">":
                     tokens.popleft()
-                    p = self.primitives['greaterp'].primitive_func
+                    p = self.primitives["greaterp"].primitive_func
                     return p(self, sum(terms), self.evaluate_value(tokens))
-                elif peek == '>=':
+                elif peek == ">=":
                     tokens.popleft()
-                    p = self.primitives['greaterequalp'].primitive_func
+                    p = self.primitives["greaterequalp"].primitive_func
                     return p(self, sum(terms), self.evaluate_value(tokens))
-                elif peek == '=':
+                elif peek == "=":
                     tokens.popleft()
-                    p = self.primitives['equalp'].primitive_func
+                    p = self.primitives["equalp"].primitive_func
                     return p(self, sum(terms), self.evaluate_value(tokens))
-                elif peek == '<>':
+                elif peek == "<>":
                     tokens.popleft()
-                    p = self.primitives['notequalp'].primitive_func
+                    p = self.primitives["notequalp"].primitive_func
                     return p(self, sum(terms), self.evaluate_value(tokens))
                 else:
                     break
             return sum(terms)
         else:
             peek = tokens.peek()
-            if peek == '=':
+            if peek == "=":
                 tokens.popleft()
-                p = self.primitives['equalp'].primitive_func
+                p = self.primitives["equalp"].primitive_func
                 return p(self, value, self.evaluate_value(tokens))
-            elif peek == '<>':
+            elif peek == "<>":
                 tokens.popleft()
-                p = self.primitives['notequalp'].primitive_func
+                p = self.primitives["notequalp"].primitive_func
                 return p(self, value, self.evaluate_value(tokens))
             else:
                 return value
@@ -416,9 +432,9 @@ class LogoInterpreter:
         if not quoted:
             if token.startswith('"'):
                 return tokens.popleft()[1:]
-            if token.startswith(':'):
+            if token.startswith(":"):
                 return self.get_variable_value(tokens.popleft()[1:])
-            if token.startswith("-") and token != '-':
+            if token.startswith("-") and token != "-":
                 temp_token = tokens.popleft()
                 temp_token = temp_token[1:]
                 tokens.appendleft(temp_token)
@@ -455,10 +471,12 @@ class LogoInterpreter:
         tokens = TokenStream.make_stream(proc.tokens)
         scope = {}
         scope_stack = self.scope_stack
-        scope_stack.append(scope) 
-        formal_params = list(itertools.chain(
-            [(name, None) for name in proc.required_inputs], 
-            proc.optional_inputs))
+        scope_stack.append(scope)
+        formal_params = list(
+            itertools.chain(
+                [(name, None) for name in proc.required_inputs], proc.optional_inputs
+            )
+        )
         rest_args = []
         rest_input = proc.rest_input
         for vardef, value in itertools.zip_longest(formal_params, args):
@@ -467,18 +485,30 @@ class LogoInterpreter:
             else:
                 varname, default_value = vardef
                 if value is None:
-                    if default_value != ':' and hasattr(default_value, 'startswith') and default_value.startswith(':'):
+                    if (
+                        default_value != ":"
+                        and hasattr(default_value, "startswith")
+                        and default_value.startswith(":")
+                    ):
                         name = default_value[1:]
                         for a_scope in reversed(scope_stack):
                             if name in a_scope:
                                 value = a_scope[name]
                                 break
                         if value is None:
-                            raise errors.LogoError("Default parameter `{}` could not find `:{}` in any scope.".format(varname, name)) 
+                            raise errors.LogoError(
+                                "Default parameter "
+                                "`{}` could not find `:{}` in any scope.".format(
+                                    varname, name
+                                )
+                            )
                     else:
                         value = default_value
                 if value is None:
-                    raise errors.LogoError("Must have a value for formal parameter `{}` in procedure `{}`.".format(varname, proc.name))
+                    raise errors.LogoError(
+                        "Must have a value for formal parameter "
+                        "`{}` in procedure `{}`.".format(varname, proc.name)
+                    )
                 scope[varname] = value
         if rest_input:
             scope[rest_input] = rest_args
@@ -486,7 +516,7 @@ class LogoInterpreter:
         try:
             self.process_commands(tokens)
         except errors.StopSignal:
-            result = None 
+            result = None
         except errors.OutputSignal as output:
             result = output.value
         scope_stack.pop()
@@ -504,7 +534,16 @@ class LogoInterpreter:
         second_token = None
         if len(tokens) > 0:
             second_token = tokens.peek()
-        if isinstance(second_token, str) and second_token in ('-', '+', '*', '/', '=', '<>', '>=', '<='):
+        if isinstance(second_token, str) and second_token in (
+            "-",
+            "+",
+            "*",
+            "/",
+            "=",
+            "<>",
+            ">=",
+            "<=",
+        ):
             tokens.appendleft(command_token)
             return self.evaluate(tokens)
         if command in primitives:
@@ -519,9 +558,13 @@ class LogoInterpreter:
             args.append(self.evaluate(tokens))
         max_arity = proc.max_arity
         if max_arity != -1 and len(args) > max_arity:
-            raise errors.LogoError("There are too many arguments for `{}`.".format(command_token))
+            raise errors.LogoError(
+                "There are too many arguments for `{}`.".format(command_token)
+            )
         if len(args) < proc.min_arity:
-            raise errors.LogoError("Not enough arguments for `{}`.".format(command_token))
+            raise errors.LogoError(
+                "Not enough arguments for `{}`.".format(command_token)
+            )
         if self.debug_primitives and command in primitives:
             print("PRIMITIVE:", command, "ARGS:", args)
         if self.debug_procs and command in procedures:
@@ -537,7 +580,9 @@ class LogoInterpreter:
             tokens = parse_tokens(grammar, data, debug=self.debug_tokens)
             result = self.process_commands(tokens)
             if result is not None:
-                raise errors.LogoError("You don't say what to do with `{}`.".format(result))
+                raise errors.LogoError(
+                    "You don't say what to do with `{}`.".format(result)
+                )
         except errors.HaltSignal:
             self.halt = False
 
@@ -547,8 +592,9 @@ class TokenStream:
     """
     Token stream.
     """
+
     tokens = attr.ib(default=None)
-    processed = attr.ib(default=attr.Factory(lambda : collections.deque(list(), 10)))
+    processed = attr.ib(default=attr.Factory(lambda: collections.deque(list(), 10)))
 
     @classmethod
     def make_stream(cls, lst):
@@ -599,38 +645,40 @@ def calculate(start, pairs):
         immediate_value = False
         if isinstance(result, numbers.Number) and isinstance(value, numbers.Number):
             immediate_value = True
-        if op == '+':
+        if op == "+":
             if immediate_value:
                 result += value
             else:
-                result = DelayedValue('sum', result, value)
-        elif op == '-':
+                result = DelayedValue("sum", result, value)
+        elif op == "-":
             if immediate_value:
                 result -= value
             else:
-                result = DelayedValue('difference', result, value)
-        elif op == '*':
+                result = DelayedValue("difference", result, value)
+        elif op == "*":
             if immediate_value:
                 result *= value
             else:
-                result = DelayedValue('product', result, value)
-        elif op == '/':
+                result = DelayedValue("product", result, value)
+        elif op == "/":
             if immediate_value:
                 result /= value
             else:
-                result = DelayedValue('quotient', result, value)
+                result = DelayedValue("quotient", result, value)
     return result
+
 
 def make_token_grammar():
     """
     Make the token grammar.
     """
-    grammar = parsley.makeGrammar(r"""
+    grammar = parsley.makeGrammar(
+        r"""
     punctuation = :x ?(x in "+-*/!'#$%&\,.:<=>?@^_`;" '"') -> x
     float = <'-'{0, 1} digit* '.' digit+>:ds -> float(ds)
     integer = <'-'{0, 1} digit+>:ds -> int(ds)
-    number = float | integer 
-    itemlist = 
+    number = float | integer
+    itemlist =
           ws item:first (ws item)*:rest ws -> [first] + rest
         | ws item:only ws -> [only]
     item =
@@ -640,9 +688,9 @@ def make_token_grammar():
         | itemlist
         | '[' ws quoted_itemlist:q ws ']' -> list(q)
         | '[' ws ']' -> []
-        | '(' itemlist:lst ')' -> tuple(lst) 
+        | '(' itemlist:lst ')' -> tuple(lst)
         | (ws comment)
-    quoted_itemlist = 
+    quoted_itemlist =
           ws quoted_item:first (ws quoted_item)*:rest ws -> [first] + rest
         | ws quoted_item:only ws -> [only]
     quoted_item =
@@ -658,7 +706,7 @@ def make_token_grammar():
     word_char = (escaped_char:e -> e) | (~';' unescaped_char:u -> u)
     unescaped_char = (letterOrDigit:c -> c) | (~';' punctuation:p -> p)
     escaped_char = '\\' (anything:c -> c)
-    comment = <';' rest_of_line>:c -> Comment(c)  
+    comment = <';' rest_of_line>:c -> Comment(c)
     rest_of_line = <('\\n' | (~'\n' anything))*>
     parens = '(' ws expr:e ws ')' -> e
     value = (number:n ->n) | (parens:p -> p)
@@ -670,8 +718,11 @@ def make_token_grammar():
     muldiv = ws (mul | div)
     expr = expr2:left addonly*:right -> calculate(left, right)
     expr2 = factor:left muldiv*:right -> calculate(left, right)
-    """, {"calculate": calculate, "Comment": Comment})
+    """,
+        {"calculate": calculate, "Comment": Comment},
+    )
     return grammar
+
 
 def transform_tokens(tokens):
     """
@@ -691,7 +742,8 @@ def transform_tokens(tokens):
             tmp.append(tuple(transform_tokens(item)))
         else:
             tmp.append(item)
-    return tmp 
+    return tmp
+
 
 def parse_tokens(grammar, script, debug=False):
     """
@@ -705,12 +757,13 @@ def parse_tokens(grammar, script, debug=False):
         print("PARSED TOKENS:", tokens)
     return tokens
 
+
 def transform_qmark(command):
     """
     If command is a `?` followed by a number, transform it to the
     special form `(?, NUMBER)`.  Otherwise, return command unaltered.
     """
-    if not hasattr(command, 'startswith'):
+    if not hasattr(command, "startswith"):
         return command
     if not command.startswith("?"):
         return command
@@ -718,7 +771,8 @@ def transform_qmark(command):
         pos = int(command[1:])
     except ValueError:
         return command
-    return ('?', pos)
+    return ("?", pos)
+
 
 def is_special_form(token):
     if not isinstance(token, tuple):
@@ -728,6 +782,7 @@ def is_special_form(token):
         return True
     return False
 
+
 def is_paren_expr(token):
     if not isinstance(token, tuple):
         return False
@@ -735,7 +790,8 @@ def is_paren_expr(token):
     if is_command(first):
         return False
     return True
-        
+
+
 def is_command(token):
     if not isinstance(token, str):
         return False
@@ -745,8 +801,10 @@ def is_command(token):
         return False
     return True
 
+
 def is_list(token):
     return isinstance(token, list)
+
 
 def main(args):
     """
@@ -755,8 +813,8 @@ def main(args):
     grammar = make_token_grammar()
     interpreter = LogoInterpreter.create_interpreter()
     interpreter.turtle_backend_args = dict(input_handler=interpreter.receive_input)
-    if args.turtle == 'tk':
-        interpreter.turtle_backend_args['maximize'] = args.maximize
+    if args.turtle == "tk":
+        interpreter.turtle_backend_args["maximize"] = args.maximize
         interpreter.init_turtle_graphics()
     interpreter.debug_tokens = args.debug_tokens
     interpreter.grammar = grammar
@@ -766,7 +824,7 @@ def main(args):
     if script_folders is None:
         script_folders = []
     interpreter.script_folders = script_folders
-    if args.turtle == 'svg':
+    if args.turtle == "svg":
         interpreter.turtle_backend = svgturtle.SVGTurtleEnv.create_turtle_env()
         svg_args = dict(
             output_file=args.outfile,
@@ -774,25 +832,25 @@ def main(args):
         )
         html_args = {}
         d = vars(args)
-        for k in ('html_title', 'animation_duration', 'animation_type'):
+        for k in ("html_title", "animation_duration", "animation_type"):
             v = d.get(k)
             if v is not None:
                 html_args[k] = v
         if args.html_width:
-            html_args['html_width'] = args.html_width
+            html_args["html_width"] = args.html_width
         if args.html_scale:
-            html_args['html_scale'] = args.html_scale
+            html_args["html_scale"] = args.html_scale
         if args.animation_duration:
-            html_args['animation_duration'] = args.animation_duration
+            html_args["animation_duration"] = args.animation_duration
         if args.animation_type:
             animation_type = args.animation_type
-            if animation_type == 'onebyone':
-                animation_type = 'oneByOne'
-            html_args['animation_type'] = animation_type
+            if animation_type == "onebyone":
+                animation_type = "oneByOne"
+            html_args["animation_type"] = animation_type
         if args.animation_start:
             animation_start = args.animation_start
-            html_args['animation_start'] = animation_start
-        svg_args['html_args'] = html_args
+            html_args["animation_start"] = animation_start
+        svg_args["html_args"] = html_args
         interpreter.turtle_backend_args = svg_args
     if args.file is not None:
         script = args.file.read()
@@ -811,94 +869,101 @@ def main(args):
     if args.debug_interpreter:
         print("")
         import pprint
+
         pprint.pprint(interpreter)
 
+
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Logo programming language interpreter")
+    parser = argparse.ArgumentParser(
+        description="Logo programming language interpreter"
+    )
     parser.add_argument(
         "-f",
         "--file",
         type=argparse.FileType("r"),
-        help="Logo script file to interpret.")
+        help="Logo script file to interpret.",
+    )
     parser.add_argument(
         "-s",
         "--script-folder",
         action="append",
-        help="Specify a folder from which the LOAD command will load Logo scripts.")
+        help="Specify a folder from which the LOAD command will load Logo scripts.",
+    )
+    parser.add_argument("--debug-procs", action="store_true", help="Debug procedures.")
     parser.add_argument(
-        "--debug-procs",
-        action="store_true",
-        help="Debug procedures.")
+        "--debug-primitives", action="store_true", help="Debug procedures."
+    )
     parser.add_argument(
-        "--debug-primitives",
-        action="store_true",
-        help="Debug procedures.")
-    parser.add_argument(
-        "--debug-tokens",
-        action="store_true",
-        help="Debug parsed tokens.")
+        "--debug-tokens", action="store_true", help="Debug parsed tokens."
+    )
     parser.add_argument(
         "--debug-interpreter",
         action="store_true",
-        help="Dump interpreter state after script completes.")
+        help="Dump interpreter state after script completes.",
+    )
     parser.add_argument(
         "--tokenize-only",
         action="store_true",
-        help="Only tokenize input.  Don't interpret.")
+        help="Only tokenize input.  Don't interpret.",
+    )
     parser.set_defaults(turtle=None)
-    subparsers = parser.add_subparsers(help='Turtle back ends.')
-    parser_tk = subparsers.add_parser('gui', help='GUI mode')
-    parser_tk.set_defaults(turtle='tk')
+    subparsers = parser.add_subparsers(help="Turtle back ends.")
+    parser_tk = subparsers.add_parser("gui", help="GUI mode")
+    parser_tk.set_defaults(turtle="tk")
     parser_tk.add_argument(
-        "--maximize",
-        action="store_true",
-        help="Maximize the window on startup.")
-    parser_svg = subparsers.add_parser('svg', help='SVG turtle backend.')
-    parser_svg.set_defaults(turtle='svg')
+        "--maximize", action="store_true", help="Maximize the window on startup."
+    )
+    parser_svg = subparsers.add_parser("svg", help="SVG turtle backend.")
+    parser_svg.set_defaults(turtle="svg")
     parser_svg.add_argument(
         "-o",
         "--outfile",
         type=argparse.FileType("w"),
         metavar="OUTFILE",
         action="store",
-        help="Save turtle graphics to SVG file, OUTFILE.")
+        help="Save turtle graphics to SVG file, OUTFILE.",
+    )
     parser_svg.add_argument(
         "--html",
         metavar="FOLDER",
         action="store",
-        help="Save turtle graphics to folder, FOLDER, and create resources for web display.")
+        help="Save turtle graphics to folder, FOLDER, and create resources for web display.",
+    )
     parser_svg.add_argument(
-        "--html-title",
-        action="store",
-        help="Set HTML title for web resources.")
+        "--html-title", action="store", help="Set HTML title for web resources."
+    )
     parser_svg.add_argument(
         "--html-width",
         action="store",
         type=int,
-        help="Set width of image in pixels for web resources.")
+        help="Set width of image in pixels for web resources.",
+    )
     parser_svg.add_argument(
         "--html-scale",
         action="store",
         type=float,
-        metavar='PERCENT',
-        help="Scale width of image in web resource to PERCENT of display width.")
+        metavar="PERCENT",
+        help="Scale width of image in web resource to PERCENT of display width.",
+    )
     parser_svg.add_argument(
         "--animation-duration",
         action="store",
         type=int,
-        help="Set animation duration (in frames) for web resources.")
+        help="Set animation duration (in frames) for web resources.",
+    )
     parser_svg.add_argument(
         "--animation-type",
         action="store",
-        choices=['sync', 'delayed', 'onebyone'],
-        default='sync',
-        help="Set animation type for web resources.")
+        choices=["sync", "delayed", "onebyone"],
+        default="sync",
+        help="Set animation type for web resources.",
+    )
     parser_svg.add_argument(
         "--animation-start",
         action="store",
-        choices=['inviewport', 'automatic'],
-        default='automatic',
-        help="Set animation type for web resources.")
+        choices=["inviewport", "automatic"],
+        default="automatic",
+        help="Set animation type for web resources.",
+    )
     args = parser.parse_args()
     main(args)
-

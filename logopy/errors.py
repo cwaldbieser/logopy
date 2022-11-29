@@ -1,4 +1,3 @@
-
 import attr
 
 
@@ -21,5 +20,3 @@ class OutputSignal(Exception):
 
 class HaltSignal(Exception):
     pass
-
-

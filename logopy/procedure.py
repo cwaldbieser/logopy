@@ -1280,9 +1280,10 @@ def process_for(logo, forcontrol, instrlist):
     logo.scope_stack.append(for_scope)
 
     def _limit_not_reached(for_scope, counter_name, limit, step):
-        return sign(for_scope[counter_name] - limit) != sign(step) or for_scope[
-            counter_name
-        ] == limit
+        return (
+            sign(for_scope[counter_name] - limit) != sign(step)
+            or for_scope[counter_name] == limit
+        )
 
     while _limit_not_reached(for_scope, counter_name, limit, step):
         _process_run_like("FOR", logo, instrlist)
